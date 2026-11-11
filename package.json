@@ -1,0 +1,44 @@
+{
+  "name": "shiri-calendar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build:core && npm run build:apple-core",
+    "build:core": "npm run build --workspace @shiri/calendar-core",
+    "build:apple-core": "node scripts/bundle-apple-core.mjs",
+    "typecheck": "tsc --noEmit && npm run typecheck --workspace @shiri/calendar-core",
+    "test": "tsx --test packages/calendar-core/test/*.test.ts",
+    "data:fetch": "tsx scripts/fetch-holidays.ts",
+    "check": "npm run typecheck && npm test && npm run build",
+    "build:mac": "npm run build && node scripts/package-mac.mjs",
+    "check:apple": "swift run --package-path platforms/apple CalendarSmoke"
+  },
+  "dependencies": {
+    "@shiri/calendar-core": "0.1.0",
+    "lunar-typescript": "1.8.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.27.0",
+    "tsx": "^4.20.0",
+    "typescript": "7.0.2"
+  },
+  "description": "拾日历：免费无广告的原生菜单栏日历，提供公农历、节气与放假调休，公共核心供 Mac、iOS 和 Web 复用",
+  "displayName": "拾日历",
+  "keywords": [
+    "日历",
+    "农历",
+    "节气",
+    "节假日",
+    "调休",
+    "macOS",
+    "iOS"
+  ],
+  "engines": {
+    "node": ">=24"
+  }
+}

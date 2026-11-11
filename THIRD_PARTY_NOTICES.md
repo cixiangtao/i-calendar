@@ -1,0 +1,67 @@
+# 第三方组件与数据
+
+本应用本地运行，无账户、广告或遥测。用户手动点击“检查调休更新”时，会请求 holiday-cn 的 GitHub 静态数据。
+
+## lunar-typescript 1.8.7
+
+- 作者：6tail
+- 代码：https://github.com/6tail/lunar-typescript
+- 许可：MIT，全文位于 packages/calendar-core/LICENSE-lunar-typescript。
+
+## holiday-cn
+
+- 作者：NateScarlet 及贡献者
+- 项目：https://github.com/NateScarlet/holiday-cn
+- 许可：MIT，全文位于 packages/calendar-core/src/data/LICENSE-holiday-cn。
+- 内置快照：2025、2026、2027 年，获取日期 2026-11-11。
+- 各年度数据的 papers 字段保存国务院通知链接。放假调休为全国统一安排，不代表所有单位或个人的实际排班。
+- 2027 年交叉核对参考：https://chinajob.mohrss.gov.cn/h5/c/2026-11-09/635850.shtml
+
+## MIT 许可全文（lunar-typescript）
+
+MIT License
+
+Copyright (c) 2020 6tail
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+## MIT 许可全文（holiday-cn）
+
+MIT License
+
+Copyright (c) 2019 NateScarlet
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
