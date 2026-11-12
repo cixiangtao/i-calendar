@@ -678,11 +678,11 @@
       "css": ".ds-day{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:48px;height:46px;padding:3px 0;border:0;border-radius:12px;cursor:pointer;transition:background-color 130ms ease-out,box-shadow 130ms ease-out}.ds-day span{font-size:19px;font-weight:650;line-height:22px;font-variant-numeric:tabular-nums;letter-spacing:-.025em}.ds-day small{font-size:11px;line-height:14px;font-weight:400;white-space:nowrap}.ds-day:focus-visible{outline:2px solid var(--blue,#3269d9);outline-offset:3px}.ds-day:active{opacity:.85}.ds-days{display:flex;gap:8px}.ds-holiday{background:var(--red-soft,#fff0f2);color:var(--red,#cf3049)}.ds-holiday small,.ds-work small{color:var(--purple,#8150bd)}.ds-work{background:transparent;color:var(--ink,#24262d)}.ds-day b{position:absolute;top:-2px;right:1px;padding:1px 2px;border-radius:4px;font-size:11px;line-height:12px;font-weight:600}.ds-holiday b{background:var(--red,#cf3049);color:var(--surface,#ffffff)}.ds-work b{background:var(--yellow-soft,#fff5d8);color:var(--yellow,#956300)}.ds-day:hover{background:var(--control,#f0f1f5)}"
     },
     {
-      "name": "休班图例与状态小签",
+      "name": "日期状态小签",
       "kind": "chip",
-      "description": "静态图例与状态说明，保留文字而非仅用颜色。",
-      "html": "<div class=\"ds-tags\"><span><b class=\"ds-rest\">休</b> 放假</span><span><b class=\"ds-makeup\">班</b> 补班</span><strong class=\"ds-working\">工作日</strong><strong class=\"ds-unknown\">调休未知</strong></div>",
-      "css": ".ds-tags{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;display:flex;align-items:center;gap:12px;color:var(--secondary,#606775);font-size:11px}.ds-tags b{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:5px;font-weight:500}.ds-rest{color:var(--red,#cf3049);background:var(--red-soft,#fff0f2)}.ds-makeup,.ds-unknown{color:var(--yellow,#956300);background:var(--yellow-soft,#fff5d8)}.ds-tags strong{font-size:11px;line-height:18px;font-weight:500;padding:1px 6px;border-radius:6px}.ds-working{color:var(--green,#16804d);background:var(--green-soft,#eaf7ef)}"
+      "description": "选中日期的工作日与调休未知状态，不额外设置休班图例。",
+      "html": "<div class=\"ds-tags\"><strong class=\"ds-working\">工作日</strong><strong class=\"ds-unknown\">调休未知</strong></div>",
+      "css": ".ds-tags{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;display:flex;align-items:center;gap:12px;color:var(--secondary,#606775);font-size:11px}.ds-unknown{color:var(--yellow,#956300);background:var(--yellow-soft,#fff5d8)}.ds-tags strong{font-size:11px;line-height:18px;font-weight:500;padding:1px 6px;border-radius:6px}.ds-working{color:var(--green,#16804d);background:var(--green-soft,#eaf7ef)}"
     },
     {
       "name": "圆角面板与日期叶片",
