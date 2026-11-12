@@ -12,6 +12,7 @@ import {
 import { bundledHolidayDatasets } from '@shiri/calendar-core/data';
 
 import { isAccentColor, isColorTheme } from './color-theme.js';
+import { defaultMenuClock, parseMenuClock } from './menu-clock.js';
 import type { CalendarPlatform, CalendarPreferences, SavedCalendarState } from './platform.js';
 
 /** 可观察的应用快照；React、测试和宿主都读取同一状态。 */
@@ -37,6 +38,7 @@ const defaults: CalendarPreferences = {
   appearance: 'system',
   colorTheme: 'clear',
   accentColor: null,
+  menuClock: { ...defaultMenuClock },
 };
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -54,6 +56,7 @@ export function parseSavedState(input: unknown): SavedCalendarState {
   const { weekStartsOn, appearance } = input.preferences;
   const colorTheme = input.preferences.colorTheme ?? defaults.colorTheme;
   const accentColor = input.preferences.accentColor ?? null;
+  const menuClock = parseMenuClock(input.preferences.menuClock);
   if (
     (weekStartsOn !== 1 && weekStartsOn !== 7) ||
     !['system', 'light', 'dark'].includes(String(appearance)) ||
@@ -76,6 +79,7 @@ export function parseSavedState(input: unknown): SavedCalendarState {
       appearance: appearance as CalendarPreferences['appearance'],
       colorTheme,
       accentColor,
+      menuClock,
     },
     datasets,
     updatedAt: input.updatedAt as string | undefined,
@@ -111,7 +115,7 @@ export class CalendarController {
       selected,
       almanac: this.engine.getAlmanac(selected.date),
       month: this.engine.getMonth(selected.year, selected.month),
-      preferences: { ...defaults },
+      preferences: { ...defaults, menuClock: { ...defaultMenuClock } },
       years: this.holidays.years,
       panel: 'calendar',
       updating: false,
@@ -236,6 +240,7 @@ export class CalendarController {
 
   setPreferences(preferences: Partial<CalendarPreferences>) {
     const next = { ...this.snapshot.preferences, ...preferences };
+    next.menuClock = parseMenuClock(next.menuClock);
     if (
       (next.weekStartsOn !== 1 && next.weekStartsOn !== 7) ||
       !['system', 'light', 'dark'].includes(next.appearance) ||
@@ -251,7 +256,10 @@ export class CalendarController {
   private serialized(): SavedCalendarState {
     return {
       schemaVersion: 1,
-      preferences: { ...this.snapshot.preferences },
+      preferences: {
+        ...this.snapshot.preferences,
+        menuClock: { ...this.snapshot.preferences.menuClock },
+      },
       datasets: this.holidays.export(),
       updatedAt: this.snapshot.updatedAt,
     };

@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "date": "2026-11-12T00:05:09+08:00",
+      "format": "YYYY-MM-DD dddd A hh:mm:ss",
+      "expected": "2026-11-12 星期四 上午 12:05:09"
+    },
+    {
+      "date": "2026-11-12T12:00:00+08:00",
+      "format": "YY/M/D ddd A h:m:s",
+      "expected": "26/11/12 周四 下午 12:0:0"
+    },
+    {
+      "date": "2026-12-31T23:59:59+08:00",
+      "format": "MM月DD日 ddd HH:mm:ss",
+      "expected": "12月31日 周四 23:59:59"
+    },
+    {
+      "date": "2027-01-01T00:00:00+08:00",
+      "format": "YYYY-MM-DD HH:mm",
+      "expected": "2027-01-01 00:00"
+    },
+    {
+      "date": "2024-02-29T13:02:03+08:00",
+      "format": "[i日历] M月D日 ddd A hh:mm",
+      "expected": "i日历 2月29日 周四 下午 01:02"
+    },
+    {
+      "date": "2026-11-12T08:05:09+08:00",
+      "format": "H HH h hh m mm s ss",
+      "expected": "8 08 8 08 5 05 9 09"
+    }
+  ],
+  "invalid": [
+    "",
+    "   ",
+    "HH:mm\n",
+    "HH:mm\t",
+    "[HH:mm",
+    "HH:mm]",
+    "%H:%M",
+    "QQ:mm",
+    "HH:mm zzz",
+    "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+  ]
+}
