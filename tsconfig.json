@@ -36,6 +36,7 @@
     "packages/*/src/**/*.tsx",
     "apps/calendar/src/**/*.ts",
     "apps/calendar/src/**/*.tsx",
-    "apps/calendar/vite.config.ts"
+    "apps/calendar/vite.config.ts",
+    "tailwind.config.ts"
   ]
 }

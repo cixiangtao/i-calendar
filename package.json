@@ -3,19 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "build": "npm run build:core && npm run build:web",
-    "build:core": "npm run build --workspace @shiri/calendar-core",
-    "typecheck": "tsc --noEmit && npm run typecheck --workspace @shiri/calendar-core",
+    "build": "pnpm run build:core && pnpm run build:web",
+    "build:core": "pnpm --filter @shiri/calendar-core run build",
+    "typecheck": "tsc --noEmit && pnpm --filter @shiri/calendar-core run typecheck",
     "test": "tsx --test packages/calendar-core/test/*.test.ts packages/calendar-ui/test/*.test.ts",
     "data:fetch": "tsx scripts/fetch-holidays.ts",
-    "check": "npm run typecheck && npm test && npm run build",
+    "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm test && pnpm run build",
     "build:mac": "node scripts/package-tauri-mac.mjs",
     "dev": "node scripts/license-notices.mjs --web && vite --config apps/calendar/vite.config.ts",
-    "dev:web": "npm run dev",
+    "dev:web": "pnpm run dev",
     "build:web": "node scripts/license-notices.mjs --web && vite build --config apps/calendar/vite.config.ts",
     "preview:web": "vite preview --config apps/calendar/vite.config.ts --host 127.0.0.1",
     "tauri": "node scripts/tauri.mjs",
@@ -25,11 +22,15 @@
     "ios:init": "node scripts/tauri.mjs ios init --ci",
     "dev:ios": "node scripts/tauri.mjs ios dev",
     "build:ios": "node scripts/tauri.mjs ios build",
-    "licenses:native": "node scripts/license-notices.mjs"
+    "licenses:native": "node scripts/license-notices.mjs",
+    "lint": "oxlint --deny-warnings .",
+    "lint:fix": "oxlint --fix .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check ."
   },
   "dependencies": {
-    "@shiri/calendar-core": "0.1.0",
-    "@shiri/calendar-ui": "0.1.0",
+    "@shiri/calendar-core": "workspace:*",
+    "@shiri/calendar-ui": "workspace:*",
     "@tauri-apps/api": "2.12.4",
     "@tauri-apps/plugin-clipboard-manager": "^2",
     "@tauri-apps/plugin-opener": "2.7.3",
@@ -47,7 +48,12 @@
     "esbuild": "^0.28.2",
     "tsx": "^4.20.0",
     "typescript": "7.0.2",
-    "vite": "8.3.8"
+    "vite": "8.3.8",
+    "oxlint": "1.93.0",
+    "oxfmt": "0.78.0",
+    "tailwindcss": "3.4.19",
+    "postcss": "^8",
+    "autoprefixer": "^10"
   },
   "description": "拾日历：免费无广告的菜单栏日历，提供公农历、节气与放假调休，Mac、iOS 与 Web 共享核心和界面",
   "displayName": "拾日历",
@@ -61,6 +67,8 @@
     "iOS"
   ],
   "engines": {
-    "node": ">=24"
-  }
+    "node": ">=24",
+    "pnpm": ">=12.18.0 <13"
+  },
+  "packageManager": "pnpm@12.18.0"
 }

@@ -8,7 +8,7 @@ if (args[0] === 'ios') {
   try {
     execFileSync('xcrun', ['--sdk', 'iphoneos', '--show-sdk-path'], { stdio: 'ignore' });
   } catch {
-    console.error('iOS 开发需要完整 Xcode 和 iOS SDK。安装后在 Xcode → Settings 中选择开发团队，再运行 npm run ios:init。当前仅有 Command Line Tools 时无法编译或验证 iOS 应用。');
+    console.error('iOS 开发需要完整 Xcode 和 iOS SDK。安装后在 Xcode → Settings 中选择开发团队，再运行 pnpm run ios:init。当前仅有 Command Line Tools 时无法编译或验证 iOS 应用。');
     process.exit(1);
   }
 }

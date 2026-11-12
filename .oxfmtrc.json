@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "trailingComma": "all",
+  "endOfLine": "lf",
+  "insertFinalNewline": true,
+  "singleAttributePerLine": true,
+  "embeddedLanguageFormatting": "auto",
+  "jsdoc": true,
+  "sortImports": true,
+  "sortPackageJson": { "sortScripts": true },
+  "sortTailwindcss": { "config": "./tailwind.config.ts", "functions": ["clsx", "cn", "cva", "tw"] },
+  "ignorePatterns": ["**/node_modules/**", "**/dist/**", "**/target/**", "**/gen/**", "**/.build/**", "work/**", "outputs/**", ".playwright-cli/**", ".impeccable/review/**", "apps/calendar/public/third-party-licenses.txt", "pnpm-lock.yaml"]
+}

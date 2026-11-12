@@ -1,0 +1,7 @@
+packages:
+  - packages/*
+
+# 只允许运行已核对的必要依赖构建脚本。
+allowBuilds:
+  esbuild: true
+  fsevents: true

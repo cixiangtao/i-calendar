@@ -52,7 +52,7 @@ function Feedback({ controller, state }: { controller: CalendarController; state
 export function CalendarApp({ controller }: { controller: CalendarController }) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const [systemDark, setSystemDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const [focusAfterNavigation, setFocusAfterNavigation] = useState(false);
+  const focusAfterNavigation = useRef(false);
   const grid = useRef<HTMLDivElement>(null);
   const gear = useRef<HTMLButtonElement>(null);
   const dark = state.preferences.appearance === 'dark' || (state.preferences.appearance === 'system' && systemDark);
@@ -75,8 +75,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   }, [dark]);
 
   useEffect(() => {
-    if (focusAfterNavigation) { grid.current?.querySelector<HTMLButtonElement>(`[data-date="${state.selected.date}"]`)?.focus(); setFocusAfterNavigation(false); }
-  }, [state.selected.date, focusAfterNavigation]);
+    if (focusAfterNavigation.current) { grid.current?.querySelector<HTMLButtonElement>(`[data-date="${state.selected.date}"]`)?.focus(); focusAfterNavigation.current = false; }
+  });
 
   useEffect(() => {
     const keydown = (event: globalThis.KeyboardEvent) => {
@@ -85,8 +85,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
         if (state.panel === 'settings') { controller.showSettings(false); requestAnimationFrame(() => gear.current?.focus()); }
         else void controller.platform.close?.();
       } else if (state.panel === 'calendar') {
-        if (event.key.toLowerCase() === 't') { event.preventDefault(); controller.goToday(); setFocusAfterNavigation(true); }
-        else if (event.key === 'PageUp' || event.key === 'PageDown') { event.preventDefault(); controller.shiftMonth(event.key === 'PageUp' ? -1 : 1); setFocusAfterNavigation(true); }
+        if (event.key.toLowerCase() === 't') { event.preventDefault(); focusAfterNavigation.current = true; controller.goToday(); }
+        else if (event.key === 'PageUp' || event.key === 'PageDown') { event.preventDefault(); focusAfterNavigation.current = true; controller.shiftMonth(event.key === 'PageUp' ? -1 : 1); }
       }
     };
     window.addEventListener('keydown', keydown);
@@ -95,21 +95,21 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
 
   function moveInGrid(event: KeyboardEvent<HTMLButtonElement>) {
     const directions: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
-    if (event.key in directions) { event.preventDefault(); controller.moveSelection(directions[event.key]!); setFocusAfterNavigation(true); }
-    else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); controller.selectWeekEdge(event.key === 'End'); setFocusAfterNavigation(true); }
+    if (event.key in directions) { event.preventDefault(); focusAfterNavigation.current = true; controller.moveSelection(directions[event.key]!); }
+    else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); focusAfterNavigation.current = true; controller.selectWeekEdge(event.key === 'End'); }
   }
 
   const displayedWeekdays = state.preferences.weekStartsOn === 1 ? weekdays : ['日', ...weekdays.slice(0, 6)];
   const coverageText = state.month.coverage === 'unavailable' ? `${state.year}年调休未收录` : `调休已收录至${state.years.at(-1) ?? '—'}年`;
   const busy = (value: boolean) => { void controller.platform.setInteractionBusy?.(value); };
-  const event = state.vacation ? { date: state.vacation.start, name: `${state.vacation.name} · 放假${state.vacation.days}天`, daysUntil: state.vacation.daysUntil } : state.nextFestival;
-  const nextEvents = [state.nextTerm, event].filter((item) => item !== undefined);
+  const vacationEvent = state.vacation ? { date: state.vacation.start, name: `${state.vacation.name} · 放假${state.vacation.days}天`, daysUntil: state.vacation.daysUntil } : state.nextFestival;
+  const nextEvents = [state.nextTerm, vacationEvent].filter((item) => item !== undefined);
 
   return <ConfigProvider theme={{ algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm, token: { colorPrimary: dark ? '#6bcfb5' : '#146e5e', fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif', fontSize: 12, borderRadius: 7, controlHeight: 30, colorBgContainer: dark ? '#202421' : '#ffffff' } }}>
     <article className="calendar-app" aria-label="拾日历" aria-busy={!state.ready} data-platform={controller.platform.kind}>
       {state.panel === 'settings' ? <Settings controller={controller} state={state} /> : <>
-        <header className="app-header">
-          <div className="brand"><Icon name="calendar" /><span>拾日历</span></div>
+        <header className="app-header tw-flex tw-items-center tw-justify-between">
+          <div className="brand tw-flex tw-items-center"><Icon name="calendar" /><span>拾日历</span></div>
           <Button ref={gear} type="text" className="icon-button" aria-label="设置与调休数据" title="设置与调休数据" onClick={() => controller.showSettings()} icon={<Icon name="settings" />} />
         </header>
         <div className="month-toolbar">
@@ -122,7 +122,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
               {months.map((month) => <option key={month} value={month}>{month}月</option>)}
             </select>
           </div>
-          <nav className="month-controls" aria-label="切换月份">
+          <nav className="month-controls tw-flex tw-shrink-0 tw-items-center tw-gap-control" aria-label="切换月份">
             <Button type="text" className="tool-button" aria-label="上个月" title="上个月（PageUp）" disabled={state.year === 1901 && state.monthNumber === 1} icon={<Icon name="left" />} onClick={() => controller.shiftMonth(-1)} />
             <Button type="text" className="today-button" onClick={() => controller.goToday()} title="回到今天（T）">今天</Button>
             <Button type="text" className="tool-button" aria-label="下个月" title="下个月（PageDown）" disabled={state.year === 2100 && state.monthNumber === 12} icon={<Icon name="right" />} onClick={() => controller.shiftMonth(1)} />
@@ -141,7 +141,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 <span className={`lunar-day ${day.solarTerm || day.festivals.length ? 'has-event' : ''}`}>{detailLabel(day)}</span>
                 {day.schedule.kind === 'holiday' || day.schedule.kind === 'makeup-workday' ? <span className={`day-mark ${day.schedule.kind === 'makeup-workday' ? 'makeup' : ''}`} aria-hidden="true">{day.schedule.kind === 'holiday' ? '休' : '班'}</span> : null}
               </button>
-            </div> : <span key={`empty-${index}`} role="gridcell" className="empty-day" />)}
+            </div> : <span key={`empty-${index}`} role="gridcell" className="empty-day" aria-label="日期范围之外" />)}
           </div>)}
         </div>
         <div className="calendar-legend"><span><b>休</b> 放假</span><span><b className="makeup">班</b> 补班</span>{state.month.coverage === 'unavailable' ? <span className="missing-label">本年调休未收录</span> : null}</div>

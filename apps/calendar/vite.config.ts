@@ -1,5 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
 import { fileURLToPath } from 'node:url';
 
 const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
@@ -9,6 +11,7 @@ export default defineConfig({
   root: source('.'),
   base: process.env.SHIRI_BASE ?? './',
   plugins: [react()],
+  css: { postcss: { plugins: [tailwindcss({ config: source('../../tailwind.config.ts') }), autoprefixer()] } },
   resolve: {
     dedupe: ['react', 'react-dom'],
     alias: [

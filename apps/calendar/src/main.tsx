@@ -39,7 +39,7 @@ void start().catch((error: unknown) => {
   if (root) {
     root.replaceChildren();
     const message = document.createElement('p'); message.className = 'boot-message'; message.textContent = '日历启动失败，请重新打开应用。';
-    const retry = document.createElement('button'); retry.textContent = '重新打开'; retry.onclick = () => location.reload();
+    const retry = document.createElement('button'); retry.textContent = '重新打开'; retry.addEventListener('click', () => location.reload());
     root.append(message, retry);
   }
 });

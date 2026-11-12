@@ -4,7 +4,7 @@ import { parseHolidayDataset } from '../packages/calendar-core/src/holidays.js';
 // Download into staging for review; never replace the shipping snapshot implicitly.
 const years = process.argv.slice(2).map(Number);
 if (years.length === 0 || years.some((year) => !Number.isInteger(year) || year < 1901 || year > 2100)) {
-  throw new Error('用法：npm run data:fetch -- 2028（下载到 work/holiday-staging，核对官方通知后再收录）');
+  throw new Error('用法：pnpm run data:fetch 2028（下载到 work/holiday-staging，核对官方通知后再收录）');
 }
 await mkdir('work/holiday-staging', { recursive: true });
 for (const year of years) {

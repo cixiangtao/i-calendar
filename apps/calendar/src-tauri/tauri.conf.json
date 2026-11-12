@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "local.shiri.calendar",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "pnpm run dev",
     "devUrl": "http://127.0.0.1:1420",
-    "beforeBuildCommand": "npm run build && npm run licenses:native",
+    "beforeBuildCommand": "pnpm run build && pnpm run licenses:native",
     "frontendDist": "../dist"
   },
   "app": {

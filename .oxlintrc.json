@@ -1,0 +1,49 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "unicorn",
+    "typescript",
+    "oxc",
+    "react",
+    "jsx-a11y",
+    "node"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "settings": {
+    "react": {
+      "version": "19.3.1"
+    }
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/target/**",
+    "**/gen/**",
+    "**/.build/**",
+    "work/**",
+    "outputs/**",
+    ".playwright-cli/**",
+    ".impeccable/review/**"
+  ],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "unicorn/no-array-sort": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "packages/calendar-ui/src/CalendarApp.tsx"
+      ],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off"
+      }
+    }
+  ]
+}
