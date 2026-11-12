@@ -1,14 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "types": [
-      "node"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
@@ -18,15 +12,9 @@
     "esModuleInterop": true,
     "noEmit": true,
     "paths": {
-      "@shiri/calendar-core": [
-        "./packages/calendar-core/src/index.ts"
-      ],
-      "@shiri/calendar-core/data": [
-        "./packages/calendar-core/src/data.ts"
-      ],
-      "@shiri/calendar-ui": [
-        "./packages/calendar-ui/src/index.ts"
-      ]
+      "@shiri/calendar-core": ["./packages/calendar-core/src/index.ts"],
+      "@shiri/calendar-core/data": ["./packages/calendar-core/src/data.ts"],
+      "@shiri/calendar-ui": ["./packages/calendar-ui/src/index.ts"]
     },
     "jsx": "react-jsx"
   },

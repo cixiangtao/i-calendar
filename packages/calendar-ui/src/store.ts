@@ -1,9 +1,17 @@
 import {
-  CalendarEngine, HolidayStore, addDays, dateForInstant,
-  parseHolidayDataset, type CalendarDay, type CalendarEvent,
-  type HolidayDataset, type MonthCalendar, type Vacation,
+  CalendarEngine,
+  HolidayStore,
+  addDays,
+  dateForInstant,
+  parseHolidayDataset,
+  type CalendarDay,
+  type CalendarEvent,
+  type HolidayDataset,
+  type MonthCalendar,
+  type Vacation,
 } from '@shiri/calendar-core';
 import { bundledHolidayDatasets } from '@shiri/calendar-core/data';
+
 import type { CalendarPlatform, CalendarPreferences, SavedCalendarState } from './platform.js';
 
 /** 可观察的应用快照；React、测试和宿主都读取同一状态。 */
@@ -27,17 +35,39 @@ export interface CalendarSnapshot {
 }
 
 const defaults: CalendarPreferences = { weekStartsOn: 1, appearance: 'system' };
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** 验证持久化数据；校验失败时由宿主保留原文件，界面回退内置数据。 */
 export function parseSavedState(input: unknown): SavedCalendarState {
-  if (!isRecord(input) || input.schemaVersion !== 1 || !isRecord(input.preferences) || !Array.isArray(input.datasets) || input.datasets.length > 200) throw new Error('本地数据格式不受支持');
+  if (
+    !isRecord(input) ||
+    input.schemaVersion !== 1 ||
+    !isRecord(input.preferences) ||
+    !Array.isArray(input.datasets) ||
+    input.datasets.length > 200
+  )
+    throw new Error('本地数据格式不受支持');
   const { weekStartsOn, appearance } = input.preferences;
-  if ((weekStartsOn !== 1 && weekStartsOn !== 7) || !['system', 'light', 'dark'].includes(String(appearance))) throw new Error('本地显示设置无效');
+  if (
+    (weekStartsOn !== 1 && weekStartsOn !== 7) ||
+    !['system', 'light', 'dark'].includes(String(appearance))
+  )
+    throw new Error('本地显示设置无效');
   const datasets = input.datasets.map(parseHolidayDataset);
-  if (new Set(datasets.map((item) => item.year)).size !== datasets.length) throw new Error('本地调休包含重复年份');
-  if (input.updatedAt !== undefined && (typeof input.updatedAt !== 'string' || !Number.isFinite(Date.parse(input.updatedAt)))) throw new Error('本地更新时间无效');
-  return { schemaVersion: 1, preferences: { weekStartsOn, appearance: appearance as CalendarPreferences['appearance'] }, datasets, updatedAt: input.updatedAt as string | undefined };
+  if (new Set(datasets.map((item) => item.year)).size !== datasets.length)
+    throw new Error('本地调休包含重复年份');
+  if (
+    input.updatedAt !== undefined &&
+    (typeof input.updatedAt !== 'string' || !Number.isFinite(Date.parse(input.updatedAt)))
+  )
+    throw new Error('本地更新时间无效');
+  return {
+    schemaVersion: 1,
+    preferences: { weekStartsOn, appearance: appearance as CalendarPreferences['appearance'] },
+    datasets,
+    updatedAt: input.updatedAt as string | undefined,
+  };
 }
 
 function mergeDatasets(current: readonly HolidayDataset[], incoming: readonly HolidayDataset[]) {
@@ -55,19 +85,36 @@ export class CalendarController {
   private updateAbort?: AbortController;
   private disposed = false;
 
-  constructor(readonly platform: CalendarPlatform, private now: () => Date = () => new Date()) {
+  constructor(
+    readonly platform: CalendarPlatform,
+    private now: () => Date = () => new Date(),
+  ) {
     const today = dateForInstant(now());
     const selected = this.engine.getDay(today);
     this.snapshot = {
-      ready: false, today, year: selected.year, monthNumber: selected.month, selected,
-      month: this.engine.getMonth(selected.year, selected.month), preferences: { ...defaults },
-      years: this.holidays.years, panel: 'calendar', updating: false, error: null, notice: null,
+      ready: false,
+      today,
+      year: selected.year,
+      monthNumber: selected.month,
+      selected,
+      month: this.engine.getMonth(selected.year, selected.month),
+      preferences: { ...defaults },
+      years: this.holidays.years,
+      panel: 'calendar',
+      updating: false,
+      error: null,
+      notice: null,
       ...this.upcoming(today),
     };
   }
 
   readonly getSnapshot = () => this.snapshot;
-  readonly subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
+  readonly subscribe = (listener: () => void) => {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  };
 
   private patch(next: Partial<CalendarSnapshot>) {
     if (this.disposed) return;
@@ -77,7 +124,11 @@ export class CalendarController {
 
   private upcoming(today: string) {
     const events = this.engine.getUpcoming(today, { days: 100, limit: 10 });
-    return { nextTerm: events.find((event) => event.kind === 'solar-term'), nextFestival: events.find((event) => event.kind === 'festival'), vacation: this.engine.getVacations(today, 1)[0] };
+    return {
+      nextTerm: events.find((event) => event.kind === 'solar-term'),
+      nextFestival: events.find((event) => event.kind === 'festival'),
+      vacation: this.engine.getVacations(today, 1)[0],
+    };
   }
 
   /** StrictMode 重挂载也只加载一次；加载失败不会覆盖已有缓存。 */
@@ -98,14 +149,17 @@ export class CalendarController {
       this.refresh();
     } catch {
       this.patch({ error: '本地数据读取失败，已使用内置数据。可在设置中重新导入。' });
-    } finally { this.patch({ ready: true }); }
+    } finally {
+      this.patch({ ready: true });
+    }
   }
 
   private refresh() {
     const state = this.snapshot;
     this.patch({
       month: this.engine.getMonth(state.year, state.monthNumber, state.preferences.weekStartsOn),
-      selected: this.engine.getDay(state.selected.date), years: this.holidays.years,
+      selected: this.engine.getDay(state.selected.date),
+      years: this.holidays.years,
       ...this.upcoming(state.today),
     });
   }
@@ -121,15 +175,29 @@ export class CalendarController {
 
   selectDate(date: string) {
     const selected = this.engine.getDay(date);
-    this.patch({ selected, year: selected.year, monthNumber: selected.month, month: this.engine.getMonth(selected.year, selected.month, this.snapshot.preferences.weekStartsOn) });
+    this.patch({
+      selected,
+      year: selected.year,
+      monthNumber: selected.month,
+      month: this.engine.getMonth(
+        selected.year,
+        selected.month,
+        this.snapshot.preferences.weekStartsOn,
+      ),
+    });
   }
 
-  goToday() { this.refreshToday(); this.selectDate(this.snapshot.today); }
+  goToday() {
+    this.refreshToday();
+    this.selectDate(this.snapshot.today);
+  }
 
   /** 保留所选日号，目标月不足该日时夹到月末。 */
   jump(year: number, month: number) {
     const calendar = this.engine.getMonth(year, month, this.snapshot.preferences.weekStartsOn);
-    const dates = calendar.cells.filter((day): day is CalendarDay => !!day && day.year === year && day.month === month);
+    const dates = calendar.cells.filter(
+      (day): day is CalendarDay => !!day && day.year === year && day.month === month,
+    );
     const selected = dates.find((day) => day.day === this.snapshot.selected.day) ?? dates.at(-1);
     if (selected) this.selectDate(selected.date);
   }
@@ -138,52 +206,79 @@ export class CalendarController {
     const total = this.snapshot.year * 12 + this.snapshot.monthNumber - 1 + amount;
     const year = Math.floor(total / 12);
     if (year < 1901 || year > 2100) return;
-    this.jump(year, total % 12 + 1);
+    this.jump(year, (total % 12) + 1);
   }
 
   moveSelection(days: number) {
-    try { this.selectDate(addDays(this.snapshot.selected.date, days)); } catch { /* 日期边界保持原选择。 */ }
+    try {
+      this.selectDate(addDays(this.snapshot.selected.date, days));
+    } catch {
+      /* 日期边界保持原选择。 */
+    }
   }
 
   selectWeekEdge(end: boolean) {
-    const offset = (this.snapshot.selected.weekday - this.snapshot.preferences.weekStartsOn + 7) % 7;
+    const offset =
+      (this.snapshot.selected.weekday - this.snapshot.preferences.weekStartsOn + 7) % 7;
     this.moveSelection((end ? 6 : 0) - offset);
   }
 
-  showSettings(show = true) { this.patch({ panel: show ? 'settings' : 'calendar' }); }
-  dismissError() { this.patch({ error: null, notice: null }); }
+  showSettings(show = true) {
+    this.patch({ panel: show ? 'settings' : 'calendar' });
+  }
+  dismissError() {
+    this.patch({ error: null, notice: null });
+  }
 
   setPreferences(preferences: Partial<CalendarPreferences>) {
     const next = { ...this.snapshot.preferences, ...preferences };
-    if ((next.weekStartsOn !== 1 && next.weekStartsOn !== 7) || !['system', 'light', 'dark'].includes(next.appearance)) throw new Error('显示设置无效');
+    if (
+      (next.weekStartsOn !== 1 && next.weekStartsOn !== 7) ||
+      !['system', 'light', 'dark'].includes(next.appearance)
+    )
+      throw new Error('显示设置无效');
     this.patch({ preferences: next });
     this.refresh();
     return this.persist();
   }
 
   private serialized(): SavedCalendarState {
-    return { schemaVersion: 1, preferences: { ...this.snapshot.preferences }, datasets: this.holidays.export(), updatedAt: this.snapshot.updatedAt };
+    return {
+      schemaVersion: 1,
+      preferences: { ...this.snapshot.preferences },
+      datasets: this.holidays.export(),
+      updatedAt: this.snapshot.updatedAt,
+    };
   }
 
   /** 串行保存，避免快速切换设置时旧写入覆盖新状态。 */
   private persist() {
     const state = this.serialized();
-    this.saves = this.saves.then(() => this.platform.save(state)).catch(() => {
-      this.patch({ error: '本地保存失败，本次操作仍在内存中。请检查存储空间或浏览器设置。' });
-    });
+    this.saves = this.saves
+      .then(() => this.platform.save(state))
+      .catch(() => {
+        this.patch({ error: '本地保存失败，本次操作仍在内存中。请检查存储空间或浏览器设置。' });
+      });
     return this.saves;
   }
 
   async importDataset(text: string) {
     if (this.snapshot.updating) return;
     try {
-      if (new TextEncoder().encode(text).byteLength > 1_000_000) throw new Error('文件过大，请选择年度调休 JSON');
+      if (new TextEncoder().encode(text).byteLength > 1_000_000)
+        throw new Error('文件过大，请选择年度调休 JSON');
       const dataset = parseHolidayDataset(JSON.parse(text));
       this.holidays.import(dataset);
-      this.patch({ error: null, notice: `已导入${dataset.year}年调休数据`, updatedAt: this.now().toISOString() });
+      this.patch({
+        error: null,
+        notice: `已导入${dataset.year}年调休数据`,
+        updatedAt: this.now().toISOString(),
+      });
       this.refresh();
       await this.persist();
-    } catch (error) { this.patch({ error: `导入失败：${error instanceof Error ? error.message : '文件格式无效'}` }); }
+    } catch (error) {
+      this.patch({ error: `导入失败：${error instanceof Error ? error.message : '文件格式无效'}` });
+    }
   }
 
   async checkUpdates() {
@@ -193,42 +288,68 @@ export class CalendarController {
     const year = Number(this.snapshot.today.slice(0, 4));
     const years = [year, year + 1].filter((item) => item <= 2100);
     try {
-      const results = await Promise.allSettled(years.map(async (target) => {
-        const data = await this.platform.fetchHolidayYear(target, this.updateAbort!.signal);
-        if (data === null) return null;
-        const dataset = parseHolidayDataset(data);
-        if (dataset.year !== target) throw new Error('数据年份与请求不一致');
-        return dataset;
-      }));
+      const results = await Promise.allSettled(
+        years.map(async (target) => {
+          const data = await this.platform.fetchHolidayYear(target, this.updateAbort!.signal);
+          if (data === null) return null;
+          const dataset = parseHolidayDataset(data);
+          if (dataset.year !== target) throw new Error('数据年份与请求不一致');
+          return dataset;
+        }),
+      );
       if (this.disposed) return;
       const valid: HolidayDataset[] = [];
       const failed: number[] = [];
-      results.forEach((result, index) => { if (result.status === 'rejected') failed.push(years[index]!); else if (result.value) valid.push(result.value); });
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') failed.push(years[index]!);
+        else if (result.value) valid.push(result.value);
+      });
       if (valid.length) {
         this.holidays.replace(mergeDatasets(this.holidays.export(), valid));
-        this.patch({ updatedAt: this.now().toISOString(), notice: `已同步${valid.map((item) => item.year).join('、')}年调休数据` });
+        this.patch({
+          updatedAt: this.now().toISOString(),
+          notice: `已同步${valid.map((item) => item.year).join('、')}年调休数据`,
+        });
         this.refresh();
         await this.persist();
       } else if (!failed.length) this.patch({ notice: '数据源尚未收录新的年度安排' });
-      if (failed.length) this.patch({ error: `${failed.join('、')}年更新失败，仍可使用已有数据，也可导入年度 JSON。` });
-    } finally { this.patch({ updating: false }); this.updateAbort = undefined; }
+      if (failed.length)
+        this.patch({
+          error: `${failed.join('、')}年更新失败，仍可使用已有数据，也可导入年度 JSON。`,
+        });
+    } finally {
+      this.patch({ updating: false });
+      this.updateAbort = undefined;
+    }
   }
 
   async copySelected() {
     const { selected } = this.snapshot;
     try {
-      await this.platform.copyText(`${selected.date} 农历${selected.lunar.monthName}${selected.lunar.dayName}`);
+      await this.platform.copyText(
+        `${selected.date} 农历${selected.lunar.monthName}${selected.lunar.dayName}`,
+      );
       this.patch({ notice: '日期已复制', error: null });
-    } catch { this.patch({ error: '复制失败，请在日期摘要中手动选取文本。' }); }
+    } catch {
+      this.patch({ error: '复制失败，请在日期摘要中手动选取文本。' });
+    }
   }
 
   async openSource(url: string) {
     try {
       if (new URL(url).protocol !== 'https:') throw new Error('来源链接须使用 HTTPS');
       await this.platform.openExternal(url);
-    } catch { this.patch({ error: '来源链接无法打开，请稍后再试。' }); }
+    } catch {
+      this.patch({ error: '来源链接无法打开，请稍后再试。' });
+    }
   }
 
-  reportError(message: string) { this.patch({ error: message }); }
-  dispose() { this.disposed = true; this.updateAbort?.abort(); this.listeners.clear(); }
+  reportError(message: string) {
+    this.patch({ error: message });
+  }
+  dispose() {
+    this.disposed = true;
+    this.updateAbort?.abort();
+    this.listeners.clear();
+  }
 }

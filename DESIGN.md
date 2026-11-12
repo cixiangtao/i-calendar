@@ -2,60 +2,60 @@
 name: 拾日历
 description: 菜单栏与网页共用的松绿公农历小月历
 colors:
-  jade: "#146e5e"
-  jade-dark-appearance: "#6bcfb5"
-  holiday: "#af2638"
-  holiday-dark-appearance: "#ff9299"
-  makeup: "#985319"
-  makeup-dark-appearance: "#f5b477"
-  selected-text: "#ffffff"
-  surface: "#ffffff"
-  surface-dark: "#202421"
-  ink: "#252d29"
-  ink-dark: "#edf3ef"
-  secondary: "#626f68"
-  secondary-dark: "#a4b2a9"
+  jade: '#146e5e'
+  jade-dark-appearance: '#6bcfb5'
+  holiday: '#af2638'
+  holiday-dark-appearance: '#ff9299'
+  makeup: '#985319'
+  makeup-dark-appearance: '#f5b477'
+  selected-text: '#ffffff'
+  surface: '#ffffff'
+  surface-dark: '#202421'
+  ink: '#252d29'
+  ink-dark: '#edf3ef'
+  secondary: '#626f68'
+  secondary-dark: '#a4b2a9'
 typography:
   headline:
-    fontFamily: "system-ui"
-    fontSize: "20px"
+    fontFamily: 'system-ui'
+    fontSize: '20px'
     fontWeight: 600
   title:
-    fontFamily: "system-ui"
-    fontSize: "14px"
+    fontFamily: 'system-ui'
+    fontSize: '14px'
     fontWeight: 600
   date:
-    fontFamily: "system-ui"
-    fontSize: "16px"
+    fontFamily: 'system-ui'
+    fontSize: '16px'
     fontWeight: 500
-    fontFeature: "tnum"
+    fontFeature: 'tnum'
   summary:
-    fontFamily: "system-ui"
-    fontSize: "13px"
+    fontFamily: 'system-ui'
+    fontSize: '13px'
     fontWeight: 600
   body:
-    fontFamily: "system-ui"
-    fontSize: "12px"
+    fontFamily: 'system-ui'
+    fontSize: '12px'
   label:
-    fontFamily: "system-ui"
-    fontSize: "11px"
+    fontFamily: 'system-ui'
+    fontSize: '11px'
 rounded:
-  day: "7px"
-  summary: "9px"
-  web-container: "14px"
+  day: '7px'
+  summary: '9px'
+  web-container: '14px'
 spacing:
-  compact: "7px"
-  section: "15px"
-  inset: "20px"
+  compact: '7px'
+  section: '15px'
+  inset: '20px'
 components:
   selected-day:
-    backgroundColor: "{colors.jade}"
-    textColor: "{colors.selected-text}"
-    rounded: "{rounded.day}"
-    height: "42px"
+    backgroundColor: '{colors.jade}'
+    textColor: '{colors.selected-text}'
+    rounded: '{rounded.day}'
+    height: '42px'
   date-summary:
-    rounded: "{rounded.summary}"
-    padding: "11px 10px"
+    rounded: '{rounded.summary}'
+    padding: '11px 10px'
 ---
 
 # Design System: 拾日历

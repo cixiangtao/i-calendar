@@ -1,13 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "unicorn",
-    "typescript",
-    "oxc",
-    "react",
-    "jsx-a11y",
-    "node"
-  ],
+  "plugins": ["unicorn", "typescript", "oxc", "react", "jsx-a11y", "node"],
   "categories": {
     "correctness": "error",
     "suspicious": "warn"
@@ -38,9 +31,7 @@
   },
   "overrides": [
     {
-      "files": [
-        "packages/calendar-ui/src/CalendarApp.tsx"
-      ],
+      "files": ["packages/calendar-ui/src/CalendarApp.tsx"],
       "rules": {
         "jsx-a11y/prefer-tag-over-role": "off"
       }

@@ -2,17 +2,31 @@
   "name": "@shiri/calendar-core",
   "version": "0.1.0",
   "description": "与 UI 和平台无关的中国农历、节气和放假调休查询核心",
+  "files": [
+    "dist",
+    "src/data/*.json",
+    "src/data/LICENSE-holiday-cn",
+    "LICENSE-lunar-typescript",
+    "README.md"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": {"types": "./dist/index.d.ts", "import": "./dist/index.js"},
-    "./data": {"types": "./dist/data.d.ts", "import": "./dist/data.js"}
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./data": {
+      "types": "./dist/data.d.ts",
+      "import": "./dist/data.js"
+    }
   },
-  "files": ["dist", "src/data/*.json", "src/data/LICENSE-holiday-cn", "LICENSE-lunar-typescript", "README.md"],
   "scripts": {
     "build": "node ../../scripts/bundle-core.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "dependencies": {"lunar-typescript": "1.8.7"}
+  "dependencies": {
+    "lunar-typescript": "1.8.7"
+  }
 }
