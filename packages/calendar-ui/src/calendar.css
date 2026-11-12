@@ -353,7 +353,7 @@ a:focus-visible {
 }
 .date-summary {
   display: grid;
-  grid-template-columns: 50px minmax(0, 1fr) 28px;
+  grid-template-columns: 50px minmax(0, 1fr);
   position: relative;
   align-items: center;
   gap: 4px 12px;
@@ -447,15 +447,6 @@ a:focus-visible {
 .schedule-unknown strong {
   color: var(--yellow);
   background: var(--yellow-soft);
-}
-.calendar-app .copy-button {
-  width: 24px;
-  height: 28px;
-  padding: 4px;
-}
-.copy-button svg {
-  width: 14px;
-  height: 14px;
 }
 .feedback {
   display: flex;
@@ -711,11 +702,6 @@ a:focus-visible {
     max-width: 100%;
     gap: 8px;
   }
-  body[data-platform='web'] .copy-button {
-    position: absolute;
-    right: -3px;
-    top: -18px;
-  }
 
   body[data-platform='web'] .calendar-app[data-panel='settings'] {
     width: 560px;
@@ -816,10 +802,6 @@ body[data-platform='ios'] .calendar-stage {
   .date-detail p {
     font-size: 11px;
   }
-  .calendar-app .copy-button {
-    width: 22px;
-    padding: 2px;
-  }
 }
 @media (pointer: coarse) {
   .calendar-app .icon-button,
@@ -861,9 +843,6 @@ body[data-platform='ios'] .calendar-stage {
   }
   .date-summary {
     flex-wrap: wrap;
-  }
-  .copy-button {
-    margin-left: auto;
   }
 }
 @media (max-width: 350px) and (pointer: coarse) {
@@ -918,10 +897,6 @@ body[data-platform='ios'] .calendar-stage {
   flex-direction: row;
   align-items: center;
   max-width: none;
-}
-.calendar-app .copy-button {
-  grid-column: 3;
-  grid-row: 1 / span 2;
 }
 .day-mark {
   font-size: 11px;

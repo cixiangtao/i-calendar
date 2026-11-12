@@ -20,7 +20,7 @@ import type { CalendarController, CalendarSnapshot } from './store.js';
 
 import './calendar.css';
 
-type IconName = 'calendar' | 'settings' | 'left' | 'right' | 'copy' | 'external' | 'close';
+type IconName = 'calendar' | 'settings' | 'left' | 'right' | 'external' | 'close';
 function Icon({ name, ...props }: SVGProps<SVGSVGElement> & { name: IconName }) {
   const paths: Record<IconName, ReactNode> = {
     calendar: (
@@ -47,18 +47,6 @@ function Icon({ name, ...props }: SVGProps<SVGSVGElement> & { name: IconName }) 
     ),
     left: <path d="m15 5-7 7 7 7" />,
     right: <path d="m9 5 7 7-7 7" />,
-    copy: (
-      <>
-        <rect
-          x="8"
-          y="8"
-          width="12"
-          height="13"
-          rx="2"
-        />
-        <path d="M15 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3" />
-      </>
-    ),
     external: (
       <>
         <path d="M14 3h7v7m0-7L10 14" />
@@ -511,16 +499,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                     <strong>{scheduleLabel(state.selected)}</strong>
                     <small>{state.selected.festivals[0] ?? state.selected.solarTerm}</small>
                   </div>
-                  <Button
-                    type="text"
-                    className="icon-button copy-button"
-                    title="复制日期与农历"
-                    aria-label="复制日期与农历"
-                    onClick={() => {
-                      void controller.copySelected();
-                    }}
-                    icon={<Icon name="copy" />}
-                  />
                 </section>
               </Dropdown>
               <div className="almanac-inline">
