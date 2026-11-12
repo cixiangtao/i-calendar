@@ -7,6 +7,7 @@ use tauri::{
 };
 
 pub fn show_calendar(app: &tauri::AppHandle) {
+    app.state::<RuntimeState>().menu_clock.wake();
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
@@ -69,6 +70,14 @@ fn popup_position(
 
 pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+    let clock = crate::read_saved_state(app.handle())
+        .and_then(|value| crate::menu_clock::ClockPreferences::from_saved(value.as_ref()));
+    match clock {
+        Ok(settings) => {
+            let _ = app.state::<RuntimeState>().menu_clock.update(settings);
+        }
+        Err(error) => eprintln!("菜单栏时钟采用默认设置：{error}"),
+    }
     let open = MenuItem::with_id(app, "open", "打开i日历", true, None::<&str>)?;
     let settings = MenuItem::with_id(app, "settings", "设置与调休数据…", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "退出i日历", true, None::<&str>)?;
@@ -108,6 +117,7 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
             }
         })
         .build(app)?;
+    crate::menu_clock::start(app.handle().clone());
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.set_visible_on_all_workspaces(true);
         let handle = app.handle().clone();

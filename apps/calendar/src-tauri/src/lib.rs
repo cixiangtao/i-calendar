@@ -1,5 +1,7 @@
 #[cfg(target_os = "macos")]
 mod desktop;
+#[cfg(target_os = "macos")]
+mod menu_clock;
 mod storage;
 
 use serde_json::{json, Value};
@@ -16,6 +18,8 @@ use tauri::Manager;
 struct RuntimeState {
     popup_busy: AtomicBool,
     save_lock: Mutex<()>,
+    #[cfg(target_os = "macos")]
+    menu_clock: menu_clock::MenuClock,
 }
 
 #[tauri::command]
@@ -28,6 +32,10 @@ fn runtime_context() -> Value {
 
 #[tauri::command]
 async fn load_state(app: tauri::AppHandle) -> Result<Option<Value>, String> {
+    read_saved_state(&app)
+}
+
+fn read_saved_state(app: &tauri::AppHandle) -> Result<Option<Value>, String> {
     if std::env::args().any(|argument| argument == "--smoke-test") {
         return Ok(None);
     }
@@ -55,6 +63,10 @@ async fn save_state(
     state: Value,
     runtime: tauri::State<'_, RuntimeState>,
 ) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    runtime
+        .menu_clock
+        .update(menu_clock::ClockPreferences::from_saved(Some(&state))?)?;
     if std::env::args().any(|argument| argument == "--smoke-test") {
         return Ok(());
     }
@@ -122,7 +134,7 @@ fn quit_calendar(app: tauri::AppHandle) {
 }
 
 #[tauri::command]
-fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), String> {
+async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
         desktop::show_calendar(&app);
@@ -147,6 +159,7 @@ fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), String> {
                 return Err("菜单栏日历未显示".into());
             }
             window.hide().map_err(|_| "日历收起失败")?;
+            menu_clock::verify_smoke(&app).await?;
             desktop::show_calendar(&app);
             if !window.is_visible().unwrap_or(false) {
                 app.exit(1);
@@ -202,8 +215,11 @@ pub fn run() {
         .expect("i日历初始化失败");
     application.run(|app, event| {
         #[cfg(target_os = "macos")]
-        if let tauri::RunEvent::Reopen { .. } = event {
-            desktop::show_calendar(app);
+        match event {
+            tauri::RunEvent::Reopen { .. } => desktop::show_calendar(app),
+            tauri::RunEvent::Resumed => app.state::<RuntimeState>().menu_clock.wake(),
+            tauri::RunEvent::Exit => app.state::<RuntimeState>().menu_clock.stop(),
+            _ => {}
         }
     });
 }
