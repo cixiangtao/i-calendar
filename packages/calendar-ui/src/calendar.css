@@ -627,16 +627,17 @@ a:focus-visible {
   }
   body[data-platform='web'] .month-heading select {
     background: transparent;
-    font-size: 23px;
-    padding: 4px 0;
-    line-height: 30px;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 5px 8px;
+    line-height: 22px;
     border-radius: 8px;
   }
   body[data-platform='web'] .month-heading .year-select {
-    width: 115px;
+    width: 84px;
   }
   body[data-platform='web'] .month-heading .month-select {
-    width: 66px;
+    width: 56px;
   }
   body[data-platform='web'] .week-row,
   body[data-platform='web'] .date-row {
