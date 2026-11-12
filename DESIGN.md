@@ -5,13 +5,15 @@ colors:
   canvas: '#f1f2f6'
   surface: '#ffffff'
   ink: '#171b24'
-  secondary: '#5b6575'
+  secondary: '#596373'
   muted: '#6e7787'
   line: '#e4e7ed'
   control: '#f4f5f8'
+  control-hover: '#e7e8eb'
+  control-active: '#dedfe3'
   hover: '#f7f8fa'
   brand-blue: '#3269d9'
-  blue: '#3269d9'
+  blue: '#2d5dc1'
   blue-soft: '#eff3fc'
   red: '#cf3049'
   red-soft: '#fff0f2'
@@ -24,12 +26,14 @@ colors:
   canvas-dark: '#171b23'
   surface-dark: '#222630'
   ink-dark: '#f6f7fb'
-  secondary-dark: '#acb4c3'
+  secondary-dark: '#c4cad4'
   muted-dark: '#929dac'
   line-dark: '#3a3e48'
   control-dark: '#303642'
+  control-hover-dark: '#444955'
+  control-active-dark: '#505560'
   hover-dark: '#2d313a'
-  blue-dark: '#7a9ee6'
+  blue-dark: '#b7cbf2'
   blue-soft-dark: '#242f48'
   red-dark: '#ff94a3'
   red-soft-dark: '#452c37'
@@ -92,7 +96,7 @@ typography:
 rounded:
   mark: '4px'
   status: '6px'
-  control: '10px'
+  control: '8px'
   toolbar: '8px'
   day: '12px'
   leaf: '13px'
@@ -127,7 +131,7 @@ components:
     backgroundColor: '{colors.control}'
     textColor: '{colors.ink}'
     rounded: '{rounded.toolbar}'
-    padding: '0 4px'
+    padding: '0 8px'
   panel:
     backgroundColor: '{colors.surface}'
     rounded: '{rounded.panel}'
@@ -274,7 +278,9 @@ Mac 应用图标保留（80/1024）的外边距；菜单栏源为 `apps/calendar
 
 返回栏、标签与全局反馈固定，仅当前标签内容滚动；移除设置页的固定页脚，版本说明与退出操作集中到关于页。Mac 设置沿用窗口内可用高度；网页面板高度为 `min(640px, 100svh - 64px)`，430px 以下采用 `100svh - 24px`。非活动面板隐藏但不销毁，避免切页丢失时间格式草稿和滚动位置。文件输入独立于懒加载面板，取消选择的监听始终存在；导入与保存反馈在所有标签可见。
 
-独立圆角面板，顶部返回入口使用强调色文字，分区用灰线与间距。周起始日和外观使用灰底 Segmented、选中项由 Ant Design 呈现；数据更新与 JSON 导入是描边按钮。反馈区成功绿、错误红，更新中显示加载，失败保留原数据。配色区提供三套预设按钮、系统颜色选择器与恢复默认操作。预设选择同时重置强调色，明暗外观独立设置。
+表单统一遵循[表单控件规范](docs/表单控件规范.md)：可见高 28px、圆角 8px、文字 13px、横向内边距 8px、同行间距 8px、行间距 12px。Select、输入框、按钮与分段选择共用中性悬停/按下反馈和 130ms 过渡，键盘焦点为 1px 中性细描边；错误输入用红色，禁用只弱化一次。开关保留 36×20px 轨道与 16px 白色滑块，触控只扩大透明命中区域。几何值与 Ant Design 主题集中在 `form-theme.ts`，状态色仍由 `color-theme.ts` 生成。
+
+独立圆角面板，顶部返回入口使用强调色文字，分区用灰线与间距。周起始日和外观使用灰底 Segmented、选中项由 Ant Design 呈现；数据更新与 JSON 导入使用统一的中性底色按钮。反馈区成功绿、错误红，更新中显示加载，失败保留原数据。配色区提供三套预设按钮、系统颜色选择器与恢复默认操作。预设选择同时重置强调色，明暗外观独立设置。
 
 Mac 的“菜单栏”标签包含“菜单栏显示”分区：“显示图标”和“显示菜单栏时间”两个开关、紧凑格式选择器、自定义输入与“应用格式”按钮，均沿用当前主题文字和控件色。图标与有效时间文字至少保留一项，最后一个可见入口对应的开关保持禁用，并显示简短原因；隐藏图标时空白格式不能应用。时间格式预览使用灰底单行容器及等宽数字，过长时自然换行；秒级变化不触发读屏播报。非法格式显示红色反馈并禁用应用按钮。Web 与 iOS 不显示此标签；输入时 Esc 仍可返回日历并恢复设置按钮焦点。
 
