@@ -197,7 +197,7 @@ pub fn run() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        .expect("拾日历初始化失败");
+        .expect("i日历初始化失败");
     application.run(|app, event| {
         #[cfg(target_os = "macos")]
         if let tauri::RunEvent::Reopen { .. } = event {

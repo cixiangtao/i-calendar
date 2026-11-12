@@ -19,13 +19,13 @@ await new Promise((resolve, reject) => {
     code === 0 ? resolve() : reject(new Error(`Tauri 构建失败（${code}）`)),
   );
 });
-const source = path.join(root, 'apps/calendar/src-tauri/target/release/bundle/macos/拾日历.app');
-const app = path.join(root, 'outputs/mac/拾日历.app');
+const source = path.join(root, 'apps/calendar/src-tauri/target/release/bundle/macos/i日历.app');
+const app = path.join(root, 'outputs/mac/i日历.app');
 await mkdir(path.dirname(app), { recursive: true });
 await rm(app, { recursive: true, force: true });
 await cp(source, app, { recursive: true });
 await run('codesign', ['--verify', '--deep', '--strict', app]);
-const archive = path.join(root, `outputs/拾日历-${version}-mac-${process.arch}.zip`);
+const archive = path.join(root, `outputs/i日历-${version}-mac-${process.arch}.zip`);
 await rm(archive, { force: true });
 await run('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', app, archive]);
 console.log(

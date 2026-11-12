@@ -1,4 +1,4 @@
 {
-  "app": { "windows": [{ "label": "main", "title": "拾日历", "visible": true }] },
+  "app": { "windows": [{ "label": "main", "title": "i日历", "visible": true }] },
   "bundle": { "iOS": { "minimumSystemVersion": "16.0" } }
 }

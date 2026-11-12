@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "拾日历",
+  "productName": "i日历",
   "version": "0.1.0",
   "identifier": "local.shiri.calendar",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "拾日历",
+        "title": "i日历",
         "width": 400,
         "height": 660,
         "visible": true

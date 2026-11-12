@@ -3,7 +3,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "拾日历",
+        "title": "i日历",
         "width": 400,
         "height": 660,
         "visible": false,

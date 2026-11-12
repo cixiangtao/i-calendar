@@ -1,7 +1,7 @@
 [package]
 name = "shiri-calendar"
 version = "0.1.0"
-description = "拾日历：公农历、节气与放假调休"
+description = "i日历：公农历、节气与放假调休"
 edition = "2021"
 rust-version = "1.99"
 

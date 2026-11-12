@@ -22,21 +22,9 @@ import type { CalendarController, CalendarSnapshot } from './store.js';
 
 import './calendar.css';
 
-type IconName = 'calendar' | 'settings' | 'left' | 'right' | 'external' | 'close';
+type IconName = 'settings' | 'left' | 'right' | 'external' | 'close';
 function Icon({ name, ...props }: SVGProps<SVGSVGElement> & { name: IconName }) {
   const paths: Record<IconName, ReactNode> = {
-    calendar: (
-      <>
-        <rect
-          x="3"
-          y="5"
-          width="18"
-          height="16"
-          rx="3"
-        />
-        <path d="M7 3v4m10-4v4M3 11h18M7 15h1m3 0h1m3 0h1m-9 3h1m3 0h1" />
-      </>
-    ),
     settings: (
       <>
         <path d="m9 3-.5 2.2-2 .9-2-.7L2 10l1.7 1.5v2L2 15l2.5 4.5 2-.7 2 .9L9 22h6l.5-2.3 2-.9 2 .7L22 15l-1.7-1.5v-2L22 10l-2.5-4.6-2 .7-2-.9L15 3Z" />
@@ -265,7 +253,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       <article
         className="calendar-app"
         data-panel={state.panel}
-        aria-label="拾日历"
+        aria-label="i日历"
         aria-busy={!state.ready}
         data-platform={controller.platform.kind}
       >
@@ -282,8 +270,13 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
             >
               <header className="app-header tw-flex tw-items-center tw-justify-between">
                 <div className="brand tw-flex tw-items-center">
-                  <Icon name="calendar" />
-                  <span>拾日历</span>
+                  <img
+                    src={new URL('./assets/logo.svg', import.meta.url).href}
+                    width="19"
+                    height="19"
+                    alt=""
+                  />
+                  <span>i日历</span>
                 </div>
                 <Button
                   ref={gear}
@@ -816,7 +809,7 @@ function Settings({
         </section>
       </div>
       <footer className="settings-footer">
-        <span>拾日历 0.1.0 · 免费无广告</span>
+        <span>i日历 0.1.0 · 免费无广告</span>
         {controller.platform.quit ? (
           <Button
             type="text"

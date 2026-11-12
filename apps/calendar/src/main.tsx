@@ -45,11 +45,11 @@ async function start() {
           {platform.kind === 'web' ? (
             <section
               className="web-info"
-              aria-label="关于拾日历"
+              aria-label="关于i日历"
             >
               <h2>查日子，打开就好。</h2>
               <p>
-                拾日历提供公农历、节气和中国大陆放假调休。日历计算在本地完成，免费、无广告，无需登录。
+                i日历提供公农历、节气和中国大陆放假调休。日历计算在本地完成，免费、无广告，无需登录。
               </p>
               <p>
                 Mac、iOS 与网页版使用相同的日历核心和界面组件。当前为 0.1.0
@@ -88,7 +88,7 @@ async function start() {
 }
 
 void start().catch((error: unknown) => {
-  console.error('拾日历启动失败', error);
+  console.error('i日历启动失败', error);
   const root = document.getElementById('root');
   if (root) {
     root.replaceChildren();

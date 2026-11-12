@@ -146,10 +146,10 @@ a:focus-visible {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-.brand svg {
+.brand img {
   width: 19px;
   height: 19px;
-  color: var(--blue);
+  display: block;
 }
 .calendar-app .icon-button {
   display: inline-flex;

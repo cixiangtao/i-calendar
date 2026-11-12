@@ -69,16 +69,16 @@ fn popup_position(
 
 pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-    let open = MenuItem::with_id(app, "open", "打开拾日历", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", "打开i日历", true, None::<&str>)?;
     let settings = MenuItem::with_id(app, "settings", "设置与调休数据…", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "退出拾日历", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "退出i日历", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&open, &settings, &quit])?;
     let _tray = TrayIconBuilder::with_id("calendar")
         .icon(tauri::image::Image::from_bytes(include_bytes!(
             "../icons/tray.png"
         ))?)
         .icon_as_template(true)
-        .tooltip("拾日历 · 公农历与放假调休")
+        .tooltip("i日历 · 公农历与放假调休")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {

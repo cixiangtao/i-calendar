@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- i日历：蓝色圆角底、白色日历纸；圆点与短竖组成小写 i。 -->
+  <rect width="64" height="64" rx="14" fill="#3269d9"/>
+  <rect x="12" y="15" width="40" height="39" rx="8" fill="#fff"/>
+  <path d="M24 12v8M40 12v8" fill="none" stroke="#3269d9" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="32" cy="28" r="3.5" fill="#3269d9"/>
+  <rect x="28.5" y="35" width="7" height="13" rx="3.5" fill="#3269d9"/>
+</svg>
