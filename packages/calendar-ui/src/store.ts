@@ -5,6 +5,7 @@ import {
   dateForInstant,
   parseHolidayDataset,
   type CalendarDay,
+  type DayAlmanac,
   type CalendarEvent,
   type HolidayDataset,
   type MonthCalendar,
@@ -21,13 +22,14 @@ export interface CalendarSnapshot {
   year: number;
   monthNumber: number;
   selected: CalendarDay;
+  almanac: DayAlmanac;
   month: MonthCalendar;
   nextTerm?: CalendarEvent;
   vacation?: Vacation;
   nextFestival?: CalendarEvent;
   preferences: CalendarPreferences;
   years: number[];
-  panel: 'calendar' | 'settings';
+  panel: 'calendar' | 'settings' | 'almanac';
   updating: boolean;
   error: string | null;
   notice: string | null;
@@ -97,6 +99,7 @@ export class CalendarController {
       year: selected.year,
       monthNumber: selected.month,
       selected,
+      almanac: this.engine.getAlmanac(selected.date),
       month: this.engine.getMonth(selected.year, selected.month),
       preferences: { ...defaults },
       years: this.holidays.years,
@@ -159,6 +162,7 @@ export class CalendarController {
     this.patch({
       month: this.engine.getMonth(state.year, state.monthNumber, state.preferences.weekStartsOn),
       selected: this.engine.getDay(state.selected.date),
+      almanac: this.engine.getAlmanac(state.selected.date),
       years: this.holidays.years,
       ...this.upcoming(state.today),
     });
@@ -177,6 +181,7 @@ export class CalendarController {
     const selected = this.engine.getDay(date);
     this.patch({
       selected,
+      almanac: this.engine.getAlmanac(selected.date),
       year: selected.year,
       monthNumber: selected.month,
       month: this.engine.getMonth(
@@ -225,6 +230,9 @@ export class CalendarController {
 
   showSettings(show = true) {
     this.patch({ panel: show ? 'settings' : 'calendar' });
+  }
+  showAlmanac(show = true) {
+    this.patch({ panel: show ? 'almanac' : 'calendar' });
   }
   dismissError() {
     this.patch({ error: null, notice: null });

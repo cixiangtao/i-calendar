@@ -131,6 +131,9 @@ fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), String> {
                 || report.get("cells").and_then(Value::as_u64) != Some(42)
                 || report.get("lunar").and_then(Value::as_str) != Some("初一")
                 || report.get("makeup").and_then(Value::as_bool) != Some(true)
+                || report.pointer("/almanac/day").and_then(Value::as_str) != Some("己酉")
+                || report.pointer("/almanac/fu").and_then(Value::as_str) != Some("正南")
+                || report.pointer("/almanac/yiCount").and_then(Value::as_u64) != Some(21)
             {
                 eprintln!("Tauri 前端与共享核心验证失败：{report}");
                 app.exit(1);

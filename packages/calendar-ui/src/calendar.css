@@ -1113,3 +1113,212 @@ body[data-platform='ios'] .calendar-stage {
 .day-cell.outside-month.holiday-day .lunar-day {
   color: var(--red);
 }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.calendar-app .almanac-trigger {
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 9px;
+  color: var(--blue);
+  background: var(--blue-soft);
+  font-size: 12px;
+}
+.almanac-inline {
+  display: none;
+}
+.calendar-app[data-panel='almanac'] {
+  display: block;
+}
+.almanac-panel {
+  gap: 0;
+}
+.almanac-panel .settings-header {
+  position: sticky;
+  top: -16px;
+  background: var(--surface);
+  z-index: 1;
+  padding: 4px 0 12px;
+}
+.almanac-date {
+  padding: 3px 0 19px;
+  border-bottom: 1px solid var(--line);
+}
+.almanac-date h2 {
+  margin: 0 0 7px;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 27px;
+}
+.almanac-date p {
+  margin: 0;
+  color: var(--secondary);
+  font-size: 12px;
+  line-height: 20px;
+}
+.almanac-content {
+  min-width: 0;
+  padding-top: 18px;
+}
+.almanac-content > h2 {
+  margin: 0 0 13px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.almanac-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 19px;
+}
+.almanac-pillars > div {
+  padding: 9px 0;
+  background: var(--hover);
+  border-radius: 10px;
+  text-align: center;
+}
+.almanac-pillars dt {
+  color: var(--secondary);
+  font-size: 11px;
+  line-height: 18px;
+}
+.almanac-pillars dd {
+  margin: 3px 0 0;
+  font-size: 16px;
+  line-height: 23px;
+  font-weight: 600;
+}
+.almanac-activities {
+  display: grid;
+  gap: 14px;
+}
+.almanac-activity {
+  display: grid;
+  grid-template-columns: 23px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+.almanac-activity h3 {
+  display: grid;
+  place-items: center;
+  min-height: 23px;
+  margin: 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--green);
+  background: var(--green-soft);
+}
+.almanac-ji h3 {
+  color: var(--red);
+  background: var(--red-soft);
+}
+.almanac-activity p {
+  margin: 0;
+  padding-top: 1px;
+  font-size: 12px;
+  line-height: 23px;
+  overflow-wrap: anywhere;
+}
+.almanac-directions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  padding: 17px 0 0;
+  margin: 17px 0 0;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 20px;
+}
+.almanac-directions > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.almanac-directions dt {
+  color: var(--secondary);
+  flex-shrink: 0;
+}
+.almanac-directions dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.almanac-directions .almanac-chong {
+  grid-column: 1 / -1;
+}
+.almanac-provenance {
+  margin-top: 19px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--secondary);
+  font-size: 11px;
+  line-height: 1.8;
+}
+.almanac-provenance summary {
+  cursor: pointer;
+  padding: 4px 0;
+  color: var(--blue);
+}
+.almanac-provenance summary:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.almanac-provenance p {
+  margin: 8px 0;
+}
+.almanac-provenance ul {
+  padding-left: 17px;
+  margin: 8px 0;
+}
+.almanac-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 15px;
+}
+.almanac-source-links button {
+  border: 0;
+  padding: 4px 0;
+  color: var(--blue);
+  background: transparent;
+  font-size: 11px;
+  line-height: 20px;
+}
+body[data-platform='macos'] .almanac-panel {
+  padding: 16px;
+}
+@media (min-width: 860px) {
+  body[data-platform='web'] .detail-panel {
+    contain: size;
+    min-height: 100%;
+    overflow-y: auto;
+  }
+  body[data-platform='web'] .detail-panel > * {
+    flex-shrink: 0;
+  }
+  body[data-platform='web'] .almanac-inline {
+    display: block;
+    margin-top: 0;
+    padding: 0 0 18px;
+    border-top: 1px solid var(--line);
+  }
+  body[data-platform='web'] .calendar-app[data-panel='almanac'] {
+    width: 560px;
+  }
+}
+@media (pointer: coarse) {
+  .calendar-app .almanac-trigger,
+  .almanac-source-links button {
+    min-height: 44px;
+  }
+  .almanac-provenance summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}

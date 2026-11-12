@@ -159,3 +159,26 @@ test('拒绝不兼容的持久化设置和非 HTTPS 外部来源', async () => {
   await controller.openSource('javascript:alert(1)');
   assert.equal(opened, false);
 });
+
+test('黄历与所选日期同步，未收录调休仍可查看，详情返回保留日期', async () => {
+  const { controller, saves } = fixture();
+  await controller.initialize();
+  controller.selectDate('2026-12-01');
+  assert.deepEqual(controller.getSnapshot().almanac.ganZhi, {
+    year: '丙午',
+    month: '己亥',
+    day: '己酉',
+  });
+  controller.showAlmanac();
+  assert.equal(controller.getSnapshot().panel, 'almanac');
+  controller.showAlmanac(false);
+  assert.equal(controller.getSnapshot().selected.date, '2026-12-01');
+  controller.moveSelection(1);
+  assert.equal(controller.getSnapshot().almanac.date, '2026-12-02');
+  assert.equal(controller.getSnapshot().almanac.ganZhi.day, '庚戌');
+  controller.selectDate('2028-01-01');
+  assert.equal(controller.getSnapshot().selected.schedule.coverage, 'unavailable');
+  assert.equal(controller.getSnapshot().almanac.date, '2028-01-01');
+  assert.ok(controller.getSnapshot().almanac.yi.length > 0);
+  assert.equal(saves.length, 0);
+});

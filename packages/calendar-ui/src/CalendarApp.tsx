@@ -14,6 +14,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { AlmanacContent, AlmanacPanel } from './Almanac.js';
 import type { CalendarPreferences } from './platform.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 
@@ -141,6 +142,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const focusAfterNavigation = useRef(false);
   const grid = useRef<HTMLDivElement>(null);
   const gear = useRef<HTMLButtonElement>(null);
+  const almanacTrigger = useRef<HTMLButtonElement>(null);
   const dark =
     state.preferences.appearance === 'dark' ||
     (state.preferences.appearance === 'system' && systemDark);
@@ -190,9 +192,11 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       )
         return;
       if (event.key === 'Escape') {
-        if (state.panel === 'settings') {
+        if (state.panel !== 'calendar') {
           controller.showSettings(false);
-          requestAnimationFrame(() => gear.current?.focus());
+          requestAnimationFrame(() =>
+            (state.panel === 'almanac' ? almanacTrigger : gear).current?.focus(),
+          );
         } else void controller.platform.close?.();
       } else if (state.panel === 'calendar') {
         if (event.key.toLowerCase() === 't') {
@@ -273,6 +277,15 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
             controller={controller}
             state={state}
           />
+        ) : state.panel === 'almanac' ? (
+          <AlmanacPanel
+            state={state}
+            controller={controller}
+            onBack={() => {
+              controller.showAlmanac(false);
+              requestAnimationFrame(() => almanacTrigger.current?.focus());
+            }}
+          />
         ) : (
           <>
             <section
@@ -284,15 +297,26 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   <Icon name="calendar" />
                   <span>拾日历</span>
                 </div>
-                <Button
-                  ref={gear}
-                  type="text"
-                  className="icon-button"
-                  aria-label="设置与调休数据"
-                  title="设置与调休数据"
-                  onClick={() => controller.showSettings()}
-                  icon={<Icon name="settings" />}
-                />
+                <div className="header-actions">
+                  <Button
+                    ref={almanacTrigger}
+                    type="text"
+                    className="almanac-trigger"
+                    aria-label="查看黄历详情"
+                    onClick={() => controller.showAlmanac()}
+                  >
+                    黄历
+                  </Button>
+                  <Button
+                    ref={gear}
+                    type="text"
+                    className="icon-button"
+                    aria-label="设置与调休数据"
+                    title="设置与调休数据"
+                    onClick={() => controller.showSettings()}
+                    icon={<Icon name="settings" />}
+                  />
+                </div>
               </header>
               <div className="month-toolbar">
                 <h1
@@ -542,6 +566,12 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   />
                 </section>
               </Dropdown>
+              <div className="almanac-inline">
+                <AlmanacContent
+                  almanac={state.almanac}
+                  controller={controller}
+                />
+              </div>
               <section
                 className="upcoming"
                 aria-label="接下来的日子"

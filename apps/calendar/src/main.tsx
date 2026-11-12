@@ -77,6 +77,10 @@ async function start() {
       cells: controller.getSnapshot().month.cells.length,
       lunar: controller.engine.getDay('2026-02-17').lunar.dayName,
       makeup: controller.engine.getDay('2026-02-14').schedule.kind === 'makeup-workday',
+      almanac: (() => {
+        const value = controller.engine.getAlmanac('2026-12-01');
+        return { day: value.ganZhi.day, fu: value.positions.fu, yiCount: value.yi.length };
+      })(),
     };
     await invoke('frontend_ready', { report });
     if (smokeTest) document.documentElement.dataset.smokeTest = 'ready';
