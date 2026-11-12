@@ -691,13 +691,6 @@
       "html": "<section class=\"ds-panel\"><div class=\"ds-leaf\"><span>12</span></div><div class=\"ds-detail\"><h2>11月12日 周四</h2><p>农历十月初四 · 丙午马年</p><strong>工作日</strong></div></section>",
       "css": ".ds-panel{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;display:flex;align-items:center;gap:12px;background:var(--surface,#ffffff);color:var(--ink,#24262d);padding:16px 18px;border-radius:22px}.ds-leaf{position:relative;display:grid;place-items:center;width:50px;height:58px;flex:none;border-radius:13px;background:#3269d9;color:#fff}.ds-leaf::before,.ds-leaf::after{content:\"\";position:absolute;top:7px;width:4px;height:4px;background:#fff;border-radius:50%}.ds-leaf::before{left:10px}.ds-leaf::after{right:10px}.ds-leaf span{padding-top:5px;font-size:28px;line-height:32px;font-weight:500;font-variant-numeric:tabular-nums}.ds-detail h2{margin:0 0 6px;font-size:13px;line-height:18px;font-weight:600}.ds-detail p{margin:0 0 4px;color:var(--secondary,#606775);font-size:11px;line-height:17px}.ds-detail strong{padding:1px 6px;border-radius:6px;color:var(--green,#16804d);background:var(--green-soft,#eaf7ef);font-size:11px;line-height:18px;font-weight:500}",
       "refersTo": "panel"
-    },
-    {
-      "name": "跨年后续事件",
-      "kind": "button",
-      "description": "从今天计算，跨年日期完整标年，节气绿与节日紫分工。",
-      "html": "<div class=\"ds-events\"><button class=\"ds-event ds-term\"><time datetime=\"2026-11-22\">11/22</time><span>小雪</span><small>10天后</small></button><button class=\"ds-event ds-festival\"><time datetime=\"2027-01-01\">2027/01/01</time><span>元旦 · 放假3天</span><small>50天后</small></button></div>",
-      "css": ".ds-events{width:100%;max-width:352px}.ds-event{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;display:flex;align-items:center;gap:9px;width:100%;min-height:34px;padding:5px 0;border:0;border-radius:8px;background:transparent;color:var(--ink,#24262d);text-align:left;cursor:pointer}.ds-event time{width:76px;flex:none;font-size:11px;font-weight:500;font-variant-numeric:tabular-nums}.ds-term time{color:var(--green,#16804d)}.ds-festival time{color:var(--purple,#8150bd)}.ds-event span{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-event small{margin-left:auto;font-size:11px;color:var(--secondary,#606775);white-space:nowrap}.ds-event:hover{background:var(--hover,#f5f6fa)}.ds-event:active{background:var(--control,#f0f1f5)}.ds-event:focus-visible{outline:2px solid var(--blue,#3269d9);outline-offset:3px}"
     }
   ],
   "narrative": {
