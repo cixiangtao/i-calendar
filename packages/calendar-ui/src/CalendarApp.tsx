@@ -526,6 +526,23 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         {state.selected.month}月{state.selected.day}日{' '}
                         <span>周{weekdays[state.selected.weekday - 1]}</span>
                       </h2>
+                      {state.selected.solarTerm ? (
+                        <span
+                          className="date-event date-event-term"
+                          aria-label={`节气：${state.selected.solarTerm}`}
+                        >
+                          {state.selected.solarTerm}
+                        </span>
+                      ) : null}
+                      {state.selected.festivals.map((festival) => (
+                        <span
+                          key={festival}
+                          className="date-event date-event-festival"
+                          aria-label={`节日：${festival}`}
+                        >
+                          {festival}
+                        </span>
+                      ))}
                       <strong
                         className={`schedule-badge schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
                       >
@@ -558,8 +575,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         ))}
                       </dl>
                     </div>
-                  </div>
-                  <div className="summary-status">
                     <span className="date-traits">
                       <span>
                         生肖 <b>{state.selected.lunar.zodiac}</b>
@@ -568,7 +583,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         星座 <b>{state.selected.constellation}</b>
                       </span>
                     </span>
-                    <small>{state.selected.festivals[0] ?? state.selected.solarTerm}</small>
                   </div>
                 </section>
               </Dropdown>

@@ -428,6 +428,7 @@ a:focus-visible {
   font-size: 13px;
   line-height: 18px;
   font-weight: 600;
+  white-space: nowrap;
 }
 .date-heading {
   display: flex;
@@ -435,6 +436,18 @@ a:focus-visible {
   flex-wrap: wrap;
   gap: 4px 8px;
   margin-bottom: 4px;
+}
+.date-event {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+.date-event-term {
+  color: var(--green);
+}
+.date-event-festival {
+  color: var(--purple);
 }
 .date-detail h2 > span:last-child {
   margin-left: 4px;
@@ -460,16 +473,8 @@ a:focus-visible {
 .lunar-summary > p {
   white-space: nowrap;
 }
-.summary-status {
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-end;
-  max-width: 92px;
-}
 .date-traits {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
   gap: 2px 8px;
   color: var(--secondary);
@@ -492,11 +497,6 @@ a:focus-visible {
   padding: 1px 6px;
   border-radius: 6px;
   white-space: nowrap;
-}
-.summary-status small {
-  font-size: 11px;
-  color: var(--purple);
-  line-height: 15px;
 }
 .schedule-badge.schedule-holiday,
 .schedule-badge.schedule-weekend {
@@ -845,12 +845,8 @@ a:focus-visible {
     font-size: 12px;
     line-height: 21px;
   }
-  body[data-platform='web'] .summary-status {
-    flex-direction: row;
-    align-items: center;
+  body[data-platform='web'] .date-traits {
     justify-content: center;
-    max-width: 100%;
-    gap: 8px;
   }
 
   body[data-platform='web'] .calendar-app[data-panel='settings'] {
@@ -947,9 +943,6 @@ body[data-platform='ios'] .calendar-stage {
     width: 44px;
     height: 54px;
   }
-  .summary-status {
-    max-width: 70px;
-  }
   .date-detail h2 {
     font-size: 12px;
   }
@@ -1021,18 +1014,11 @@ body[data-platform='ios'] .calendar-stage {
 
 .date-leaf {
   grid-column: 1;
-  grid-row: 1 / span 2;
+  grid-row: 1;
 }
 .date-detail {
   grid-column: 2;
   grid-row: 1;
-}
-.summary-status {
-  grid-column: 2;
-  grid-row: 2;
-  flex-direction: row;
-  align-items: center;
-  max-width: none;
 }
 .day-mark {
   font-size: 11px;
