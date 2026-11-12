@@ -91,6 +91,7 @@ export function resolveColorTheme(
     increasedContrast ? 7 : 4.5,
   );
   const leaf = readable(accent, ['#ffffff'], false);
+  const switchOff = readable(controlActive, ['#ffffff'], false);
   return {
     accent,
     tokens: {
@@ -109,6 +110,9 @@ export function resolveColorTheme(
       '--leaf': leaf,
       '--leaf-hover': mix(leaf, '#000000', 0.08),
       '--leaf-active': mix(leaf, '#000000', 0.16),
+      '--switch-off': switchOff,
+      '--switch-off-hover': mix(switchOff, '#000000', 0.08),
+      '--switch-off-active': mix(switchOff, '#000000', 0.16),
     },
   };
 }

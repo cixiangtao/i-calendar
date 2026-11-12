@@ -19,7 +19,7 @@
   opacity: 0.5;
 }
 .settings-panel .ant-switch:not(.ant-switch-disabled):active {
-  background: var(--ink);
+  background: var(--switch-off-active);
 }
 .settings-panel .ant-switch.ant-switch-checked:not(.ant-switch-disabled):active {
   background: var(--leaf-active);

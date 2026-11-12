@@ -61,6 +61,8 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
         assert.ok(contrastRatio('#ffffff', t['--leaf']) >= 4.5);
         assert.ok(contrastRatio('#ffffff', t['--leaf-hover']) >= 4.5);
         assert.ok(contrastRatio('#ffffff', t['--leaf-active']) >= 4.5);
+        for (const bg of ['--switch-off', '--switch-off-hover', '--switch-off-active'] as const)
+          assert.ok(contrastRatio('#ffffff', t[bg]) >= 4.5, `${preset.id}/${dark}/${bg}`);
         for (const bg of ['--control', '--control-hover', '--control-active'] as const)
           for (const fg of ['--ink', '--secondary'] as const)
             assert.ok(contrastRatio(t[fg], t[bg]) >= 4.5, `${preset.id}/${dark}/${fg}/${bg}`);

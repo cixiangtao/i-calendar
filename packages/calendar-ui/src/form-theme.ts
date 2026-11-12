@@ -95,8 +95,8 @@ export function createFormTheme(t: ReturnType<typeof resolveColorTheme>['tokens'
         handleShadow: 'none',
         colorPrimary: t['--leaf'],
         colorPrimaryHover: t['--leaf-hover'],
-        colorTextQuaternary: t['--secondary'],
-        colorTextTertiary: t['--ink'],
+        colorTextQuaternary: t['--switch-off'],
+        colorTextTertiary: t['--switch-off-hover'],
       },
     },
   };
