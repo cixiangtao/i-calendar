@@ -17,6 +17,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { version as appVersion } from '../../../package.json';
 import { AlmanacContent } from './Almanac.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import { colorThemes, resolveColorTheme } from './color-theme.js';
@@ -858,6 +859,20 @@ function Settings({
             children: (
               <div className="settings-scroll">
                 <section>
+                  <h2>i日历</h2>
+                  <p>版本 {appVersion}</p>
+                  <p>免费、无广告的公农历日历。</p>
+                  {controller.platform.quit ? (
+                    <Button
+                      onClick={() => {
+                        void controller.platform.quit?.();
+                      }}
+                    >
+                      退出i日历
+                    </Button>
+                  ) : null}
+                </section>
+                <section>
                   <h2>数据来源</h2>
                   <button
                     type="button"
@@ -948,19 +963,6 @@ function Settings({
         controller={controller}
         state={state}
       />
-      <footer className="settings-footer">
-        <span>i日历 0.1.0 · 免费无广告</span>
-        {controller.platform.quit ? (
-          <Button
-            type="text"
-            onClick={() => {
-              void controller.platform.quit?.();
-            }}
-          >
-            退出
-          </Button>
-        ) : null}
-      </footer>
     </section>
   );
 }

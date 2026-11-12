@@ -4,6 +4,7 @@ import { Component, StrictMode, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
+import { version as appVersion } from '../../../package.json';
 import { createPlatform } from './platform.js';
 
 class AppBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -56,7 +57,7 @@ async function start() {
                 i日历提供公农历、节气和中国大陆放假调休。日历计算在本地完成，免费、无广告，无需登录。
               </p>
               <p>
-                Mac、iOS 与网页版使用相同的日历核心和界面组件。当前为 0.1.0
+                Mac、iOS 与网页版使用相同的日历核心和界面组件。当前为 {appVersion}
                 开发预览，正式官网与应用下载将在 1.0 发布时同步提供。
               </p>
               <p>

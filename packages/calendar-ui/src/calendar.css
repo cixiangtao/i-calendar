@@ -724,16 +724,6 @@ a:focus-visible {
   line-height: 19px;
   text-align: left;
 }
-.settings-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: auto;
-  padding-top: 14px;
-  font-size: 11px;
-  color: var(--secondary);
-  flex-shrink: 0;
-}
 .web-info {
   max-width: 880px;
   margin: 0 auto;
