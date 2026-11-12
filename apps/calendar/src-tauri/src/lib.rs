@@ -161,9 +161,14 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init());
     #[cfg(target_os = "macos")]
-    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _, _| {
-        desktop::show_calendar(app)
-    }));
+    let builder = if std::env::args().any(|argument| argument == "--smoke-test") {
+        // 冒烟模式已跳过持久化读写，允许与开发实例并行验证打包产物。
+        builder
+    } else {
+        builder.plugin(tauri_plugin_single_instance::init(|app, _, _| {
+            desktop::show_calendar(app)
+        }))
+    };
     let application = builder
         .invoke_handler(tauri::generate_handler![
             runtime_context,

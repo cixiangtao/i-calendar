@@ -21,7 +21,7 @@ try {
       maxBuffer: 1_000_000,
     });
     if (!result.stdout.includes('PASS：Tauri'))
-      throw new Error('原生应用未返回前端验证结果。请先退出正在运行的拾日历，再执行验证。');
+      throw new Error('原生应用未返回前端验证结果，请重新构建应用后重试。');
     console.log(result.stdout.trim());
   }
 } catch (error) {
