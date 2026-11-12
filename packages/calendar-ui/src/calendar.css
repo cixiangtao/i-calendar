@@ -603,6 +603,61 @@ a:focus-visible {
 .setting-label:last-child {
   margin-bottom: 0;
 }
+.menu-clock-settings select {
+  min-width: 0;
+  max-width: 220px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--control);
+  font-size: 12px;
+}
+.clock-format-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.clock-format-form .ant-input {
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+.clock-format-form .ant-btn {
+  flex-shrink: 0;
+}
+.settings-scroll .clock-help {
+  font-size: 11px;
+}
+.settings-scroll .clock-format-error {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--red);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.clock-format-error:empty {
+  display: none;
+}
+.clock-preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 9px 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: var(--control);
+  color: var(--secondary);
+  font-size: 11px;
+  line-height: 20px;
+}
+.clock-preview-row output {
+  color: var(--ink);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
 .setting-label .ant-segmented {
   flex: 1;
   max-width: 250px;

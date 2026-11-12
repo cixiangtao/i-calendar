@@ -17,6 +17,7 @@ import {
 
 import { AlmanacContent } from './Almanac.js';
 import { colorThemes, resolveColorTheme } from './color-theme.js';
+import { MenuClockSettings } from './MenuClockSettings.js';
 import type { CalendarPreferences } from './platform.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 
@@ -180,9 +181,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
         event.ctrlKey ||
         event.metaKey ||
         event.altKey ||
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLSelectElement ||
-        event.target instanceof HTMLTextAreaElement
+        (event.key !== 'Escape' &&
+          (event.target instanceof HTMLInputElement ||
+            event.target instanceof HTMLSelectElement ||
+            event.target instanceof HTMLTextAreaElement))
       )
         return;
       if (event.key === 'Escape') {
@@ -601,6 +603,14 @@ function Settings({
         <h1 id="settings-title">设置</h1>
       </header>
       <div className="settings-scroll">
+        {controller.platform.kind === 'macos' ? (
+          <MenuClockSettings
+            settings={state.preferences.menuClock}
+            onChange={(menuClock) => {
+              void controller.setPreferences({ menuClock });
+            }}
+          />
+        ) : null}
         <section>
           <h2>日历显示</h2>
           <div className="setting-label">
