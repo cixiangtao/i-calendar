@@ -33,6 +33,10 @@ flowchart TD
 
 Mac 使用系统 WKWebView，不携带 Chromium。Rust 只处理菜单栏、窗口位置、文件存储和固定来源的网络请求；iOS 复用相同入口与 `mobile_entry_point`，通过独立平台配置避免引入 Mac 菜单栏行为。Web 使用浏览器 localStorage、Fetch 和 Clipboard，不启动 Rust 服务端。
 
+Mac 菜单栏时间由 `src-tauri/src/menu_clock.rs` 的原生线程维护，使用系统本地时区，不依赖 WebView 可见状态或 JavaScript 定时器；格式包含秒时按秒边界刷新，其余按分钟边界刷新，仅在标题变化时调用菜单栏 API。偏好修改立即唤醒线程，重新打开窗口与原生恢复事件也触发刷新。关闭时间显示仅清空标题，图标保留。
+
+`calendar-ui/src/menu-clock.ts` 提供格式校验、预设及设置页预览；这属于显示偏好，不进入历法核心。Rust 与 TypeScript 读取同一份格式样例，校验补零、12 小时制、中文星期、固定文字与非法格式。`preferences.menuClock` 随既有 schemaVersion 1 状态保存，旧记录缺字段时采用启用和 `HH:mm` 默认值。iOS 与 Web 保留偏好结构兼容，不展示 Mac 专属设置。详细契约见[菜单栏时间格式](菜单栏时间格式.md)。
+
 ## 平台能力与权限
 
 - Mac 菜单栏左键切换，右键提供打开、设置和退出；关闭与失焦收起窗口，进程常驻。
@@ -60,6 +64,6 @@ oxlint 与 oxfmt 由 `pnpm run check` 统一检查。构建不自动修改源码
 
 `pnpm run build` 生成清理后的核心 ESM/声明与静态前端；Tauri 再将前端嵌入应用。不再生成 JavaScriptCore IIFE 或 Swift 桥接资源。前端依赖按 React、控件和历法库分包；应用与网页均随附第三方许可信息。
 
-Mac 冒烟检查在真实 WKWebView 中渲染 42 格月历，调用共享核心核对春节农历、补班及黄历样例，再通过 IPC 检查窗口显示、收起和重开。此检查不替代菜单栏鼠标、辅助功能或 iOS 验收。
+Mac 冒烟检查在真实 WKWebView 中渲染 42 格月历，调用共享核心核对春节农历、补班及黄历样例，再通过 IPC 检查窗口显示、收起和重开；收起期间核对原生菜单栏标题持续跳秒，关闭显示后标题清空。冒烟实例仅在内存修改时钟偏好，不写入用户存储。此检查不替代菜单栏鼠标、辅助功能或 iOS 验收。
 
 iOS 当前完成架构入口、共享 UI 与构建配置接入；缺少完整 Xcode 和 CocoaPods，未生成可验证的 iOS Xcode 工程，也未编译模拟器或真机。提醒、农历生日、Widget、系统日历、账号同步和地方假期均不在当前实现范围。

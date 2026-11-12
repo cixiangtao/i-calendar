@@ -41,6 +41,8 @@ open outputs/mac/i日历.app
 产物为 `outputs/mac/i日历.app` 和 `outputs/i日历-0.1.0-mac-arm64.zip`（文件名随本机构架变化）。当前验证环境为 Apple Silicon；应用采用本地临时签名，没有 Developer ID 签名或 Apple 公证，尚不是正式分发版。
 
 - 左键菜单栏图标展开或收起；失去焦点自动收起；右键可进入设置或退出。
+- Mac 菜单栏默认显示 `HH:mm`，在“设置 → 菜单栏时间”选择时分、时分秒、日期与星期、12 小时制，或填写自定义格式。关闭时间显示后保留图标，格式与开关在本机保存。
+- 菜单栏时钟由原生层刷新，弹窗收起后继续走时，跟随 Mac 系统时区；日历查询仍采用北京时间。格式示例与规则见[菜单栏时间格式](docs/菜单栏时间格式.md)。
 - 点日期查看完整农历和休班状态，点年月直接跳转。
 - 日期摘要明确标注生肖与星座，随选中日期更新。生肖以农历正月初一换年，星座采用公历月日固定区间。
 - 干支、完整宜忌、冲煞和方位直接展示在所选日期下方；宽窄屏内容一致。Mac 下方详情及宽屏网页右栏可独立滚动，无需进入另一页。
@@ -71,8 +73,8 @@ pnpm run build:ios
 pnpm run lint           # oxlint：问题和警告均须处理
 pnpm run format         # oxfmt：格式化所有支持的项目文件
 pnpm run format:check   # 只检查格式，不写文件
-pnpm run check          # lint、格式、类型检查、33 项测试及 ESM/网页构建
-pnpm run check:native   # Rust 测试：存储、旧数据迁移、多屏定位
+pnpm run check          # lint、格式、类型检查、36 项测试及 ESM/网页构建
+pnpm run check:native   # Rust 测试：存储、旧数据迁移、多屏定位、菜单栏时钟
 pnpm run build:mac      # 构建 Mac 应用、校验签名并生成 ZIP
 pnpm run check:mac      # Rust 测试 + 已打包应用的真实 WebView 冒烟验证
 pnpm run preview:web   # 预览已构建的静态网页
