@@ -43,9 +43,9 @@ colors:
 typography:
   headline:
     fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
-    fontSize: '16px'
+    fontSize: '13px'
     fontWeight: 500
-    lineHeight: '22px'
+    lineHeight: '20px'
   title:
     fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
     fontSize: '15px'
@@ -92,6 +92,7 @@ rounded:
   mark: '4px'
   status: '6px'
   control: '10px'
+  toolbar: '8px'
   day: '12px'
   leaf: '13px'
   panel-compact: '18px'
@@ -118,14 +119,14 @@ components:
   today-button:
     backgroundColor: '{colors.blue-soft}'
     textColor: '{colors.blue}'
-    rounded: '{rounded.control}'
-    padding: '4px 10px'
-    height: '32px'
+    rounded: '{rounded.toolbar}'
+    padding: '0'
+    height: '28px'
   month-select:
     backgroundColor: '{colors.control}'
     textColor: '{colors.ink}'
-    rounded: '{rounded.control}'
-    padding: '6px 10px'
+    rounded: '{rounded.toolbar}'
+    padding: '4px 8px'
   panel:
     backgroundColor: '{colors.surface}'
     rounded: '{rounded.panel}'
@@ -188,8 +189,8 @@ Frontmatter 记录清爽白默认运行时色值；完整规则以共享 UI 的 
 
 全界面使用 Apple 系统字体、苹方与系统回退，不加载外部字体。字重以中等到半粗为主，日期和叶片数字使用等宽数字特性。frontmatter 的字号是实际角色，响应变化在下方补充。
 
-- **Headline**：宽屏年月导航为 16px / 500 / 22px，保持工具栏文字的克制层级；窄屏为 15px。
-- **Title**：年月标签与设置标题；常规详情标题为（13px），宽屏为（14px）。
+- **Headline**：月份工具栏统一为 13px / 500 / 20px，图标框同为 13px；各端不再按断点放大。
+- **Title**：设置标题；常规详情标题为（13px），宽屏为（14px）。
 - **Date / Date Compact / Date Wide**：分别对应普通月历、Mac 紧凑月历、宽屏月历；短屏宽屏会回落至（19px / 23px 行高）。
 - **Leaf / Leaf Wide**：详情叶片的大号数字，数字变化时短暂淡入上移。
 - **Body**：基础界面文字；事件名称与操作多使用（12px），设置说明使用（12px / 1.8 行高）。
@@ -223,7 +224,9 @@ Web 从（860px）起使用月历与（280px）详情双栏，总宽最大（960
 
 ### 月份标签与导航
 
-年月使用真实 select，普通/紧凑形态为浅灰圆角标签，宽屏采用无底的中等字重导航文字，不作为大标题。年份宽 84px、月份宽 56px，避免字号与控件间距压过日期网格。工具栏左侧为“年份＋〈月份〉”，箭头贴近月份；右侧独立放“今天”，使用强调色文字和轻染底色。桌面方向按钮 30×32px，“今天”48×32px，触控目标至少 44px。禁用透明度（0.38），键盘焦点保留外描边。
+年月使用真实 select，Mac、窄屏、宽屏统一为浅灰圆角控件，文字与图标框均为 13px、文字字重 500、行高 20px；可见高度 28px，圆角 8px。年份宽 72px、月份宽 48px，方向按钮可见区域 28×28px，今天宽 44px。
+
+工具栏左侧为“年份＋〈月份〉”，右侧独立放“今天”。触控端只扩大透明点击区域至至少 44px，不改变底色、圆角、字重、字号或可见高度；方向按钮之间的间距按可用宽度调整。跨端优先调整布局结构，同一控件不额外切换视觉样式。
 
 网页日历顶部对齐、水平居中，不再按黄历详情总高度垂直居中；切月或回到今天时，详情长短变化不移动顶部工具栏。Mac 维持固定窗口中的上月历、下详情。
 

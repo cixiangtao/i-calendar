@@ -642,24 +642,24 @@
     {
       "name": "回到今天",
       "kind": "button",
-      "description": "蓝字浅蓝底的常用操作，触控环境放大目标。",
+      "description": "各端统一的 13px 强调色文字和 28px 可见高度；触控透明点击区域至少 44px。",
       "html": "<button class=\"ds-today\">今天</button>",
-      "css": ".ds-today{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;width:48px;min-width:48px;height:32px;white-space:nowrap;padding:4px 10px;border:0;border-radius:10px;background:var(--blue-soft,#edf3ff);color:var(--blue,#3269d9);font-size:12px;font-weight:500;cursor:pointer}.ds-today:hover{background:var(--blue-soft,#edf3ff);color:var(--blue,#3269d9)}.ds-today:active{opacity:.8}.ds-today:focus-visible{outline:2px solid var(--blue,#3269d9);outline-offset:3px}@media(pointer:coarse){.ds-today{min-width:44px;min-height:44px}}",
+      "css": ".ds-today{font:500 13px/20px -apple-system,BlinkMacSystemFont,\"PingFang SC\",sans-serif;position:relative;width:44px;height:28px;border:0;border-radius:8px;padding:0;background:transparent;color:var(--blue,#3269d9);cursor:pointer}.ds-today:before{content:\"\";position:absolute;inset:50% 0 auto;height:28px;transform:translateY(-50%);background:var(--blue-soft,#eff3fc);border-radius:8px;z-index:-1}.ds-today{isolation:isolate}.ds-today:focus-visible{outline:2px solid var(--blue,#3269d9);outline-offset:3px}@media(pointer:coarse){.ds-today{height:44px}}",
       "refersTo": "today-button"
     },
     {
       "name": "方向导航",
       "kind": "nav",
-      "description": "方向按钮位于月份选择器两侧，与年份在左侧形成月份导航；今天独立放在工具栏右侧。",
-      "html": "<nav class=\"ds-nav\" aria-label=\"切换月份\"><button aria-label=\"上个月\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"m10 3-5 5 5 5\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></button><select aria-label=\"月份\"><option>11月</option><option>12月</option></select><button aria-label=\"下个月\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"m6 3 5 5-5 5\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></button></nav>",
-      "css": ".ds-nav{display:flex;align-items:center;gap:4px}.ds-nav button{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;display:grid;place-items:center;width:30px;height:32px;padding:4px;border:0;border-radius:10px;background:var(--control,#f0f1f5);color:var(--ink,#171b24);cursor:pointer}.ds-nav button:hover{background:var(--blue-soft,#edf3ff);color:var(--blue,#3269d9)}.ds-nav button:active{opacity:.8}.ds-nav button:focus-visible{outline:2px solid var(--blue,#3269d9);outline-offset:3px}.ds-nav button:disabled{opacity:.38;cursor:default}@media(pointer:coarse){.ds-nav button{min-width:44px;min-height:44px}}.ds-nav select{font:600 15px/20px -apple-system,BlinkMacSystemFont,\"PingFang SC\",sans-serif;width:57px;padding:6px 10px;border:0;border-radius:10px;background:var(--control,#f4f5f8);color:var(--ink,#171b24);appearance:none}"
+      "description": "箭头位于月份两侧，文字和图标框统一 13px，可见区域 28px；触控只扩展透明点击区。",
+      "html": "<nav class=\"ds-nav\" aria-label=\"切换月份\"><button aria-label=\"上个月\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"m10 3-5 5 5 5\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></button><select aria-label=\"月份\"><option>11月</option><option>12月</option></select><button aria-label=\"下个月\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"m6 3 5 5-5 5\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></button></nav>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:4px}.ds-nav button{position:relative;isolation:isolate;display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--ink,#171b24);cursor:pointer}.ds-nav button:before{content:\"\";position:absolute;top:50%;left:50%;width:28px;height:28px;transform:translate(-50%,-50%);border-radius:8px;background:var(--control,#f4f5f8);z-index:-1}.ds-nav select{font:500 13px/20px -apple-system,BlinkMacSystemFont,\"PingFang SC\",sans-serif;width:48px;height:28px;padding:4px 8px;border:0;border-radius:8px;appearance:none;background:var(--control,#f4f5f8);color:var(--ink,#171b24)}.ds-nav button:focus-visible,.ds-nav select:focus-visible{outline:2px solid var(--blue,#3269d9);outline-offset:3px}.ds-nav button:disabled{opacity:.38}@media(pointer:coarse){.ds-nav{gap:2px}.ds-nav button{width:44px;height:44px}}"
     },
     {
       "name": "年月标签",
       "kind": "input",
-      "description": "真实 select；此处是紧凑圆角标签形态，宽屏变为无底大标题。",
+      "description": "各端统一的 13px、500 字重、浅灰底圆角年月标签，不按断点放大。",
       "html": "<div class=\"ds-month\"><select aria-label=\"年份\"><option>2026年</option><option>2027年</option></select><select aria-label=\"月份\"><option>11月</option><option>12月</option></select></div>",
-      "css": ".ds-month{display:flex;gap:6px}.ds-month select{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;appearance:none;border:0;border-radius:10px;padding:6px 10px;background:var(--control,#f0f1f5);color:var(--ink,#171b24);font-size:15px;font-weight:600;line-height:20px;cursor:pointer}.ds-month select:hover{color:var(--blue,#3269d9)}.ds-month select:focus-visible{outline:2px solid var(--blue,#3269d9);outline-offset:3px}.ds-month option{background:var(--surface,#ffffff);color:var(--ink,#171b24)}",
+      "css": ".ds-month{display:flex;gap:6px}.ds-month select{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;appearance:none;border:0;border-radius:8px;padding:4px 8px;background:var(--control,#f0f1f5);color:var(--ink,#171b24);font-size:13px;font-weight:500;line-height:20px;cursor:pointer}.ds-month select:hover{color:var(--blue,#3269d9)}.ds-month select:focus-visible{outline:2px solid var(--blue,#3269d9);outline-offset:3px}.ds-month option{background:var(--surface,#ffffff);color:var(--ink,#171b24)}",
       "refersTo": "month-select"
     },
     {
