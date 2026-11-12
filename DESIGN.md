@@ -1,123 +1,267 @@
 ---
 name: 拾日历
-description: 菜单栏与网页共用的松绿公农历小月历
+description: 红绿蓝黄紫五色分工的圆润公农历小月历
 colors:
-  jade: '#146e5e'
-  jade-dark-appearance: '#6bcfb5'
-  holiday: '#af2638'
-  holiday-dark-appearance: '#ff9299'
-  makeup: '#985319'
-  makeup-dark-appearance: '#f5b477'
-  selected-text: '#ffffff'
+  canvas: '#f1f2f6'
   surface: '#ffffff'
-  surface-dark: '#202421'
-  ink: '#252d29'
-  ink-dark: '#edf3ef'
-  secondary: '#626f68'
-  secondary-dark: '#a4b2a9'
+  ink: '#24262d'
+  secondary: '#606775'
+  muted: '#707581'
+  line: '#eceef3'
+  control: '#f0f1f5'
+  hover: '#f5f6fa'
+  blue: '#3269d9'
+  blue-soft: '#edf3ff'
+  red: '#cf3049'
+  red-soft: '#fff0f2'
+  green: '#16804d'
+  green-soft: '#eaf7ef'
+  yellow: '#956300'
+  yellow-soft: '#fff5d8'
+  purple: '#8150bd'
+  purple-soft: '#f4edfc'
+  canvas-dark: '#191b22'
+  surface-dark: '#24262f'
+  ink-dark: '#eef0f7'
+  secondary-dark: '#b2b7c7'
+  muted-dark: '#a0a6b7'
+  line-dark: '#363946'
+  control-dark: '#30333e'
+  hover-dark: '#2c2f3a'
+  blue-dark: '#93b5ff'
+  blue-soft-dark: '#2c3955'
+  red-dark: '#ff94a3'
+  red-soft-dark: '#452c37'
+  green-dark: '#83d9ab'
+  green-soft-dark: '#263d36'
+  yellow-dark: '#ebc568'
+  yellow-soft-dark: '#423b29'
+  purple-dark: '#c6a4f2'
+  purple-soft-dark: '#3b304b'
+  leaf-blue: '#3269d9'
+  leaf-ink: '#ffffff'
 typography:
   headline:
-    fontFamily: 'system-ui'
-    fontSize: '20px'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+    fontSize: '23px'
     fontWeight: 600
+    lineHeight: '30px'
   title:
-    fontFamily: 'system-ui'
-    fontSize: '14px'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+    fontSize: '15px'
     fontWeight: 600
+    lineHeight: '20px'
   date:
-    fontFamily: 'system-ui'
-    fontSize: '16px'
-    fontWeight: 500
-    fontFeature: 'tnum'
-  summary:
-    fontFamily: 'system-ui'
-    fontSize: '13px'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+    fontSize: '19px'
     fontWeight: 600
+    lineHeight: '22px'
+    fontFeature: 'tnum'
+  date-compact:
+    fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+    fontSize: '18px'
+    fontWeight: 600
+    lineHeight: '21px'
+    fontFeature: 'tnum'
+  date-wide:
+    fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+    fontSize: '22px'
+    fontWeight: 600
+    lineHeight: '27px'
+    fontFeature: 'tnum'
+  leaf:
+    fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+    fontSize: '28px'
+    fontWeight: 500
+    lineHeight: '32px'
+    fontFeature: 'tnum'
+  leaf-wide:
+    fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+    fontSize: '46px'
+    fontWeight: 500
+    lineHeight: '54px'
+    fontFeature: 'tnum'
   body:
-    fontFamily: 'system-ui'
-    fontSize: '12px'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
+    fontSize: '13px'
   label:
-    fontFamily: 'system-ui'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
     fontSize: '11px'
+    lineHeight: '14px'
 rounded:
-  day: '7px'
-  summary: '9px'
-  web-container: '14px'
+  mark: '4px'
+  legend: '5px'
+  status: '6px'
+  event: '8px'
+  control: '10px'
+  day: '12px'
+  leaf: '13px'
+  panel-compact: '18px'
+  leaf-wide: '19px'
+  panel-mobile: '20px'
+  panel: '22px'
+  circle: '50%'
 spacing:
-  compact: '7px'
-  section: '15px'
-  inset: '20px'
+  micro: '4px'
+  grid: '5px'
+  compact: '8px'
+  panel-gap-mac: '10px'
+  panel-gap: '12px'
+  wide-gap: '16px'
+  panel-inset: '18px'
+  section-inset: '20px'
+  wide-inset: '24px'
 components:
   selected-day:
-    backgroundColor: '{colors.jade}'
-    textColor: '{colors.selected-text}'
+    backgroundColor: '{colors.blue-soft}'
+    textColor: '{colors.blue}'
     rounded: '{rounded.day}'
-    height: '42px'
-  date-summary:
-    rounded: '{rounded.summary}'
-    padding: '11px 10px'
+    height: '46px'
+  today-button:
+    backgroundColor: '{colors.blue-soft}'
+    textColor: '{colors.blue}'
+    rounded: '{rounded.control}'
+    padding: '4px 10px'
+    height: '30px'
+  month-select:
+    backgroundColor: '{colors.control}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.control}'
+    padding: '6px 10px'
+  panel:
+    backgroundColor: '{colors.surface}'
+    rounded: '{rounded.panel}'
+    padding: '18px'
+  date-leaf:
+    backgroundColor: '{colors.leaf-blue}'
+    textColor: '{colors.leaf-ink}'
+    rounded: '{rounded.leaf}'
+    width: '50px'
+    height: '58px'
 ---
 
 # Design System: 拾日历
 
 ## Overview
 
-**Creative North Star: "随手翻开的松绿小月历"**
+**Creative North Star: "圆润五色小月历"**
 
-沿用用户确认的 A“月历优先”方向，以公农历双行、松绿选择态和轻量休班标记组织信息。日历保持紧凑，设置在同一界面内进入与返回。
+以用户确认的“圆润五色小月历”为视觉方向：浅灰画布托住独立白色面板，日期数字先被看见，农历与节日节气保持第二层。红、绿、蓝、黄、紫各自承担信息任务，轻染背景提供温和分组，避免把所有日期涂成彩色。
 
-视觉规范由共享 React 界面、CSS 和带 `tw-` 前缀的 Tailwind 工具类实现，Mac 使用 Tauri 的系统 WebView。Web 采用相同月历，介绍位于首屏之后。iOS 复用该实现并处理安全区域与触控尺寸，尚未在模拟器或真机验证。
+Mac 保留随手展开的紧凑上下布局；宽屏网页让月历与日期详情并排，小屏回到上下排列并允许纵向滚动。统一系统字体、圆润边角与细线图标，使共享视图在不同平台仍是同一本小日历。
 
 **Key Characteristics:**
 
-- 系统字体、清晰的公农历层级和固定七列六周。
-- 松绿组织选择和节气，红色提示休息日，赭色提示补班。
-- 今日描边、选中填充和休班文字各自表达事实。
-- 调休未知状态直接写明，来源在设置中可查。
+- 五色按语义分工，颜色始终配合文字或形状。
+- 公历数字主导扫描，农历、节日与节气单行呈现。
+- 选中描边、今日圆点、休班角标分别表达事实。
+- 白色圆角面板与浅灰画布分层，面板本身不使用投影。
 
 ## Colors
 
-松绿用于选择、品牌图标、节气和来源操作；深色使用更亮的松绿强调色，选中背景保留深松绿配白字。红色用于休息日数字，赭色用于补班，二者始终配合“休/班”文字。
+色值以 frontmatter 为准，对应共享 CSS 的浅色与深色变量；`-dark` 为深色外观，不是悬停色。柔和底色降低大面积彩色的压迫感，正文与次级文字使用中性灰层级。
 
-浅色采用白色表面和深色文字，深色采用暗绿灰表面与浅色文字。摘要以轻染表面区分区域，边线只用于事件与设置分组。
+### Primary
 
-**The Selection Rule.** 选中的实心背景、今天的细描边、休班的文字标记分别表达不同事实，不能互相替代。
+- **清晰蓝**：选择描边、今日圆点、回到今天、品牌图标与来源操作；轻蓝色用于选择与工具背景。
+- **日历叶片蓝**：日期详情中的实体小叶片固定使用品牌蓝与白字，深色模式保持这一配对。
+
+### Secondary
+
+- **日常红**：周末与放假日期数字；确认放假才使用浅红底和“休”角标。
+- **节气绿**：节气标签与后续节气日期，也用于正常工作状态、已收录数据与成功反馈。
+
+### Tertiary
+
+- **暖金黄**：补班“班”字与浅黄底；调休未知提示也使用这一提醒色。
+- **节日紫**：节日名称与后续节日日期；在日期次级标签中节日优先于节气。
+
+### Neutral
+
+- **浅灰画布 / 白色面板**：分开宿主背景与可阅读内容；深色转换为深灰画布和略亮面板。
+- **墨色 / 次级灰 / 月外灰**：分别用于日期正文、农历和说明、相邻月份日期。月外的确认放假仍保留红色公农历文字。
+- **控件灰 / 悬停灰 / 分隔灰**：服务年月标签、轻按钮、行悬停和详情分区，不争抢日期层级。
+
+**The Five Colors Rule.** 蓝色组织选择与系统操作，红色提示休假和周末，绿色标示节气，黄色标示补班与数据未知，紫色标示节日；保持配套文字，不以颜色单独传达状态。
+
+**The Independent States Rule.** 蓝色内描边和浅蓝底代表选中，左上蓝色圆点代表今天，“休/班”角标代表已收录安排。三种状态可以叠加，不能互相替代。
 
 ## Typography
 
-字体优先使用 macOS/iOS 系统字体与苹方，无需下载字体。月份标题、品牌、日期数字、摘要及农历标签分别使用 frontmatter 中的角色。日期数字使用等宽数字特性，触控环境日期数字增至（17px）。
+全界面使用 Apple 系统字体、苹方与系统回退，不加载外部字体。字重以中等到半粗为主，日期和叶片数字使用等宽数字特性。frontmatter 的字号是实际角色，响应变化在下方补充。
 
-农历与节日标签保持单行，长名称省略并在可访问名称和日期摘要中保留完整信息；摘要的农历说明在窄屏允许换行。
+- **Headline**：宽屏年月入口，窄屏改用 Title 角色。
+- **Title**：年月标签与设置标题；常规详情标题为（13px），宽屏为（14px）。
+- **Date / Date Compact / Date Wide**：分别对应普通月历、Mac 紧凑月历、宽屏月历；短屏宽屏会回落至（19px / 23px 行高）。
+- **Leaf / Leaf Wide**：详情叶片的大号数字，数字变化时短暂淡入上移。
+- **Body**：基础界面文字；事件名称与操作多使用（12px），设置说明使用（12px / 1.8 行高）。
+- **Label**：农历、图例、状态和辅助信息；宽屏农历为（12px / 17px 行高），宽屏短于（700px）回落为（11px / 14px 行高）。
+
+农历、节日和节气在日期格内保持单行；长名称省略，完整文本留在可访问名称和日期详情。不要因标签过长挤压公历数字。
 
 ## Layout
 
-共享月历七列六周，包含相邻月日期，日期范围边界用空格补齐。Web 容器宽（400px），最小宽度（320px）；宽屏在首屏居中，窄于（430px）时取消外层阴影与圆角，靠近顶部。官网介绍和许可证入口在首屏之后。
+月历固定七列六周，展示相邻月日期，范围之外用空位补齐。基础容器宽度为 `min(400px, 100%)`，视口最小宽（320px）。基础面板间距（12px），月份面板内边距（18px）；常规日期格高（46px）、列与行间距（5px）。
 
-Mac 窗口为（400 × 660）逻辑像素，无系统标题栏；日历单元高（40px），窗口内允许滚动以容纳提示与设置。Web 常规单元高（42px），触控环境高（46px）；主要工具按钮触控目标至少（44px）。iOS 入口使用 safe-area-inset，但这些处理仍需设备验证。
+Mac 为（400 × 660）逻辑像素，上月历下详情；外侧内边距（10px）、面板间距（10px）、圆角（18px），日期格高（40px）。内容容器可以纵向滚动，设置同样可以滚动。
+
+Web 从（860px）起使用月历与（280px）详情双栏，总宽最大（960px），列间距（16px）。月历内边距（24px），日期格高为 `clamp(44px, 6.4vh, 60px)`，网格间距（8px）。右栏叶片居中，后续事件日期、倒计时与名称分行排布，数据来源贴近面板底部；设置改为单栏（560px）宽。
+
+小于等于（430px）时采用上下卡片、（12px）外侧内边距与（20px）面板圆角。粗指针环境主要工具、年月选择器、事件行、来源操作等触控目标至少（44px），日期格高（48px）；小于等于（350px）时工具条可换行。小屏首屏放不下时通过纵向滚动读取详情。iOS 入口已考虑安全区域，但没有据此宣称完成模拟器或真机验证。
 
 ## Elevation & Depth
 
-Web 宽屏日历使用轻微环境阴影（0 12px 48px #143b2510）。Mac 窗口由系统提供阴影，内容不再叠加卡片阴影。移动窄屏与设置区域主要依靠间距、轻染色和细线组织信息。
+**The Flat Panels Rule.** 内容面板用画布色差、留白和少量分隔线建立层次，不添加装饰性卡片投影。Mac 外部窗口阴影由系统负责。
+
+选中日期的 `inset 0 0 0 2px var(--blue)` 是状态描边，不是浮起阴影。设置使用 Ant Design 默认 Segmented 的选项层次及按钮轻微深度，属于控件本身，不扩展为面板投影。键盘焦点使用蓝色（2px）外描边与（3px）偏移。
 
 ## Shapes
 
-日期、工具按钮与控件采用轻圆角；摘要容器比日期稍柔和。Web 外层圆角只用于宽屏，Mac 和移动窄屏贴合宿主边界。图标为统一线性 SVG，使用圆端点与圆连接。
+整体圆润简洁：通用面板（22px）、手机面板（20px）、Mac 面板（18px）；普通日期（12px）、Mac 日期（10px）。年月标签与工具按钮用（10px）圆角；齿轮与复制类图标按钮用圆形。状态小签、休班角标的圆角更小，避免和主面板等重。
+
+日期叶片为带双圆孔的蓝色小日历剪影，普通尺寸（50 × 58px）、宽屏（84 × 94px）、小屏（44 × 54px）；圆角分别用 Leaf 与 Leaf Wide。图标采用统一细线 SVG 和圆端点。
 
 ## Components
 
-月份导航由原生 HTML 年月选择器与 Ant Design 按钮组成，支持直接跳转、切月、回到今天和范围禁用。主月历使用 grid/row/gridcell 语义、单一 Tab 入口、方向键选日与完整中文可访问名称。
+### 月份标签与导航
 
-日期摘要显示月日、星期、完整农历、干支生肖及休班状态；有复制按钮和来源右键菜单。“接下来的日子”始终从今天计算，跨年日期显式标年。
+年月使用真实 select，普通/紧凑形态为浅灰圆角标签，宽屏转为无底大标题；上月、今天、下月形成轻按钮组。“今天”使用蓝字浅蓝底，其他方向按钮默认灰底。悬停转蓝色，禁用透明度（0.38），键盘焦点保留外描边。
 
-设置使用 Ant Design Segmented 切换周起始日和外观，按钮触发手动更新与 JSON 文件选择器。更新中显示加载状态，失败保留原数据并给出可关闭提示；设置返回键可聚焦，Esc 返回后焦点回齿轮。
+### 日期格
+
+公历数字在上，农历或节日节气在下；选中采用浅蓝底、蓝字、蓝色内描边，次级标签改为墨色。今日独立显示左上（4px）蓝点。确认放假使用浅红底与右上红底白字“休”；补班使用浅黄底黄字“班”。普通周末只标红数字，不出现放假底色和角标。
+
+悬停使用控件灰，切换背景与描边以（130ms ease-out）过渡。网格支持单 Tab 入口、方向键选日、完整中文日期名称；视觉样式不能替代语义。
+
+### 休班图例与状态小签
+
+图例为静态说明，不是过滤器。“休”红字浅红底、“班”黄字浅黄底，配文字解释。详情中的工作日小签绿字浅绿底，放假/周末红字浅红底，补班/调休未知黄字浅黄底；节日或节气补充文字使用紫色。
+
+### 日期叶片与详情
+
+叶片白色数字和双孔固定在品牌蓝底上。紧凑详情为叶片、日期说明、复制按钮三列，状态放在日期说明下方；宽屏改为竖向居中。叶片数字切换使用（160ms cubic-bezier(0.16, 1, 0.3, 1)）淡入与（2px）上移；减少动态偏好会将动画与过渡缩短至（0.01ms）。
+
+### 接下来的日子与数据入口
+
+事件从今天计算，节气日期绿、节日日期紫，名称使用墨色，倒计时为次级灰；跨年显示完整年份。整行可点击，悬停使用轻灰底。底部绿色小点表示已收录调休，黄色小点表示未知，旁边必须保留文字并可进入设置查看来源。
+
+### 设置控件与容器
+
+独立白色圆角面板，顶部返回入口为蓝色文字，分区用灰线与间距。周起始日和外观使用灰底 Segmented、选中项由 Ant Design 呈现；数据更新与 JSON 导入是描边按钮。反馈区成功绿、错误红，更新中显示加载，失败保留原数据。这里没有新增文本输入框，不为设计面板虚构输入组件。
 
 ## Do's and Don'ts
 
-- **Do** 保持七列六周和公农历双行的稳定布局。
-- **Do** 将今日、选中和休班状态分别表达。
-- **Do** 明确标出未收录年份，并保留来源入口。
-- **Do** 让官网首屏可以直接查日期。
-- **Don't** 将普通周末解释为已确认的法定放假。
-- **Don't** 在首屏加入宣传、下载或注册流程。
-- **Don't** 将手机浏览器截图写成 iOS 设备验证。
-- **Don't** 重新维护 SwiftUI 或另一套跨平台日历界面。
+### Do:
+
+- **Do** 保持七列六周、公农历双行和当前月份的扫描层级。
+- **Do** 保留选中描边、今日圆点与休班文字各自含义。
+- **Do** 让节气、节日、补班按五色语义出现，并保留完整日期详情。
+- **Do** 让 Mac 紧凑上下排列，宽屏 Web 双栏，小屏可以纵向滚动。
+- **Do** 明确显示年度调休未知状态并提供来源入口。
+
+### Don't:
+
+- **Don't** 将普通周末的红字解释为已确认放假，也不要补造未收录年份的休班角标。
+- **Don't** 将所有日期填成彩色，或用深色实心填充替代当前蓝色描边选择态。
+- **Don't** 将宽屏双栏强加给菜单栏窗口，或在窄屏固定高度裁掉详情。
+- **Don't** 在日历首屏插入广告、下载推广或注册流程。

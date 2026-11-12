@@ -71,7 +71,7 @@ pnpm run check:mac      # Rust 测试 + 已打包应用的真实 WebView 冒烟�
 pnpm run preview:web   # 预览已构建的静态网页
 ```
 
-`check:mac` 前请退出正在运行的拾日历；单实例保护可能把第二次启动交给现有进程，验证脚本会明确报错，不会据此判定通过。验证范围与限制见[验证记录](docs/验证记录.md)。
+`check:mac` 使用隔离的冒烟实例，跳过偏好与调休缓存读写，可与正在运行的开发窗口并行验证；正常应用继续保持单实例。运行前先构建最新 Mac 应用。验证范围与限制见[验证记录](docs/验证记录.md)。
 
 ## 工具链与格式约定
 
@@ -95,7 +95,9 @@ outputs/                       本地应用与 ZIP，不提交
 
 依赖方向为：平台入口 → 共享界面/状态 → 日历核心。核心不依赖 React、Tauri、网络、文件系统或宿主系统，不重写 Rust 历法算法。详见[架构说明](docs/ARCHITECTURE.md)和[核心契约](packages/calendar-core/README.md)。
 
-[桌面网页截图](docs/images/网页桌面.png) · [手机深色截图](docs/images/网页手机深色.png)
+[宽屏月历](docs/images/五色月历-网页.png) · [Mac 紧凑布局预览](docs/images/五色月历-菜单栏布局.png) · [手机深色](docs/images/五色月历-手机深色.png) · [春节休班](docs/images/五色月历-春节.png)
+
+界面采用红绿蓝黄紫的状态配色与圆角面板。Mac 维持 400×660 的上下布局，宽屏网页采用月历与日期详情双栏；上述布局预览来自浏览器，手机图不代表 iOS 真机验证。
 
 ## 调休数据与缓存
 

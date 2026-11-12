@@ -26,7 +26,7 @@
 ## 产品与架构
 
 - 免费、无广告，以查日期、农历、节气和国内放假调休为核心。
-- Mac 第一阶段只做菜单栏弹出小日历，沿用用户已选的 A“月历优先”方案。
+- Mac 第一阶段只做菜单栏弹出小日历，沿用用户已选的 A“月历优先”方案。视觉采用用户确认的红绿蓝黄紫基色与圆润简洁风格；Mac 保持紧凑上下布局，宽屏 Web 使用月历＋详情双栏。
 - 目标平台为 Mac 与 iOS；网页版在 1.0 发布时同步作为官网提供。
 - 公共数据能力放在 `packages/calendar-core`，不依赖界面、网络、文件系统或平台壳。
 - Mac 与 iOS 使用 Tauri 2，三端复用 `packages/calendar-ui` 中的 React 视图和应用状态。平台存储、网络与系统能力通过注入接口分离；不重新引入 SwiftUI/JavaScriptCore 桥接或另一套历法算法。
@@ -65,4 +65,4 @@ pnpm run build:mac
 pnpm run check:mac
 ```
 
-`check:mac` 使用已打包的真实 WKWebView 应用验证前端、共享核心、IPC 与窗口生命周期，执行前退出现有实例。iOS 通过 `pnpm run ios:init`、`pnpm run dev:ios` 和 `pnpm run build:ios` 接入；没有完整 Xcode/iOS SDK 时不宣称已编译 iOS、运行模拟器或完成真机验证。
+`check:mac` 使用已打包的真实 WKWebView 应用验证前端、共享核心、IPC 与窗口生命周期，隔离冒烟模式跳过偏好与调休缓存读写，可与现有开发实例并行验证，正常应用仍保持单实例。iOS 通过 `pnpm run ios:init`、`pnpm run dev:ios` 和 `pnpm run build:ios` 接入；没有完整 Xcode/iOS SDK 时不宣称已编译 iOS、运行模拟器或完成真机验证。
