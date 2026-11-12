@@ -14,7 +14,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { AlmanacContent, AlmanacPanel } from './Almanac.js';
+import { AlmanacContent } from './Almanac.js';
 import type { CalendarPreferences } from './platform.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 
@@ -142,7 +142,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const focusAfterNavigation = useRef(false);
   const grid = useRef<HTMLDivElement>(null);
   const gear = useRef<HTMLButtonElement>(null);
-  const almanacTrigger = useRef<HTMLButtonElement>(null);
   const dark =
     state.preferences.appearance === 'dark' ||
     (state.preferences.appearance === 'system' && systemDark);
@@ -194,9 +193,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       if (event.key === 'Escape') {
         if (state.panel !== 'calendar') {
           controller.showSettings(false);
-          requestAnimationFrame(() =>
-            (state.panel === 'almanac' ? almanacTrigger : gear).current?.focus(),
-          );
+          requestAnimationFrame(() => gear.current?.focus());
         } else void controller.platform.close?.();
       } else if (state.panel === 'calendar') {
         if (event.key.toLowerCase() === 't') {
@@ -241,14 +238,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const busy = (value: boolean) => {
     void controller.platform.setInteractionBusy?.(value);
   };
-  const vacationEvent = state.vacation
-    ? {
-        date: state.vacation.start,
-        name: `${state.vacation.name} · 放假${state.vacation.days}天`,
-        daysUntil: state.vacation.daysUntil,
-      }
-    : state.nextFestival;
-  const nextEvents = [state.nextTerm, vacationEvent].filter((item) => item !== undefined);
 
   return (
     <ConfigProvider
@@ -277,15 +266,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
             controller={controller}
             state={state}
           />
-        ) : state.panel === 'almanac' ? (
-          <AlmanacPanel
-            state={state}
-            controller={controller}
-            onBack={() => {
-              controller.showAlmanac(false);
-              requestAnimationFrame(() => almanacTrigger.current?.focus());
-            }}
-          />
         ) : (
           <>
             <section
@@ -297,26 +277,15 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   <Icon name="calendar" />
                   <span>拾日历</span>
                 </div>
-                <div className="header-actions">
-                  <Button
-                    ref={almanacTrigger}
-                    type="text"
-                    className="almanac-trigger"
-                    aria-label="查看黄历详情"
-                    onClick={() => controller.showAlmanac()}
-                  >
-                    黄历
-                  </Button>
-                  <Button
-                    ref={gear}
-                    type="text"
-                    className="icon-button"
-                    aria-label="设置与调休数据"
-                    title="设置与调休数据"
-                    onClick={() => controller.showSettings()}
-                    icon={<Icon name="settings" />}
-                  />
-                </div>
+                <Button
+                  ref={gear}
+                  type="text"
+                  className="icon-button"
+                  aria-label="设置与调休数据"
+                  title="设置与调休数据"
+                  onClick={() => controller.showSettings()}
+                  icon={<Icon name="settings" />}
+                />
               </header>
               <div className="month-toolbar">
                 <h1
@@ -572,32 +541,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   controller={controller}
                 />
               </div>
-              <section
-                className="upcoming"
-                aria-label="接下来的日子"
-              >
-                <header>
-                  <h2>接下来的日子</h2>
-                  <span>从今天起</span>
-                </header>
-                {nextEvents.map((next) => (
-                  <button
-                    type="button"
-                    className={`event-row ${next === state.nextTerm ? 'event-term' : 'event-festival'}`}
-                    key={`${next.date}-${next.name}`}
-                    onClick={() => controller.selectDate(next.date)}
-                  >
-                    <time dateTime={next.date}>
-                      {next.date.slice(0, 4) !== state.today.slice(0, 4) ||
-                      state.year !== Number(state.today.slice(0, 4))
-                        ? next.date.replaceAll('-', '/')
-                        : next.date.slice(5).replace('-', '/')}
-                    </time>
-                    <span className="event-name">{next.name}</span>
-                    <small>{next.daysUntil === 0 ? '今天' : `${next.daysUntil}天后`}</small>
-                  </button>
-                ))}
-              </section>
               <Feedback
                 controller={controller}
                 state={state}

@@ -1,8 +1,6 @@
 import type { DayAlmanac } from '@shiri/calendar-core';
-import Button from 'antd/es/button';
-import { useEffect, useRef } from 'react';
 
-import type { CalendarController, CalendarSnapshot } from './store.js';
+import type { CalendarController } from './store.js';
 
 /** 共享黄历内容；所展示的数值全部来自公共核心，不在界面里重算。 */
 export function AlmanacContent({
@@ -110,52 +108,6 @@ export function AlmanacContent({
           </button>
         </div>
       </details>
-    </section>
-  );
-}
-
-/** 紧凑菜单栏与手机中的独立详情，内容可滚动，返回入口始终可见。 */
-export function AlmanacPanel({
-  state,
-  controller,
-  onBack,
-}: {
-  state: CalendarSnapshot;
-  controller: CalendarController;
-  onBack: () => void;
-}) {
-  const back = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    back.current?.focus();
-  }, []);
-  return (
-    <section
-      className="settings-panel almanac-panel"
-      aria-labelledby="almanac-title"
-    >
-      <header className="settings-header">
-        <Button
-          ref={back}
-          type="text"
-          onClick={onBack}
-        >
-          返回日历
-        </Button>
-        <h1 id="almanac-title">黄历详情</h1>
-      </header>
-      <div className="almanac-date">
-        <h2>
-          {state.selected.year}年{state.selected.month}月{state.selected.day}日
-        </h2>
-        <p>
-          农历{state.selected.lunar.monthName}
-          {state.selected.lunar.dayName} · {state.selected.lunar.zodiac}年
-        </p>
-      </div>
-      <AlmanacContent
-        almanac={state.almanac}
-        controller={controller}
-      />
     </section>
   );
 }

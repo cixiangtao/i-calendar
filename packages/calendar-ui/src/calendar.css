@@ -482,67 +482,6 @@ a:focus-visible {
   width: 14px;
   height: 14px;
 }
-.upcoming {
-  margin-top: 17px;
-  padding-top: 13px;
-  border-top: 1px solid var(--line);
-}
-.upcoming > header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-.upcoming h2 {
-  margin: 0;
-  font-size: 12px;
-  line-height: 20px;
-  font-weight: 600;
-}
-.upcoming > header > span {
-  font-size: 11px;
-  color: var(--secondary);
-}
-.event-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  min-height: 34px;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  padding: 5px 0;
-  border-radius: 8px;
-  text-align: left;
-}
-.event-row:hover {
-  background: var(--hover);
-}
-.event-row time {
-  flex-shrink: 0;
-  width: 76px;
-  color: var(--green);
-  font-size: 11px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-.event-festival time {
-  color: var(--purple);
-}
-.event-name {
-  color: var(--ink);
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.event-row small {
-  margin-left: auto;
-  white-space: nowrap;
-  color: var(--secondary);
-  font-size: 11px;
-}
 .data-footer {
   display: flex;
   align-items: center;
@@ -829,24 +768,6 @@ a:focus-visible {
     right: -3px;
     top: -18px;
   }
-  body[data-platform='web'] .upcoming {
-    margin-top: 0;
-    padding-top: 20px;
-  }
-  body[data-platform='web'] .event-row {
-    flex-wrap: wrap;
-    gap: 5px 8px;
-    padding: 12px 0;
-  }
-  body[data-platform='web'] .event-row time {
-    width: auto;
-  }
-  body[data-platform='web'] .event-name {
-    order: 3;
-    width: 100%;
-    font-size: 13px;
-    line-height: 22px;
-  }
   body[data-platform='web'] .data-footer {
     margin-top: auto;
     padding-top: 20px;
@@ -869,6 +790,7 @@ body[data-platform='macos'] .calendar-app {
   padding: 10px;
   gap: 10px;
   align-content: start;
+  grid-template-rows: auto minmax(0, 1fr);
   overflow-y: auto;
 }
 body[data-platform='macos'] .month-panel {
@@ -903,16 +825,10 @@ body[data-platform='macos'] .calendar-legend {
   margin-top: 8px;
 }
 body[data-platform='macos'] .detail-panel {
+  min-height: 0;
+  overflow-y: auto;
   padding: 11px 16px;
   border-radius: 18px;
-}
-body[data-platform='macos'] .upcoming {
-  margin-top: 10px;
-  padding-top: 9px;
-}
-body[data-platform='macos'] .event-row {
-  min-height: 30px;
-  padding: 4px 0;
 }
 body[data-platform='macos'] .data-footer {
   padding-top: 7px;
@@ -990,7 +906,6 @@ body[data-platform='ios'] .calendar-stage {
   .empty-day {
     height: 48px;
   }
-  .event-row,
   .data-footer,
   .source-link {
     min-height: 44px;
@@ -1114,50 +1029,10 @@ body[data-platform='ios'] .calendar-stage {
   color: var(--red);
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.calendar-app .almanac-trigger {
-  height: 28px;
-  padding: 0 9px;
-  border-radius: 9px;
-  color: var(--blue);
-  background: var(--blue-soft);
-  font-size: 12px;
-}
 .almanac-inline {
-  display: none;
-}
-.calendar-app[data-panel='almanac'] {
-  display: block;
-}
-.almanac-panel {
-  gap: 0;
-}
-.almanac-panel .settings-header {
-  position: sticky;
-  top: -16px;
-  background: var(--surface);
-  z-index: 1;
-  padding: 4px 0 12px;
-}
-.almanac-date {
-  padding: 3px 0 19px;
-  border-bottom: 1px solid var(--line);
-}
-.almanac-date h2 {
-  margin: 0 0 7px;
-  font-size: 19px;
-  font-weight: 600;
-  line-height: 27px;
-}
-.almanac-date p {
-  margin: 0;
-  color: var(--secondary);
-  font-size: 12px;
-  line-height: 20px;
+  margin-top: 14px;
+  padding-bottom: 18px;
+  border-top: 1px solid var(--line);
 }
 .almanac-content {
   min-width: 0;
@@ -1289,9 +1164,6 @@ body[data-platform='ios'] .calendar-stage {
   font-size: 11px;
   line-height: 20px;
 }
-body[data-platform='macos'] .almanac-panel {
-  padding: 16px;
-}
 @media (min-width: 860px) {
   body[data-platform='web'] .detail-panel {
     contain: size;
@@ -1307,12 +1179,8 @@ body[data-platform='macos'] .almanac-panel {
     padding: 0 0 18px;
     border-top: 1px solid var(--line);
   }
-  body[data-platform='web'] .calendar-app[data-panel='almanac'] {
-    width: 560px;
-  }
 }
 @media (pointer: coarse) {
-  .calendar-app .almanac-trigger,
   .almanac-source-links button {
     min-height: 44px;
   }

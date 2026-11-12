@@ -6,10 +6,8 @@ import {
   parseHolidayDataset,
   type CalendarDay,
   type DayAlmanac,
-  type CalendarEvent,
   type HolidayDataset,
   type MonthCalendar,
-  type Vacation,
 } from '@shiri/calendar-core';
 import { bundledHolidayDatasets } from '@shiri/calendar-core/data';
 
@@ -24,12 +22,9 @@ export interface CalendarSnapshot {
   selected: CalendarDay;
   almanac: DayAlmanac;
   month: MonthCalendar;
-  nextTerm?: CalendarEvent;
-  vacation?: Vacation;
-  nextFestival?: CalendarEvent;
   preferences: CalendarPreferences;
   years: number[];
-  panel: 'calendar' | 'settings' | 'almanac';
+  panel: 'calendar' | 'settings';
   updating: boolean;
   error: string | null;
   notice: string | null;
@@ -107,7 +102,6 @@ export class CalendarController {
       updating: false,
       error: null,
       notice: null,
-      ...this.upcoming(today),
     };
   }
 
@@ -123,15 +117,6 @@ export class CalendarController {
     if (this.disposed) return;
     this.snapshot = { ...this.snapshot, ...next };
     for (const listener of this.listeners) listener();
-  }
-
-  private upcoming(today: string) {
-    const events = this.engine.getUpcoming(today, { days: 100, limit: 10 });
-    return {
-      nextTerm: events.find((event) => event.kind === 'solar-term'),
-      nextFestival: events.find((event) => event.kind === 'festival'),
-      vacation: this.engine.getVacations(today, 1)[0],
-    };
   }
 
   /** StrictMode 重挂载也只加载一次；加载失败不会覆盖已有缓存。 */
@@ -164,7 +149,6 @@ export class CalendarController {
       selected: this.engine.getDay(state.selected.date),
       almanac: this.engine.getAlmanac(state.selected.date),
       years: this.holidays.years,
-      ...this.upcoming(state.today),
     });
   }
 
@@ -173,7 +157,7 @@ export class CalendarController {
     const today = dateForInstant(this.now());
     if (today === this.snapshot.today) return;
     const following = this.snapshot.selected.date === this.snapshot.today;
-    this.patch({ today, ...this.upcoming(today) });
+    this.patch({ today });
     if (following) this.selectDate(today);
   }
 
@@ -230,9 +214,6 @@ export class CalendarController {
 
   showSettings(show = true) {
     this.patch({ panel: show ? 'settings' : 'calendar' });
-  }
-  showAlmanac(show = true) {
-    this.patch({ panel: show ? 'almanac' : 'calendar' });
   }
   dismissError() {
     this.patch({ error: null, notice: null });

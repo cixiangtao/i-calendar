@@ -160,7 +160,7 @@ test('拒绝不兼容的持久化设置和非 HTTPS 外部来源', async () => {
   assert.equal(opened, false);
 });
 
-test('黄历与所选日期同步，未收录调休仍可查看，详情返回保留日期', async () => {
+test('黄历与所选日期同步，未收录调休仍可查看，设置返回保留日期', async () => {
   const { controller, saves } = fixture();
   await controller.initialize();
   controller.selectDate('2026-12-01');
@@ -169,9 +169,9 @@ test('黄历与所选日期同步，未收录调休仍可查看，详情返回�
     month: '己亥',
     day: '己酉',
   });
-  controller.showAlmanac();
-  assert.equal(controller.getSnapshot().panel, 'almanac');
-  controller.showAlmanac(false);
+  controller.showSettings();
+  assert.equal(controller.getSnapshot().panel, 'settings');
+  controller.showSettings(false);
   assert.equal(controller.getSnapshot().selected.date, '2026-12-01');
   controller.moveSelection(1);
   assert.equal(controller.getSnapshot().almanac.date, '2026-12-02');
