@@ -37,6 +37,8 @@ export interface CalendarDay {
   day: number;
   /** ISO weekday: Monday = 1, Sunday = 7. */
   weekday: number;
+  /** 按公历月日的固定区间查询，含“座”后缀；不包含出生时刻推算。 */
+  constellation: string;
   lunar: LunarDate;
   festivals: string[];
   solarTerm: string | null;

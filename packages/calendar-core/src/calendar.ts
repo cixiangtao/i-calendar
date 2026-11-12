@@ -67,6 +67,7 @@ export class CalendarEngine {
         month,
         day,
         weekday,
+        constellation: `${solar.getXingZuo()}座`,
         lunar: {
           year: lunar.getYear(),
           month: Math.abs(lunarMonth),
