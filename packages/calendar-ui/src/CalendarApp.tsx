@@ -299,26 +299,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
           />
         ) : (
           <>
-            <header className="app-header tw-flex tw-items-center tw-justify-between">
-              <div className="brand tw-flex tw-items-center">
-                <img
-                  src={new URL('./assets/logo.svg', import.meta.url).href}
-                  width="19"
-                  height="19"
-                  alt=""
-                />
-                <span>i日历</span>
-              </div>
-              <Button
-                ref={gear}
-                type="text"
-                className="icon-button"
-                aria-label="设置与调休数据"
-                title="设置与调休数据"
-                onClick={() => controller.showSettings()}
-                icon={<Icon name="settings" />}
-              />
-            </header>
             <section
               className="month-panel"
               aria-label="月历"
@@ -594,6 +574,26 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 state={state}
               />
             </aside>
+            <footer className="app-footer tw-flex tw-items-center tw-justify-between">
+              <div className="brand tw-flex tw-items-center">
+                <img
+                  src={new URL('./assets/logo.svg', import.meta.url).href}
+                  width="19"
+                  height="19"
+                  alt=""
+                />
+                <span>i日历</span>
+              </div>
+              <Button
+                ref={gear}
+                type="text"
+                className="icon-button"
+                aria-label="设置与调休数据"
+                title="设置与调休数据"
+                onClick={() => controller.showSettings()}
+                icon={<Icon name="settings" />}
+              />
+            </footer>
           </>
         )}
       </article>
