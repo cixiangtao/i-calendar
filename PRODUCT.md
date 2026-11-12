@@ -8,7 +8,7 @@ adaptive
 
 ## Stack
 
-目标平台为 macOS 与 iOS；1.0 发布时同步提供网页版，兼作官网。原生 SwiftUI 界面；独立 TypeScript 日期引擎经 JavaScriptCore 供 Apple 平台调用，Web 直接使用 npm 包。技术组合已实现，并通过 macOS JavaScriptCore 实际调用验证。
+目标平台为 macOS 与 iOS；1.0 发布时同步上线网页版官网。使用 Tauri 2 + React + TypeScript，Mac、iOS 与 Web 共用界面、应用状态和独立日历核心。Mac 与 Web 已运行验证；iOS 配置和入口已接入，完整工程生成及设备验证仍需 Xcode 环境。
 
 ## Users
 
@@ -20,7 +20,7 @@ adaptive
 
 ## Operating Context
 
-Mac 第一版只做菜单栏弹出小日历，无独立主窗口。用户常用百度日历；该事实说明使用背景，不代表要求复刻其样式。
+Mac 第一版只做菜单栏弹出小日历，无 Dock 主窗口。用户常用百度日历；该事实说明使用背景，不代表要求复刻其样式。
 
 ## Capabilities and Constraints
 
@@ -44,7 +44,7 @@ Mac 第一版只做菜单栏弹出小日历，无独立主窗口。用户常用�
 1. 查日期比功能堆叠更重要。
 2. 同一套核心规则服务所有目标平台。
 3. 信息可靠且可追溯，未知状态不伪装成已知。
-4. 系统原生交互，离线可用。
+4. 菜单栏交互适配系统，日历与已收录数据离线可用。
 
 ## 发布与官网
 

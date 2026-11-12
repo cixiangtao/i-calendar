@@ -20,7 +20,7 @@
 - 提交前检查完整差异，说明本轮提交的数量及各自范围，按范围暂存。
 - 使用 Conventional Commits，描述用中文，格式为 `type(scope): 对应表情 中文描述`。
 - 功能修改执行适用的类型检查、测试和构建；纯文档修改检查内容与链接即可。
-- 公共核心修改后运行 `npm run build`，同步 Apple 包中的 `Resources/calendar-core.js`，将该嵌入资源与对应源修改一并提交；`dist/` 等临时构建目录不跟踪。
+- 公共核心修改后运行 `npm run build`，验证 ESM 与共享前端构建；涉及原生行为时运行 `npm run check:native`、`npm run build:mac` 和 `npm run check:mac`。`dist/`、`target/` 等构建目录不跟踪。
 - 任务结束报告提交记录和验证结果，并确认工作区状态。
 
 ## 产品与架构
@@ -29,7 +29,7 @@
 - Mac 第一阶段只做菜单栏弹出小日历，沿用用户已选的 A“月历优先”方案。
 - 目标平台为 Mac 与 iOS；网页版在 1.0 发布时同步作为官网提供。
 - 公共数据能力放在 `packages/calendar-core`，不依赖界面、网络、文件系统或平台壳。
-- Apple 平台通过共享 `ShiriCalendarKit` 和系统 JavaScriptCore 调用同一份核心；Web 直接使用 ESM 包。
+- Mac 与 iOS 使用 Tauri 2，三端复用 `packages/calendar-ui` 中的 React 视图和应用状态。平台存储、网络与系统能力通过注入接口分离；不重新引入 SwiftUI/JavaScriptCore 桥接或另一套历法算法。
 - 休假、补班与常规周末分开处理；未收录的年度调休不得伪装成确定安排。
 
 ## 版本与 GitHub 发布
@@ -52,8 +52,9 @@
 ```sh
 npm ci
 npm run check
-npm run check:apple
+npm run check:native
 npm run build:mac
+npm run check:mac
 ```
 
-`check:apple` 使用实际 JavaScriptCore 验证桥接。没有完整 Xcode 时不宣称已运行 XCTest 或 iOS 真机验证。
+`check:mac` 使用已打包的真实 WKWebView 应用验证前端、共享核心、IPC 与窗口生命周期，执行前退出现有实例。iOS 通过 `npm run ios:init`、`npm run dev:ios` 和 `npm run build:ios` 接入；没有完整 Xcode/iOS SDK 时不宣称已编译 iOS、运行模拟器或完成真机验证。

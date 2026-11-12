@@ -1,6 +1,6 @@
 # @shiri/calendar-core
 
-平台与 UI 无关的中国日历核心。无网络、文件系统、DOM、Electron、SwiftUI 依赖。输出为可序列化的普通数据。
+平台与 UI 无关的中国日历核心。无网络、文件系统、DOM、React 或 Tauri 依赖。输出为可序列化的普通数据。
 
 ## 使用
 
@@ -34,7 +34,7 @@ calendar.getVacations('2026-11-11', 3);
 
 `npm run build:core` 生成 ESM 与 TypeScript 声明；`npm pack --workspace @shiri/calendar-core` 生成可安装包，尚未发布至公共 npm。
 
-`npm run build:apple-core` 把同一份实现打包为没有浏览器/Node 依赖的 IIFE，供原生 Apple 的 JavaScriptCore 运行。Swift 包位于 `platforms/apple`，其中 `ShiriCalendarKit` 仅封装桥接和 Codable 数据模型，不复制任何历法规则。
+Mac、iOS 与 Web 均由共享 TypeScript 应用状态直接调用本包；Apple 平台通过 Tauri 的系统 WebView 加载相同前端，不再使用 Swift 或 JavaScriptCore 桥接。独立客户端也可只引入 ESM 核心，无需依赖共享 UI。每次构建先清理旧产物，避免分发残留声明。
 
 ## 许可与校验
 
