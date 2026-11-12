@@ -12,6 +12,8 @@ const holidays = new HolidayStore(bundledHolidayDatasets);
 const calendar = new CalendarEngine(holidays);
 
 calendar.getDay('2026-11-11');
+calendar.getDay('2026-11-12').lunar.zodiac; // '马'，农历年生肖
+calendar.getDay('2026-11-12').constellation; // '天蝎座'，公历月日固定区间
 calendar.getMonth(2026, 11); // 周一开始，42 个单元格
 calendar.getUpcoming('2026-11-11', { kind: 'solar-term', limit: 3 });
 calendar.getVacations('2026-11-11', 3);
@@ -24,6 +26,7 @@ calendar.getAlmanac('2026-12-01'); // 独立查询，不让 42 格月历携带�
 - 农历与节气遵循中国历法的 UTC+8 口径；当前日期用 `dateForInstant(instant, 'Asia/Shanghai')` 显式转换。按其他地区日期查询时，调用方自行选择当地日期。
 - `weekday` 是 ISO 星期，周一 1、周日 7。
 - 农历 `month` 始终为正整数；闰月单独由 `isLeapMonth` 表示。
+- `lunar.zodiac` 为农历年生肖，按正月初一换年，不按元旦或立春；`constellation` 为带“座”后缀的公历星座，沿用 lunar-typescript 1.8.7 的 `Solar.getXingZuo()` 固定月日区间，不涉及出生时刻推算。两者独立于调休覆盖状态。
 - 常见节日是产品维护的规则集，并非所有地方/民族/纪念日的完整百科。传统节日不在闰月重复。除夕按年界判断，兼容腊月廿九。
 - `schedule.coverage === 'unavailable'` 表示未安装该年完整调休数据。此时 weekday/weekend 只说明常规星期分布，不能用于判断最终上班/放假。
 - 普通周末不标成官方假日；明确的周末补班优先。假期查询会将与官方假日相邻的普通周末合并。

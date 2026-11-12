@@ -2,7 +2,7 @@
 
 <img src="packages/calendar-ui/src/assets/logo.svg" width="80" height="80" alt="i日历 Logo" />
 
-Mac 菜单栏里的小月历，提供公历、农历、传统节日、节气、放假与补班，以及年月日干支、每日宜忌、冲煞和主要方位。免费、无广告，无需登录。
+Mac 菜单栏里的小月历，提供公历、农历、生肖、星座、传统节日、节气、放假与补班，以及年月日干支、每日宜忌、冲煞和主要方位。免费、无广告，无需登录。
 
 当前版本 **0.1.0**。项目已迁移为 **Tauri 2 + React + TypeScript**：Mac、iOS 和 Web 复用同一份界面、应用状态和日历核心。Mac 菜单栏应用与本地网页版已可运行；iOS 的入口及配置已接入，工程生成、模拟器和真机验证仍需完整 Xcode 环境。
 
@@ -42,6 +42,7 @@ open outputs/mac/i日历.app
 
 - 左键菜单栏图标展开或收起；失去焦点自动收起；右键可进入设置或退出。
 - 点日期查看完整农历和休班状态，点年月直接跳转。
+- 日期摘要明确标注生肖与星座，随选中日期更新。生肖以农历正月初一换年，星座采用公历月日固定区间。
 - 干支、完整宜忌、冲煞和方位直接展示在所选日期下方；宽窄屏内容一致。Mac 下方详情及宽屏网页右栏可独立滚动，无需进入另一页。
 - 方向键选日，PageUp / PageDown 切月，T 回到今天，Esc 返回或收起。
 - 设置支持周一/周日开始、跟随系统/浅色/深色、手动检查更新与年度 JSON 导入。
@@ -70,7 +71,7 @@ pnpm run build:ios
 pnpm run lint           # oxlint：问题和警告均须处理
 pnpm run format         # oxfmt：格式化所有支持的项目文件
 pnpm run format:check   # 只检查格式，不写文件
-pnpm run check          # lint、格式、类型检查、30 项测试及 ESM/网页构建
+pnpm run check          # lint、格式、类型检查、33 项测试及 ESM/网页构建
 pnpm run check:native   # Rust 测试：存储、旧数据迁移、多屏定位
 pnpm run build:mac      # 构建 Mac 应用、校验签名并生成 ZIP
 pnpm run check:mac      # Rust 测试 + 已打包应用的真实 WebView 冒烟验证
