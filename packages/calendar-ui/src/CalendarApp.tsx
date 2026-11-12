@@ -3,6 +3,7 @@ import Button from 'antd/es/button';
 import ConfigProvider from 'antd/es/config-provider';
 import Dropdown from 'antd/es/dropdown';
 import Segmented from 'antd/es/segmented';
+import Tabs from 'antd/es/tabs';
 import theme from 'antd/es/theme';
 import {
   useEffect,
@@ -576,233 +577,281 @@ function Settings({
         </Button>
         <h1 id="settings-title">设置</h1>
       </header>
-      <div className="settings-scroll">
-        {controller.platform.kind === 'macos' ? (
-          <MenuClockSettings
-            settings={state.preferences.menuClock}
-            onChange={(menuClock) => {
-              void controller.setPreferences({ menuClock });
-            }}
-          />
-        ) : null}
-        <section>
-          <h2>日历显示</h2>
-          <div className="setting-label">
-            <span>每周开始于</span>
-            <Segmented
-              aria-label="每周开始于"
-              options={[
-                { label: '周一', value: 1 },
-                { label: '周日', value: 7 },
-              ]}
-              value={state.preferences.weekStartsOn}
-              onChange={(value) => {
-                void controller.setPreferences({ weekStartsOn: value as 1 | 7 });
-              }}
-            />
-          </div>
-          <div className="setting-label">
-            <span>外观</span>
-            <Segmented
-              aria-label="外观"
-              options={[
-                { label: '跟随系统', value: 'system' },
-                { label: '浅色', value: 'light' },
-                { label: '深色', value: 'dark' },
-              ]}
-              value={state.preferences.appearance}
-              onChange={(value) => {
-                void controller.setPreferences({
-                  appearance: value as CalendarPreferences['appearance'],
-                });
-              }}
-            />
-          </div>
-        </section>
-        <section>
-          <h2>配色</h2>
-          <div
-            className="palette-choices"
-            role="group"
-            aria-label="主题预设"
-          >
-            {colorThemes.map((preset) => (
-              <Button
-                key={preset.id}
-                className="palette-choice"
-                aria-pressed={state.preferences.colorTheme === preset.id}
-                onClick={() => {
-                  void controller.setPreferences({ colorTheme: preset.id, accentColor: null });
-                }}
-              >
-                <span
-                  className="palette-swatch"
-                  style={{ background: preset.canvas }}
-                  aria-hidden="true"
-                >
-                  <i style={{ background: preset.accent }} />
-                </span>
-                {preset.name}
-              </Button>
-            ))}
-          </div>
-          <div className="accent-setting">
-            <label htmlFor="accent-color">强调色</label>
-            <input
-              id="accent-color"
-              type="color"
-              value={
-                state.preferences.accentColor ??
-                colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
-              }
-              onChange={(event) => {
-                void controller.setPreferences({ accentColor: event.target.value });
-              }}
-              onFocus={() => interact(true)}
-              onBlur={() => interact(false)}
-            />
-            <span className="accent-value">
-              {(
-                state.preferences.accentColor ??
-                colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
-              ).toUpperCase()}
-            </span>
-            <Button
-              type="text"
-              disabled={state.preferences.accentColor === null}
-              onClick={() => {
-                void controller.setPreferences({ accentColor: null });
-              }}
-            >
-              恢复默认
-            </Button>
-          </div>
-          <p>强调色用于选中日期和操作，自动适配明暗外观。切换预设会恢复该主题的默认强调色。</p>
-        </section>
-        <section>
-          <h2>放假与调休</h2>
-          <p>已收录：{state.years.join('、')}年</p>
-          <p>
-            农历、节气和已收录的调休均可离线查询。放假安排根据全国统一通知整理，不包含个人排班及地方假期。
-          </p>
-          <div className="data-actions">
-            <Button
-              loading={state.updating}
-              disabled={!state.ready}
-              onClick={() => {
-                void controller.checkUpdates();
-              }}
-            >
-              检查调休更新
-            </Button>
-            <Button
-              disabled={state.updating || !state.ready}
-              onClick={() => {
-                interact(true);
-                file.current?.click();
-              }}
-            >
-              导入 JSON…
-            </Button>
-          </div>
-          <input
-            ref={file}
-            hidden
-            type="file"
-            accept=".json,application/json"
-            aria-label="选择年度调休 JSON"
-            onChange={(event) => {
-              const selected = event.target.files?.[0];
-              if (!selected) {
-                interact(false);
-                return;
-              }
-              if (selected.size > 1_000_000) {
-                controller.reportError('文件过大，请选择年度调休 JSON');
-                event.target.value = '';
-                interact(false);
-                return;
-              }
-              void selected
-                .text()
-                .then((text) => controller.importDataset(text))
-                .catch(() => controller.reportError('文件无法读取，请重新选择。'))
-                .finally(() => {
-                  event.target.value = '';
-                  interact(false);
-                });
-            }}
-          />
-          <p className="setting-hint">只导入已核对来源的完整年度安排。</p>
-          {state.updatedAt ? (
-            <p className="setting-hint">
-              上次同步：
-              {new Intl.DateTimeFormat('zh-CN', {
-                timeZone: 'Asia/Shanghai',
-                dateStyle: 'medium',
-              }).format(new Date(state.updatedAt))}
-            </p>
-          ) : null}
-          <Feedback
-            controller={controller}
-            state={state}
-          />
-        </section>
-        <section>
-          <h2>数据来源</h2>
-          <button
-            type="button"
-            className="source-link"
-            onClick={() => {
-              void controller.openSource('https://github.com/NateScarlet/holiday-cn');
-            }}
-          >
-            国务院节假日通知 · holiday-cn{' '}
-            <Icon
-              name="external"
-              width="12"
-              height="12"
-            />
-          </button>
-          <button
-            type="button"
-            className="source-link"
-            onClick={() => {
-              void controller.openSource('https://github.com/6tail/lunar-typescript');
-            }}
-          >
-            农历与节气计算 · lunar-typescript{' '}
-            <Icon
-              name="external"
-              width="12"
-              height="12"
-            />
-          </button>
-          {state.selected.schedule.sources.map((source, index) => (
-            <button
-              type="button"
-              className="source-link"
-              key={source}
-              onClick={() => {
-                void controller.openSource(source);
-              }}
-            >
-              {state.selected.year}年放假安排来源
-              {state.selected.schedule.sources.length > 1 ? index + 1 : ''}{' '}
-              <Icon
-                name="external"
-                width="12"
-                height="12"
-              />
-            </button>
-          ))}
-          <p className="setting-hint">日期按北京时间计算 · 支持1901—2100年</p>
-        </section>
-        <section className="keyboard-help">
-          <h2>键盘操作</h2>
-          <p>方向键选择日期，PageUp / PageDown 切月，T 回到今天，Esc 返回或收起日历。</p>
-        </section>
-      </div>
+      <Tabs
+        className="settings-tabs"
+        defaultActiveKey="general"
+        animated={false}
+        destroyOnHidden={false}
+        tabBarGutter={12}
+        indicator={{ size: 20, align: 'center' }}
+        styles={{ indicator: { background: 'var(--ink)', height: 2, borderRadius: 2 } }}
+        items={[
+          {
+            key: 'general',
+            label: '常规',
+            children: (
+              <div className="settings-scroll">
+                <section>
+                  <h2>日历显示</h2>
+                  <div className="setting-label">
+                    <span>每周开始于</span>
+                    <Segmented
+                      aria-label="每周开始于"
+                      options={[
+                        { label: '周一', value: 1 },
+                        { label: '周日', value: 7 },
+                      ]}
+                      value={state.preferences.weekStartsOn}
+                      onChange={(value) => {
+                        void controller.setPreferences({ weekStartsOn: value as 1 | 7 });
+                      }}
+                    />
+                  </div>
+                  <div className="setting-label">
+                    <span>外观</span>
+                    <Segmented
+                      aria-label="外观"
+                      options={[
+                        { label: '跟随系统', value: 'system' },
+                        { label: '浅色', value: 'light' },
+                        { label: '深色', value: 'dark' },
+                      ]}
+                      value={state.preferences.appearance}
+                      onChange={(value) => {
+                        void controller.setPreferences({
+                          appearance: value as CalendarPreferences['appearance'],
+                        });
+                      }}
+                    />
+                  </div>
+                </section>
+                <section>
+                  <h2>配色</h2>
+                  <div
+                    className="palette-choices"
+                    role="group"
+                    aria-label="主题预设"
+                  >
+                    {colorThemes.map((preset) => (
+                      <Button
+                        key={preset.id}
+                        className="palette-choice"
+                        aria-pressed={state.preferences.colorTheme === preset.id}
+                        onClick={() => {
+                          void controller.setPreferences({
+                            colorTheme: preset.id,
+                            accentColor: null,
+                          });
+                        }}
+                      >
+                        <span
+                          className="palette-swatch"
+                          style={{ background: preset.canvas }}
+                          aria-hidden="true"
+                        >
+                          <i style={{ background: preset.accent }} />
+                        </span>
+                        {preset.name}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="accent-setting">
+                    <label htmlFor="accent-color">强调色</label>
+                    <input
+                      id="accent-color"
+                      type="color"
+                      value={
+                        state.preferences.accentColor ??
+                        colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
+                      }
+                      onChange={(event) => {
+                        void controller.setPreferences({ accentColor: event.target.value });
+                      }}
+                      onFocus={() => interact(true)}
+                      onBlur={() => interact(false)}
+                    />
+                    <span className="accent-value">
+                      {(
+                        state.preferences.accentColor ??
+                        colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
+                      ).toUpperCase()}
+                    </span>
+                    <Button
+                      type="text"
+                      disabled={state.preferences.accentColor === null}
+                      onClick={() => {
+                        void controller.setPreferences({ accentColor: null });
+                      }}
+                    >
+                      恢复默认
+                    </Button>
+                  </div>
+                  <p>
+                    强调色用于选中日期和操作，自动适配明暗外观。切换预设会恢复该主题的默认强调色。
+                  </p>
+                </section>
+              </div>
+            ),
+          },
+          ...(controller.platform.kind === 'macos'
+            ? [
+                {
+                  key: 'menu-bar',
+                  label: '菜单栏',
+                  children: (
+                    <div className="settings-scroll">
+                      <MenuClockSettings
+                        settings={state.preferences.menuClock}
+                        onChange={(menuClock) => {
+                          void controller.setPreferences({ menuClock });
+                        }}
+                      />
+                    </div>
+                  ),
+                },
+              ]
+            : []),
+          {
+            key: 'data',
+            label: '数据',
+            children: (
+              <div className="settings-scroll">
+                <section>
+                  <h2>放假与调休</h2>
+                  <p>已收录：{state.years.join('、')}年</p>
+                  <p>
+                    农历、节气和已收录的调休均可离线查询。放假安排根据全国统一通知整理，不包含个人排班及地方假期。
+                  </p>
+                  <div className="data-actions">
+                    <Button
+                      loading={state.updating}
+                      disabled={!state.ready}
+                      onClick={() => {
+                        void controller.checkUpdates();
+                      }}
+                    >
+                      检查调休更新
+                    </Button>
+                    <Button
+                      disabled={state.updating || !state.ready}
+                      onClick={() => {
+                        interact(true);
+                        file.current?.click();
+                      }}
+                    >
+                      导入 JSON…
+                    </Button>
+                  </div>
+                  <p className="setting-hint">只导入已核对来源的完整年度安排。</p>
+                  {state.updatedAt ? (
+                    <p className="setting-hint">
+                      上次同步：
+                      {new Intl.DateTimeFormat('zh-CN', {
+                        timeZone: 'Asia/Shanghai',
+                        dateStyle: 'medium',
+                      }).format(new Date(state.updatedAt))}
+                    </p>
+                  ) : null}
+                </section>
+              </div>
+            ),
+          },
+          {
+            key: 'about',
+            label: '关于',
+            children: (
+              <div className="settings-scroll">
+                <section>
+                  <h2>数据来源</h2>
+                  <button
+                    type="button"
+                    className="source-link"
+                    onClick={() => {
+                      void controller.openSource('https://github.com/NateScarlet/holiday-cn');
+                    }}
+                  >
+                    国务院节假日通知 · holiday-cn{' '}
+                    <Icon
+                      name="external"
+                      width="12"
+                      height="12"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    className="source-link"
+                    onClick={() => {
+                      void controller.openSource('https://github.com/6tail/lunar-typescript');
+                    }}
+                  >
+                    农历与节气计算 · lunar-typescript{' '}
+                    <Icon
+                      name="external"
+                      width="12"
+                      height="12"
+                    />
+                  </button>
+                  {state.selected.schedule.sources.map((source, index) => (
+                    <button
+                      type="button"
+                      className="source-link"
+                      key={source}
+                      onClick={() => {
+                        void controller.openSource(source);
+                      }}
+                    >
+                      {state.selected.year}年放假安排来源
+                      {state.selected.schedule.sources.length > 1 ? index + 1 : ''}{' '}
+                      <Icon
+                        name="external"
+                        width="12"
+                        height="12"
+                      />
+                    </button>
+                  ))}
+                  <p className="setting-hint">日期按北京时间计算 · 支持1901—2100年</p>
+                </section>
+                <section className="keyboard-help">
+                  <h2>键盘操作</h2>
+                  <p>方向键选择日期，PageUp / PageDown 切月，T 回到今天，Esc 返回或收起日历。</p>
+                </section>
+              </div>
+            ),
+          },
+        ]}
+      />
+      <input
+        ref={file}
+        hidden
+        type="file"
+        accept=".json,application/json"
+        aria-label="选择年度调休 JSON"
+        onChange={(event) => {
+          const selected = event.target.files?.[0];
+          if (!selected) {
+            interact(false);
+            return;
+          }
+          if (selected.size > 1_000_000) {
+            controller.reportError('文件过大，请选择年度调休 JSON');
+            event.target.value = '';
+            interact(false);
+            return;
+          }
+          void selected
+            .text()
+            .then((text) => controller.importDataset(text))
+            .catch(() => controller.reportError('文件无法读取，请重新选择。'))
+            .finally(() => {
+              event.target.value = '';
+              interact(false);
+            });
+        }}
+      />
+      <Feedback
+        controller={controller}
+        state={state}
+      />
       <footer className="settings-footer">
         <span>i日历 0.1.0 · 免费无广告</span>
         {controller.platform.quit ? (
