@@ -1,5 +1,6 @@
 import { Solar } from 'lunar-typescript';
 
+import { getAlmanac as queryAlmanac } from './almanac.js';
 import { addDays, dateKey, daysBetween, MAX_YEAR, MIN_YEAR, parseDate } from './date.js';
 import { HolidayStore } from './holidays.js';
 import type { CalendarDay, CalendarEvent, DateKey, MonthCalendar, Vacation } from './types.js';
@@ -88,6 +89,11 @@ export class CalendarEngine {
       festivals: [...base.festivals],
       schedule: this.holidays.get(date),
     };
+  }
+
+  /** 按需查询所选日期的传统黄历，不向 42 格月历附加大块详情。 */
+  getAlmanac(date: DateKey) {
+    return queryAlmanac(date);
   }
 
   /** Returns a six-row month grid. Out-of-range boundary dates become blank cells. */

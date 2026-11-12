@@ -68,3 +68,35 @@ export interface Vacation {
   days: number;
   daysUntil: number;
 }
+
+/** 每日黄历采用的固定口径；日期输入不包含时辰。 */
+export interface AlmanacRules {
+  id: 'shiri-almanac-v1';
+  timeZone: 'Asia/Shanghai';
+  yearBoundary: 'lunar-new-year';
+  monthBoundary: 'jie-day-start';
+  dayBoundary: '00:00';
+  yiJiSect: 1;
+  fuSect: 1;
+}
+
+/** 可序列化的每日传统黄历；与年度放假调休覆盖状态无关。 */
+export interface DayAlmanac {
+  date: DateKey;
+  ganZhi: { year: string; month: string; day: string };
+  /** 保留资料原文；上游的“无”不改写成“诸事皆宜”。 */
+  yi: string[];
+  ji: string[];
+  chong: string;
+  sha: string;
+  positions: { xi: string; fu: string; cai: string; yangGui: string; yinGui: string };
+  rules: AlmanacRules;
+  source: {
+    library: 'lunar-typescript';
+    version: string;
+    repository: string;
+    ganZhiDocumentation: string;
+    yiJiDocumentation: string;
+    positionsDocumentation: string;
+  };
+}
