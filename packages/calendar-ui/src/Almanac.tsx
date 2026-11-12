@@ -1,15 +1,7 @@
 import type { DayAlmanac } from '@shiri/calendar-core';
 
-import type { CalendarController } from './store.js';
-
 /** 共享黄历内容；所展示的数值全部来自公共核心，不在界面里重算。 */
-export function AlmanacContent({
-  almanac,
-  controller,
-}: {
-  almanac: DayAlmanac;
-  controller: CalendarController;
-}) {
+export function AlmanacContent({ almanac }: { almanac: DayAlmanac }) {
   const directions = [
     ['喜神', almanac.positions.xi],
     ['福神', almanac.positions.fu],
@@ -61,53 +53,6 @@ export function AlmanacContent({
           </div>
         ))}
       </dl>
-      <details className="almanac-provenance">
-        <summary>数据来源与口径</summary>
-        <p>
-          {almanac.source.library} {almanac.source.version} · 传统黄历资料
-        </p>
-        <ul>
-          <li>干支年以正月初一换年。</li>
-          <li>干支月以节交接日零点换月。</li>
-          <li>日期按北京时间零点换日，未包含时辰。</li>
-          <li>宜忌和福神固定使用上游流派一。</li>
-        </ul>
-        <p>宜忌采用上游整理的对照表，可能与其他黄历存在差异；原文“无”不表示“诸事皆宜”。</p>
-        <div className="almanac-source-links">
-          <button
-            type="button"
-            onClick={() => {
-              void controller.openSource(almanac.source.yiJiDocumentation);
-            }}
-          >
-            宜忌资料说明
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void controller.openSource(almanac.source.ganZhiDocumentation);
-            }}
-          >
-            干支口径说明
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void controller.openSource(almanac.source.positionsDocumentation);
-            }}
-          >
-            方位口径说明
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void controller.openSource(almanac.source.repository);
-            }}
-          >
-            查看计算库
-          </button>
-        </div>
-      </details>
     </section>
   );
 }

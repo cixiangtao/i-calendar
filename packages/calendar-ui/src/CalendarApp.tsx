@@ -231,10 +231,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
 
   const displayedWeekdays =
     state.preferences.weekStartsOn === 1 ? weekdays : ['日', ...weekdays.slice(0, 6)];
-  const coverageText =
-    state.month.coverage === 'unavailable'
-      ? `${state.year}年调休未收录`
-      : `调休已收录至${state.years.at(-1) ?? '—'}年`;
   const busy = (value: boolean) => {
     void controller.platform.setInteractionBusy?.(value);
   };
@@ -536,30 +532,12 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 </section>
               </Dropdown>
               <div className="almanac-inline">
-                <AlmanacContent
-                  almanac={state.almanac}
-                  controller={controller}
-                />
+                <AlmanacContent almanac={state.almanac} />
               </div>
               <Feedback
                 controller={controller}
                 state={state}
               />
-              <button
-                className="data-footer"
-                type="button"
-                onClick={() => controller.showSettings()}
-              >
-                <span
-                  className={`status-dot ${state.month.coverage === 'unavailable' ? 'unknown' : ''}`}
-                />
-                <span>中国大陆 · {coverageText}</span>
-                <Icon
-                  name="right"
-                  width="12"
-                  height="12"
-                />
-              </button>
             </aside>
           </>
         )}
