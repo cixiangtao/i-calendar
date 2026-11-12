@@ -58,15 +58,13 @@ body {
   min-width: 320px;
 }
 button,
-select,
 input {
   font: inherit;
 }
 button {
   -webkit-tap-highlight-color: transparent;
 }
-button:not(:disabled),
-select {
+button:not(:disabled) {
   cursor: pointer;
 }
 button:disabled {
@@ -74,7 +72,6 @@ button:disabled {
   opacity: 0.38;
 }
 button:focus-visible,
-select:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 3px;
@@ -178,16 +175,9 @@ a:focus-visible {
 .month-heading {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
-.month-select-control {
-  position: relative;
-  display: inline-flex;
-  flex-shrink: 0;
-  height: 28px;
-}
-.month-select-control::before,
 .calendar-app .tool-button::before,
 .calendar-app .today-button::before {
   content: '';
@@ -201,36 +191,17 @@ a:focus-visible {
   background: var(--control);
   pointer-events: none;
 }
-.month-heading select {
-  position: relative;
-  appearance: none;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 20px;
-  padding: 4px 8px;
-}
 .year-control {
   width: 72px;
 }
 .month-control {
-  width: 48px;
+  width: 50px;
 }
 .month-controls {
   display: flex;
   align-items: center;
   flex-shrink: 0;
   gap: 4px;
-}
-.month-heading option {
-  font-size: 14px;
-  background: var(--surface);
-  color: var(--ink);
 }
 .calendar-app .tool-button,
 .calendar-app .today-button {
@@ -603,15 +574,9 @@ a:focus-visible {
 .setting-label:last-child {
   margin-bottom: 0;
 }
-.menu-clock-settings select {
-  min-width: 0;
-  max-width: 220px;
-  padding: 5px 8px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--ink);
-  background: var(--control);
-  font-size: 12px;
+.clock-format-select {
+  width: 188px;
+  max-width: 65%;
 }
 .clock-format-form {
   display: flex;
@@ -923,9 +888,6 @@ body[data-platform='ios'] .calendar-stage {
   .calendar-app .today-button {
     min-width: 44px;
     min-height: 44px;
-  }
-  .month-select-control {
-    height: 44px;
   }
   .month-controls {
     gap: 2px;

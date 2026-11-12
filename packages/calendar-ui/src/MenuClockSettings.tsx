@@ -3,6 +3,7 @@ import Input from 'antd/es/input';
 import Switch from 'antd/es/switch';
 import { useEffect, useState } from 'react';
 
+import { CalendarSelect } from './CalendarSelect.js';
 import {
   formatMenuClock,
   menuClockPresets,
@@ -12,6 +13,7 @@ import {
 
 const modeFor = (format: string) =>
   menuClockPresets.some((item) => item.value === format) ? format : 'custom';
+const formatOptions = [...menuClockPresets, { value: 'custom', label: '自定义' }];
 
 /** 仅供 Mac 菜单栏使用；预览遵循系统时区，输入校验通过后才保存。 */
 export function MenuClockSettings({
@@ -51,28 +53,21 @@ export function MenuClockSettings({
       </div>
       <div className="setting-label">
         <label htmlFor="menu-clock-format">展示格式</label>
-        <select
+        <CalendarSelect
           id="menu-clock-format"
+          className="clock-format-select"
+          label="展示格式"
           value={mode}
-          onChange={(event) => {
-            const format = event.target.value;
+          options={formatOptions}
+          popupWidth={208}
+          onChange={(format) => {
             setMode(format);
             if (format !== 'custom') {
               setDraft(format);
               onChange({ ...settings, format });
             }
           }}
-        >
-          {menuClockPresets.map((item) => (
-            <option
-              key={item.value}
-              value={item.value}
-            >
-              {item.label}
-            </option>
-          ))}
-          <option value="custom">自定义</option>
-        </select>
+        />
       </div>
       {mode === 'custom' ? (
         <form

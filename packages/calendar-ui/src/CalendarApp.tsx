@@ -16,6 +16,7 @@ import {
 } from 'react';
 
 import { AlmanacContent } from './Almanac.js';
+import { CalendarSelect } from './CalendarSelect.js';
 import { colorThemes, resolveColorTheme } from './color-theme.js';
 import { MenuClockSettings } from './MenuClockSettings.js';
 import type { CalendarPreferences } from './platform.js';
@@ -65,8 +66,14 @@ function Icon({ name, ...props }: SVGProps<SVGSVGElement> & { name: IconName }) 
 }
 
 const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
-const years = Array.from({ length: 200 }, (_, index) => 1901 + index);
-const months = Array.from({ length: 12 }, (_, index) => index + 1);
+const years = Array.from({ length: 200 }, (_, index) => ({
+  value: 1901 + index,
+  label: `${1901 + index}年`,
+}));
+const months = Array.from({ length: 12 }, (_, index) => ({
+  value: index + 1,
+  label: `${index + 1}月`,
+}));
 
 function scheduleLabel(day: CalendarDay) {
   if (day.schedule.coverage === 'unavailable') return '调休未收录';
@@ -228,9 +235,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
 
   const displayedWeekdays =
     state.preferences.weekStartsOn === 1 ? weekdays : ['日', ...weekdays.slice(0, 6)];
-  const busy = (value: boolean) => {
-    void controller.platform.setInteractionBusy?.(value);
-  };
 
   return (
     <ConfigProvider
@@ -298,28 +302,13 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   {state.year}年{state.monthNumber}月
                 </h1>
                 <div className="month-heading">
-                  <span className="month-select-control year-control">
-                    <select
-                      className="year-select"
-                      aria-label="年份"
-                      value={state.year}
-                      onFocus={() => busy(true)}
-                      onBlur={() => busy(false)}
-                      onChange={(event) => {
-                        controller.jump(Number(event.target.value), state.monthNumber);
-                        busy(false);
-                      }}
-                    >
-                      {years.map((year) => (
-                        <option
-                          key={year}
-                          value={year}
-                        >
-                          {year}年
-                        </option>
-                      ))}
-                    </select>
-                  </span>
+                  <CalendarSelect
+                    className="year-control"
+                    label="年份"
+                    value={state.year}
+                    options={years}
+                    onChange={(year) => controller.jump(year, state.monthNumber)}
+                  />
                   <nav
                     className="month-controls"
                     aria-label="切换月份"
@@ -338,28 +327,13 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                       }
                       onClick={() => controller.shiftMonth(-1)}
                     />
-                    <span className="month-select-control month-control">
-                      <select
-                        className="month-select"
-                        aria-label="月份"
-                        value={state.monthNumber}
-                        onFocus={() => busy(true)}
-                        onBlur={() => busy(false)}
-                        onChange={(event) => {
-                          controller.jump(state.year, Number(event.target.value));
-                          busy(false);
-                        }}
-                      >
-                        {months.map((month) => (
-                          <option
-                            key={month}
-                            value={month}
-                          >
-                            {month}月
-                          </option>
-                        ))}
-                      </select>
-                    </span>
+                    <CalendarSelect
+                      className="month-control"
+                      label="月份"
+                      value={state.monthNumber}
+                      options={months}
+                      onChange={(month) => controller.jump(state.year, month)}
+                    />
                     <Button
                       type="text"
                       className="tool-button"
