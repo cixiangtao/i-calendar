@@ -515,20 +515,24 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                     <span key={state.selected.date}>{state.selected.day}</span>
                   </div>
                   <div className="date-detail">
-                    <h2>
-                      <span className="detail-year">{state.selected.year}年</span>
-                      {state.selected.month}月{state.selected.day}日{' '}
-                      <span>周{weekdays[state.selected.weekday - 1]}</span>
-                    </h2>
+                    <div className="date-heading">
+                      <h2>
+                        <span className="detail-year">{state.selected.year}年</span>
+                        {state.selected.month}月{state.selected.day}日{' '}
+                        <span>周{weekdays[state.selected.weekday - 1]}</span>
+                      </h2>
+                      <strong
+                        className={`schedule-badge schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
+                      >
+                        {scheduleLabel(state.selected)}
+                      </strong>
+                    </div>
                     <p>
                       农历{state.selected.lunar.monthName}
                       {state.selected.lunar.dayName} · {state.selected.lunar.yearGanZhi}年
                     </p>
                   </div>
-                  <div
-                    className={`summary-status schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
-                  >
-                    <strong>{scheduleLabel(state.selected)}</strong>
+                  <div className="summary-status">
                     <span className="date-traits">
                       <span>
                         生肖 <b>{state.selected.lunar.zodiac}</b>
