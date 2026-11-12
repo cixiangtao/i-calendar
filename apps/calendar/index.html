@@ -8,7 +8,7 @@
     />
     <meta
       name="theme-color"
-      content="#146e5e"
+      content="#f1f2f6"
     />
     <meta
       name="description"
@@ -22,7 +22,14 @@
     <title>拾日历 · 公农历与放假调休</title>
   </head>
   <body>
-    <!-- 沿用已批准的 A 月历优先方案（49ec89c9）：松绿、七列六周、公农历双行；首屏直接使用日历。三端共用组件，平台只提供存储与系统能力。 -->
+    <!--
+    THESIS: 公农历优先的小日历，以清楚的日期网格和独立详情减少查阅负担。
+    OWN-WORLD: 浅灰画布、白色圆角面板；蓝选择、红休假、绿节气、黄补班、紫节日。
+    STORY: 打开查日期，选择后看完整农历与休班；必要操作在首屏内。
+    FIRST VIEWPORT: 宽屏左月历右详情；Mac 400×660 上下排列；小屏保留触控与深色。
+    FORM: 用户参考图与明确配色要求，圆润简洁；方向键选日时焦点跟随。key=rounded-five-colors-20261112
+    FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+    -->
     <div id="root"><p class="boot-message">正在打开日历…</p></div>
     <script
       type="module"
