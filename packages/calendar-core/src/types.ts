@@ -73,7 +73,7 @@ export interface Vacation {
 
 /** 每日黄历采用的固定口径；日期输入不包含时辰。 */
 export interface AlmanacRules {
-  id: 'shiri-almanac-v1';
+  id: 'i-calendar-almanac-v1';
   timeZone: 'Asia/Shanghai';
   yearBoundary: 'lunar-new-year';
   monthBoundary: 'jie-day-start';

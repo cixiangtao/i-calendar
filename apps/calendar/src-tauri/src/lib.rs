@@ -44,17 +44,14 @@ fn read_saved_state(app: &tauri::AppHandle) -> Result<Option<Value>, String> {
         .app_data_dir()
         .map_err(|_| "无法获取日历数据目录")?
         .join("calendar-state.json");
-    if let Some(state) = storage::read_state(&path)? {
-        return Ok(Some(state));
-    }
     #[cfg(target_os = "macos")]
     {
         let directory = app.path().data_dir().map_err(|_| "无法获取旧版数据目录")?;
         let home = app.path().home_dir().map_err(|_| "无法获取用户目录")?;
-        return storage::legacy_state(&directory, &home);
+        return storage::load_with_legacy(&path, &directory, &home);
     }
     #[cfg(not(target_os = "macos"))]
-    Ok(None)
+    storage::read_state(&path)
 }
 
 #[tauri::command]

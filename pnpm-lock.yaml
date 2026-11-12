@@ -166,10 +166,10 @@ importers:
 
   .:
     dependencies:
-      '@shiri/calendar-core':
+      '@i-calendar/core':
         specifier: workspace:*
         version: link:packages/calendar-core
-      '@shiri/calendar-ui':
+      '@i-calendar/ui':
         specifier: workspace:*
         version: link:packages/calendar-ui
       '@tauri-apps/api':
@@ -245,7 +245,7 @@ importers:
 
   packages/calendar-ui:
     dependencies:
-      '@shiri/calendar-core':
+      '@i-calendar/core':
         specifier: workspace:*
         version: link:../calendar-core
       antd:

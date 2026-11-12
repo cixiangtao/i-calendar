@@ -1,12 +1,12 @@
 [package]
-name = "shiri-calendar"
+name = "i-calendar"
 version = "0.1.0"
 description = "i日历：公农历、节气与放假调休"
 edition = "2021"
 rust-version = "1.99"
 
 [lib]
-name = "shiri_calendar_lib"
+name = "i_calendar_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

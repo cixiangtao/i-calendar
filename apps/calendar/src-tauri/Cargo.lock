@@ -1707,6 +1707,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "i-calendar"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "plist",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-clipboard-manager",
+ "tauri-plugin-opener",
+ "tauri-plugin-single-instance",
+]
+
+[[package]]
 name = "iana-time-zone"
 version = "0.1.65"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3617,22 +3633,6 @@ dependencies = [
  "cfg-if",
  "cpufeatures 0.2.17",
  "digest",
-]
-
-[[package]]
-name = "shiri-calendar"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "plist",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-clipboard-manager",
- "tauri-plugin-opener",
- "tauri-plugin-single-instance",
 ]
 
 [[package]]

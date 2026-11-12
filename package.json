@@ -1,5 +1,5 @@
 {
-  "name": "shiri-calendar",
+  "name": "i-calendar",
   "displayName": "i日历",
   "version": "0.1.0",
   "private": true,
@@ -16,7 +16,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm run build:core && pnpm run build:web",
-    "build:core": "pnpm --filter @shiri/calendar-core run build",
+    "build:core": "pnpm --filter @i-calendar/core run build",
     "build:icons": "node scripts/build-icons.mjs",
     "build:ios": "node scripts/tauri.mjs ios build",
     "build:mac": "node scripts/package-tauri-mac.mjs",
@@ -38,11 +38,11 @@
     "preview:web": "vite preview --config apps/calendar/vite.config.ts --host 127.0.0.1",
     "tauri": "node scripts/tauri.mjs",
     "test": "tsx --test packages/calendar-core/test/*.test.ts packages/calendar-ui/test/*.test.ts",
-    "typecheck": "tsc --noEmit && pnpm --filter @shiri/calendar-core run typecheck"
+    "typecheck": "tsc --noEmit && pnpm --filter @i-calendar/core run typecheck"
   },
   "dependencies": {
-    "@shiri/calendar-core": "workspace:*",
-    "@shiri/calendar-ui": "workspace:*",
+    "@i-calendar/core": "workspace:*",
+    "@i-calendar/ui": "workspace:*",
     "@tauri-apps/api": "2.12.4",
     "@tauri-apps/plugin-clipboard-manager": "^2",
     "@tauri-apps/plugin-opener": "2.7.3",

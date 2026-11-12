@@ -7,6 +7,7 @@ import { ALMANAC_SOURCE, CalendarEngine, getAlmanac, HolidayStore } from '../src
 // 与用户参考图 2026-12-01 的干支、宜忌及主要方位交叉核对的固定样例。
 test('黄历样例：年月日干支、完整宜忌、冲煞及福神流派固定', () => {
   const day = getAlmanac('2026-12-01');
+  assert.equal(day.rules.id, 'i-calendar-almanac-v1');
   assert.deepEqual(day.ganZhi, { year: '丙午', month: '己亥', day: '己酉' });
   assert.deepEqual(day.yi, [
     '开市',

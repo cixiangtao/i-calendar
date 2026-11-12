@@ -14,7 +14,7 @@ try {
   console.log(stdout);
   if (stderr) console.log(stderr);
   if (process.argv.includes('--app')) {
-    const app = path.join(root, 'outputs/mac/i日历.app/Contents/MacOS/shiri-calendar');
+    const app = path.join(root, 'outputs/mac/i日历.app/Contents/MacOS/i-calendar');
     const result = await run(app, ['--smoke-test'], {
       cwd: root,
       timeout: 40_000,

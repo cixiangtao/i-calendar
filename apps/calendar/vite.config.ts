@@ -10,7 +10,7 @@ const nativeHost = process.env.TAURI_DEV_HOST;
 
 export default defineConfig({
   root: source('.'),
-  base: process.env.SHIRI_BASE ?? './',
+  base: process.env.I_CALENDAR_BASE ?? './',
   plugins: [react()],
   css: {
     postcss: {
@@ -21,15 +21,15 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
     alias: [
       {
-        find: '@shiri/calendar-core/data',
+        find: '@i-calendar/core/data',
         replacement: source('../../packages/calendar-core/src/data.ts'),
       },
       {
-        find: '@shiri/calendar-core',
+        find: '@i-calendar/core',
         replacement: source('../../packages/calendar-core/src/index.ts'),
       },
       {
-        find: '@shiri/calendar-ui',
+        find: '@i-calendar/ui',
         replacement: source('../../packages/calendar-ui/src/index.ts'),
       },
     ],

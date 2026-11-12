@@ -36,9 +36,28 @@ pub fn save_state(path: &Path, state: &Value) -> Result<(), String> {
     fs::rename(&temporary, path).map_err(|_| "无法替换日历数据".to_string())
 }
 
-/// 旧版调休与显示设置只读迁移；旧文件保持原样。
+/// 当前文件优先；缺失时只读迁移，损坏的当前文件不由旧数据静默替代。
+#[cfg(target_os = "macos")]
+pub fn load_with_legacy(
+    path: &Path,
+    data_directory: &Path,
+    home: &Path,
+) -> Result<Option<Value>, String> {
+    if let Some(state) = read_state(path)? {
+        return Ok(Some(state));
+    }
+    legacy_state(data_directory, home)
+}
+
+/// 旧版 Tauri 完整状态优先于早期原生版本；所有旧文件保持原样。
 #[cfg(target_os = "macos")]
 pub fn legacy_state(data_directory: &Path, home: &Path) -> Result<Option<Value>, String> {
+    // 历史应用标识仅在这里用于读取已有偏好和调休缓存。
+    if let Some(state) =
+        read_state(&data_directory.join("local.shiri.calendar/calendar-state.json"))?
+    {
+        return Ok(Some(state));
+    }
     let holidays = read_state(&data_directory.join("ShiriCalendar/holidays.json"))?;
     let preferences_path = home.join("Library/Preferences/local.shiri.calendar.plist");
     let settings = plist::Value::from_file(preferences_path).ok();
@@ -71,7 +90,8 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn legacy_settings_and_holidays_migrate_without_modifying_original() {
-        let directory = std::env::temp_dir().join(format!("shiri-legacy-{}", std::process::id()));
+        let directory =
+            std::env::temp_dir().join(format!("i-calendar-legacy-{}", std::process::id()));
         let data = directory.join("Application Support");
         let home = directory.join("home");
         fs::create_dir_all(data.join("ShiriCalendar")).unwrap();
@@ -97,13 +117,52 @@ mod tests {
 
     #[test]
     fn atomic_storage_round_trip_and_invalid_version_preserve_previous() {
-        let directory = std::env::temp_dir().join(format!("shiri-storage-{}", std::process::id()));
+        let directory =
+            std::env::temp_dir().join(format!("i-calendar-storage-{}", std::process::id()));
         let path = directory.join("calendar.json");
         assert!(read_state(&path).unwrap().is_none());
         let state = json!({"schemaVersion": 1, "preferences": {"weekStartsOn": 1}, "datasets": []});
         save_state(&path, &state).unwrap();
         assert!(save_state(&path, &json!({"schemaVersion": 99})).is_err());
         assert_eq!(read_state(&path).unwrap().unwrap(), state);
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn renamed_app_migrates_full_state_and_keeps_current_state_authoritative() {
+        let directory =
+            std::env::temp_dir().join(format!("i-calendar-rename-{}", std::process::id()));
+        let data = directory.join("Application Support");
+        let home = directory.join("home");
+        let old = data.join("local.shiri.calendar/calendar-state.json");
+        let current = data.join("local.icalendar.app/calendar-state.json");
+        let original = json!({"schemaVersion": 1, "preferences": {
+            "weekStartsOn": 7, "appearance": "dark", "colorTheme": "paper",
+            "accentColor": "#123456", "menuClock": {"enabled": false, "format": "HH:mm:ss"}
+        }, "datasets": [{"year": 2026, "papers": [], "days": []}]});
+        save_state(&old, &original).unwrap();
+        let old_bytes = fs::read(&old).unwrap();
+        // 旧 Tauri 状态优先于早期版本，后者即使损坏也不影响迁移。
+        fs::create_dir_all(data.join("ShiriCalendar")).unwrap();
+        fs::write(data.join("ShiriCalendar/holidays.json"), b"broken").unwrap();
+        assert_eq!(
+            load_with_legacy(&current, &data, &home).unwrap(),
+            Some(original.clone())
+        );
+        assert!(!current.exists());
+        save_state(&current, &original).unwrap();
+        assert_eq!(fs::read(&old).unwrap(), old_bytes);
+        fs::write(&old, b"broken").unwrap();
+        assert_eq!(
+            load_with_legacy(&current, &data, &home).unwrap(),
+            Some(original)
+        );
+        // 已存在的新文件损坏时必须报错，不能回退并覆盖。
+        fs::write(&current, b"broken").unwrap();
+        assert!(load_with_legacy(&current, &data, &home).is_err());
+        fs::remove_file(&current).unwrap();
+        assert!(load_with_legacy(&current, &data, &home).is_err());
         fs::remove_dir_all(directory).unwrap();
     }
 }

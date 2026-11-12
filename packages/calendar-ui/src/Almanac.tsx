@@ -1,4 +1,4 @@
-import type { DayAlmanac } from '@shiri/calendar-core';
+import type { DayAlmanac } from '@i-calendar/core';
 
 /** 共享黄历内容；所展示的数值全部来自公共核心，不在界面里重算。 */
 export function AlmanacContent({ almanac }: { almanac: DayAlmanac }) {

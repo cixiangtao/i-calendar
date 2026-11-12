@@ -1,4 +1,4 @@
-import type { CalendarDay } from '@shiri/calendar-core';
+import type { CalendarDay } from '@i-calendar/core';
 import Button from 'antd/es/button';
 import ConfigProvider from 'antd/es/config-provider';
 import Dropdown from 'antd/es/dropdown';

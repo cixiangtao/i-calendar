@@ -1,5 +1,5 @@
 {
-  "name": "@shiri/calendar-ui",
+  "name": "@i-calendar/ui",
   "version": "0.1.0",
   "private": true,
   "description": "i日历在 Mac、iOS 和官网共用的日历界面与应用状态",
@@ -8,7 +8,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@shiri/calendar-core": "workspace:*"
+    "@i-calendar/core": "workspace:*"
   },
   "peerDependencies": {
     "antd": "^6.7.0",

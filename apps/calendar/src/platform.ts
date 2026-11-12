@@ -1,15 +1,17 @@
-import type { CalendarPlatform, SavedCalendarState } from '@shiri/calendar-ui';
+import type { CalendarPlatform, SavedCalendarState } from '@i-calendar/ui';
 import { isTauri, invoke } from '@tauri-apps/api/core';
 
-const STORAGE_KEY = 'shiri-calendar:state:v1';
+const STORAGE_KEY = 'i-calendar:state:v1';
+// 仅用于只读迁移；新数据始终写入当前名称，旧记录保留。
+const LEGACY_STORAGE_KEY = 'shiri-calendar:state:v1';
 
 /** 普通浏览器只使用公开数据、本地存储和浏览器系统能力。 */
 function browserPlatform(): CalendarPlatform {
   return {
     kind: 'web',
     async load() {
-      const value = localStorage.getItem(STORAGE_KEY);
-      return value ? (JSON.parse(value) as unknown) : null;
+      const value = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
+      return value === null ? null : (JSON.parse(value) as unknown);
     },
     async save(state) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));

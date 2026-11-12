@@ -5,7 +5,7 @@ import type { AlmanacRules, DateKey, DayAlmanac } from './types.js';
 
 /** 固定每日黄历口径；变更规则含义时升级 id，而非静默改变历史结果。 */
 export const ALMANAC_RULES = Object.freeze({
-  id: 'shiri-almanac-v1',
+  id: 'i-calendar-almanac-v1',
   timeZone: 'Asia/Shanghai',
   yearBoundary: 'lunar-new-year',
   monthBoundary: 'jie-day-start',

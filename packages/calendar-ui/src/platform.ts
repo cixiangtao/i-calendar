@@ -1,4 +1,4 @@
-import type { HolidayDataset } from '@shiri/calendar-core';
+import type { HolidayDataset } from '@i-calendar/core';
 
 import type { ColorThemeId } from './color-theme.js';
 import type { MenuClockPreferences } from './menu-clock.js';

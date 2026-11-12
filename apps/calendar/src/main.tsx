@@ -1,4 +1,4 @@
-import { CalendarApp, CalendarController } from '@shiri/calendar-ui';
+import { CalendarApp, CalendarController } from '@i-calendar/ui';
 import { invoke } from '@tauri-apps/api/core';
 import { Component, StrictMode, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';

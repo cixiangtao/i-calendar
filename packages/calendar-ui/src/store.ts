@@ -8,8 +8,8 @@ import {
   type DayAlmanac,
   type HolidayDataset,
   type MonthCalendar,
-} from '@shiri/calendar-core';
-import { bundledHolidayDatasets } from '@shiri/calendar-core/data';
+} from '@i-calendar/core';
+import { bundledHolidayDatasets } from '@i-calendar/core/data';
 
 import { isAccentColor, isColorTheme } from './color-theme.js';
 import { defaultMenuClock, parseMenuClock } from './menu-clock.js';
