@@ -472,10 +472,26 @@ a:focus-visible {
 }
 .summary-status {
   display: flex;
+  flex-wrap: wrap;
   flex-direction: column;
   gap: 4px;
   align-items: flex-end;
   max-width: 92px;
+}
+.date-traits {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  color: var(--secondary);
+  font-size: 11px;
+  line-height: 18px;
+}
+.date-traits > span {
+  white-space: nowrap;
+}
+.date-traits b {
+  color: var(--ink);
+  font-weight: 500;
 }
 .summary-status strong {
   font-size: 11px;

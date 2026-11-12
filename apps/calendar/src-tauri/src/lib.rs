@@ -131,6 +131,8 @@ fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), String> {
                 || report.get("cells").and_then(Value::as_u64) != Some(42)
                 || report.get("lunar").and_then(Value::as_str) != Some("初一")
                 || report.get("makeup").and_then(Value::as_bool) != Some(true)
+                || report.get("zodiac").and_then(Value::as_str) != Some("马")
+                || report.get("constellation").and_then(Value::as_str) != Some("天蝎座")
                 || report.pointer("/almanac/day").and_then(Value::as_str) != Some("己酉")
                 || report.pointer("/almanac/fu").and_then(Value::as_str) != Some("正南")
                 || report.pointer("/almanac/yiCount").and_then(Value::as_u64) != Some(21)

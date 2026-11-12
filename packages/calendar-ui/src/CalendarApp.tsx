@@ -522,14 +522,21 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                     </h2>
                     <p>
                       农历{state.selected.lunar.monthName}
-                      {state.selected.lunar.dayName} · {state.selected.lunar.yearGanZhi}
-                      {state.selected.lunar.zodiac}年
+                      {state.selected.lunar.dayName} · {state.selected.lunar.yearGanZhi}年
                     </p>
                   </div>
                   <div
                     className={`summary-status schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
                   >
                     <strong>{scheduleLabel(state.selected)}</strong>
+                    <span className="date-traits">
+                      <span>
+                        生肖 <b>{state.selected.lunar.zodiac}</b>
+                      </span>
+                      <span>
+                        星座 <b>{state.selected.constellation}</b>
+                      </span>
+                    </span>
                     <small>{state.selected.festivals[0] ?? state.selected.solarTerm}</small>
                   </div>
                 </section>
