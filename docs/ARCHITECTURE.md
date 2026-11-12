@@ -1,6 +1,6 @@
 # 核心能力与界面边界
 
-拾日历使用 Tauri 2 承载 Mac 与 iOS，共享 React 界面直接用于 Web。历法及调休规则仍只有一份 TypeScript 实现。
+i日历使用 Tauri 2 承载 Mac 与 iOS，共享 React 界面直接用于 Web。历法及调休规则仍只有一份 TypeScript 实现。
 
 ```mermaid
 flowchart TD

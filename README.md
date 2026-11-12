@@ -1,10 +1,14 @@
-# 拾日历
+# i日历
+
+<img src="packages/calendar-ui/src/assets/logo.svg" width="80" height="80" alt="i日历 Logo" />
 
 Mac 菜单栏里的小月历，提供公历、农历、传统节日、节气、放假与补班，以及年月日干支、每日宜忌、冲煞和主要方位。免费、无广告，无需登录。
 
 当前版本 **0.1.0**。项目已迁移为 **Tauri 2 + React + TypeScript**：Mac、iOS 和 Web 复用同一份界面、应用状态和日历核心。Mac 菜单栏应用与本地网页版已可运行；iOS 的入口及配置已接入，工程生成、模拟器和真机验证仍需完整 Xcode 环境。
 
 项目达到 **1.0** 并完成验收后，再提交 GitHub，并同步上线网页版官网。目前只在本地 Git 管理，没有提前发布。官网第一屏只有日历与必要操作，介绍和下载放在首屏之后。见[版本规划](docs/版本规划.md)与[发布约定](docs/发布约定.md)。
+
+项目由“拾日历”更名为“i日历”；现有 `shiri-calendar` 目录、`@shiri/*` 包名及应用标识保持兼容，偏好和缓存继续沿用。
 
 ## 快速启动
 
@@ -31,10 +35,10 @@ pnpm run dev:web
 
 ```sh
 pnpm run build:mac
-open outputs/mac/拾日历.app
+open outputs/mac/i日历.app
 ```
 
-产物为 `outputs/mac/拾日历.app` 和 `outputs/拾日历-0.1.0-mac-arm64.zip`（文件名随本机构架变化）。当前验证环境为 Apple Silicon；应用采用本地临时签名，没有 Developer ID 签名或 Apple 公证，尚不是正式分发版。
+产物为 `outputs/mac/i日历.app` 和 `outputs/i日历-0.1.0-mac-arm64.zip`（文件名随本机构架变化）。当前验证环境为 Apple Silicon；应用采用本地临时签名，没有 Developer ID 签名或 Apple 公证，尚不是正式分发版。
 
 - 左键菜单栏图标展开或收起；失去焦点自动收起；右键可进入设置或退出。
 - 点日期查看完整农历和休班状态，点年月直接跳转。
@@ -102,6 +106,20 @@ outputs/                       本地应用与 ZIP，不提交
 界面采用红绿蓝黄紫的状态配色与圆角面板。Mac 维持 400×660 的上下布局，宽屏网页采用月历与日期详情双栏；上述布局预览来自浏览器，手机图不代表 iOS 真机验证。
 
 配色将主要文字、次要说明与相邻月日期分层。自定义强调色用于选中日期、操作、焦点和日期叶片，按当前背景生成可读的派生色；极亮或极暗选色可能与实际文字色不同，原始选色仍被保存。休假、节气、补班和节日的语义色保持稳定。切换预设会恢复该预设的强调色，旧版设置自动补齐清爽白主题。详见[配色与文字层级](docs/配色与文字层级.md)。
+
+## 品牌与图标
+
+Logo 以小写 `i` 为主体：蓝色圆角底承载白色日历纸，中央圆点与短竖组成 `i`，顶部双装订缺口提示日历。固定品牌蓝为 `#3269d9`；主题与用户强调色继续作用于界面操作，Logo 保持品牌色。菜单栏使用透明底单色模板，由 macOS 适配明暗背景。
+
+唯一彩色矢量源为 [`packages/calendar-ui/src/assets/logo.svg`](packages/calendar-ui/src/assets/logo.svg)，共享界面直接引用；菜单栏源为 [`tray.svg`](apps/calendar/src-tauri/icons/tray.svg)。修改后，在 macOS 安装 librsvg（提供 `rsvg-convert`），执行：
+
+```sh
+pnpm run build:icons
+```
+
+脚本使用 `rsvg-convert` 与系统 `iconutil` 生成网页 favicon、Mac PNG/ICNS 及菜单栏 PNG；Mac 图标留出系统边距，通用 1024px PNG 铺满底色以供后续 iOS 图标接入。中间文件写入 `work/brand/`，PNG 记录矢量来源。普通构建使用已提交图标，无需重新生成。iOS 图标资源目录、工程编译和设备验证仍需后续 Xcode 环境完成。
+
+[品牌与小尺寸预览](docs/images/i日历-品牌预览.png) · [新版宽屏界面](docs/images/i日历-宽屏.png) · [新版手机尺寸界面](docs/images/i日历-手机.png)。其余文档中的旧截图保留为各阶段记录。
 
 ## 调休数据与缓存
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-12T03:52:45.213865+00:00",
-  "title": "Design System: 拾日历",
+  "generatedAt": "2026-11-12T07:38:30.687632+00:00",
+  "title": "Design System: i日历",
   "extensions": {
     "colorMeta": {
       "canvas": {
@@ -535,6 +535,10 @@
           "oklch(84% 0.0000 0.00)",
           "oklch(95% 0.0000 0.00)"
         ]
+      },
+      "brand-blue": {
+        "role": "primary",
+        "displayName": "固定品牌蓝"
       }
     },
     "typographyMeta": {
@@ -636,7 +640,50 @@
       "面板不设投影；Ant Design Segmented 与描边按钮仍沿用库内控件深度，不提取为全局面板阴影。",
       "色带为从源码规范色合成的 OKLCH 展示阶梯，不是运行时额外主题，也不写回 CSS。",
       "高对比偏好会覆盖 secondary、muted 和 line；具体覆盖见共享 CSS，不作为默认主题色。"
-    ]
+    ],
+    "brand": {
+      "name": "i日历",
+      "colorToken": "brand-blue",
+      "fixedAcrossThemes": true,
+      "source": "packages/calendar-ui/src/assets/logo.svg",
+      "motif": "小写 i 与日历纸；蓝色圆角底、白色纸张、双装订缺口、蓝色圆点与短竖。",
+      "geometry": {
+        "viewBox": "0 0 64 64",
+        "backgroundRadius": "14px",
+        "paper": {
+          "x": 12,
+          "y": 15,
+          "width": 40,
+          "height": 39,
+          "radius": 8
+        }
+      },
+      "headerSize": "19px",
+      "favicon": "apps/calendar/public/favicon.svg",
+      "macInset": "80/1024",
+      "tray": {
+        "source": "apps/calendar/src-tauri/icons/tray.svg",
+        "pixelSize": "44px",
+        "logicalSize": "22px",
+        "transparent": true,
+        "monochrome": true,
+        "iconAsTemplate": true
+      },
+      "generation": {
+        "command": "pnpm run build:icons",
+        "script": "scripts/build-icons.mjs",
+        "tools": ["rsvg-convert", "iconutil"],
+        "temporaryDirectory": "work/brand",
+        "pngMetadata": "Source"
+      },
+      "genericPng": "1024px 铺满底色，供后续 iOS 资源接入；未完成 iOS 编译或设备验收。",
+      "compatibility": ["shiri-calendar", "@shiri", "local.shiri.calendar", "既有存储键"],
+      "reviewEvidence": [
+        "docs/images/i日历-宽屏.png",
+        "docs/images/i日历-手机.png",
+        "docs/images/i日历-品牌预览.png"
+      ]
+    }
   },
   "components": [
     {
@@ -717,9 +764,15 @@
         "name": "The Flat Panels Rule",
         "body": "内容面板用画布色差、留白和少量分隔线建立层次，不添加装饰性卡片投影。Mac 外部窗口阴影由系统负责。",
         "section": "elevation"
+      },
+      {
+        "name": "The Brand Identity Rule",
+        "body": "品牌 Logo 固定使用 frontmatter 的品牌蓝，不随主题或自定义操作强调色变化；彩色源为共享 SVG，菜单栏模板仅表达相同的小写 i 与日历轮廓。",
+        "section": "colors"
       }
     ],
     "dos": [
+      "**Do** 让小写 `i` 日历 Logo 使用固定品牌蓝，并从共享 SVG 生成平台资源。",
       "**Do** 保持七列六周、公农历双行和当前月份的扫描层级。",
       "**Do** 保留选中描边、今日圆点与休班文字各自含义。",
       "**Do** 让节气、节日、补班按五色语义出现，并保留完整日期详情。",
@@ -727,6 +780,7 @@
       "**Do** 明确显示年度调休未知状态并提供来源入口。"
     ],
     "donts": [
+      "**Don't** 让品牌 Logo 随用户强调色变化，或分别手改生成的图标位图。",
       "**Don't** 将普通周末的红字解释为已确认放假，也不要补造未收录年份的休班角标。",
       "**Don't** 将所有日期填成彩色，或用深色实心填充替代当前蓝色描边选择态。",
       "**Don't** 将宽屏双栏强加给菜单栏窗口，或在窄屏固定高度裁掉详情。",
