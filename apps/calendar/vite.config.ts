@@ -1,0 +1,35 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'node:url';
+
+const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
+const nativeHost = process.env.TAURI_DEV_HOST;
+
+export default defineConfig({
+  root: source('.'),
+  base: process.env.SHIRI_BASE ?? './',
+  plugins: [react()],
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+    alias: [
+      { find: '@shiri/calendar-core/data', replacement: source('../../packages/calendar-core/src/data.ts') },
+      { find: '@shiri/calendar-core', replacement: source('../../packages/calendar-core/src/index.ts') },
+      { find: '@shiri/calendar-ui', replacement: source('../../packages/calendar-ui/src/index.ts') },
+    ],
+  },
+  server: {
+    port: 1420,
+    strictPort: true,
+    host: nativeHost ?? '127.0.0.1',
+    hmr: nativeHost ? { protocol: 'ws', host: nativeHost, port: 1421 } : undefined,
+    watch: { ignored: ['**/src-tauri/**'] },
+  },
+  build: {
+    target: 'safari16', outDir: 'dist', emptyOutDir: true,
+    rolldownOptions: { output: { codeSplitting: { groups: [
+      { name: 'lunar', test: /node_modules\/lunar-typescript/ },
+      { name: 'react', test: /node_modules\/(react|react-dom|scheduler)\// },
+      { name: 'controls', test: /node_modules\/(antd|@ant-design|@rc-component|rc-)/ },
+    ] } } },
+  },
+});

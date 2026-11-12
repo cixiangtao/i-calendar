@@ -1,0 +1,45 @@
+import { Component, StrictMode, type ReactNode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
+import { invoke } from '@tauri-apps/api/core';
+import { CalendarApp, CalendarController } from '@shiri/calendar-ui';
+import { createPlatform } from './platform.js';
+
+class AppBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() {
+    return this.state.failed ? <main className="boot-message"><h1>日历暂时无法显示</h1><p>本地数据会保留，请重新打开日历。</p><button type="button" onClick={() => location.reload()}>重新打开</button></main> : this.props.children;
+  }
+}
+
+async function start() {
+  const { platform, smokeTest } = await createPlatform();
+  document.body.dataset.platform = platform.kind;
+  const controller = new CalendarController(platform);
+  await controller.initialize();
+  const root = createRoot(document.getElementById('root')!);
+  flushSync(() => root.render(<StrictMode><AppBoundary><main className="calendar-stage"><CalendarApp controller={controller} /></main>
+    {platform.kind === 'web' ? <section className="web-info" aria-label="关于拾日历"><h2>查日子，打开就好。</h2><p>拾日历提供公农历、节气和中国大陆放假调休。日历计算在本地完成，免费、无广告，无需登录。</p><p>Mac、iOS 与网页版使用相同的日历核心和界面组件。当前为 0.1.0 开发预览，正式官网与应用下载将在 1.0 发布时同步提供。</p><p>放假与补班根据全国统一安排整理，个人排班以所在单位为准。数据来源可在日历设置中查看。</p></section> : null}
+  </AppBoundary></StrictMode>));
+  window.addEventListener('pagehide', () => controller.dispose(), { once: true });
+  if (platform.kind !== 'web') {
+    const { listen } = await import('@tauri-apps/api/event');
+    await listen('calendar:settings', () => controller.showSettings());
+    // 原生冒烟测试经真实 WebView 调用共享核心，再把结果传回 Rust。
+    const report = { renderedCells: document.querySelectorAll('[role="gridcell"]').length, cells: controller.getSnapshot().month.cells.length, lunar: controller.engine.getDay('2026-02-17').lunar.dayName, makeup: controller.engine.getDay('2026-02-14').schedule.kind === 'makeup-workday' };
+    await invoke('frontend_ready', { report });
+    if (smokeTest) document.documentElement.dataset.smokeTest = 'ready';
+  }
+}
+
+void start().catch((error: unknown) => {
+  console.error('拾日历启动失败', error);
+  const root = document.getElementById('root');
+  if (root) {
+    root.replaceChildren();
+    const message = document.createElement('p'); message.className = 'boot-message'; message.textContent = '日历启动失败，请重新打开应用。';
+    const retry = document.createElement('button'); retry.textContent = '重新打开'; retry.onclick = () => location.reload();
+    root.append(message, retry);
+  }
+});

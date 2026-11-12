@@ -1,0 +1,210 @@
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type SVGProps, type ReactNode } from 'react';
+import Button from 'antd/es/button';
+import ConfigProvider from 'antd/es/config-provider';
+import Dropdown from 'antd/es/dropdown';
+import Segmented from 'antd/es/segmented';
+import theme from 'antd/es/theme';
+import type { CalendarDay } from '@shiri/calendar-core';
+import type { CalendarController, CalendarSnapshot } from './store.js';
+import type { CalendarPreferences } from './platform.js';
+import './calendar.css';
+
+type IconName = 'calendar' | 'settings' | 'left' | 'right' | 'copy' | 'external' | 'close';
+function Icon({ name, ...props }: SVGProps<SVGSVGElement> & { name: IconName }) {
+  const paths: Record<IconName, ReactNode> = {
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M7 3v4m10-4v4M3 11h18M7 15h1m3 0h1m3 0h1m-9 3h1m3 0h1" /></>,
+    settings: <><path d="m9 3-.5 2.2-2 .9-2-.7L2 10l1.7 1.5v2L2 15l2.5 4.5 2-.7 2 .9L9 22h6l.5-2.3 2-.9 2 .7L22 15l-1.7-1.5v-2L22 10l-2.5-4.6-2 .7-2-.9L15 3Z" /><circle cx="12" cy="12.5" r="3.1" /></>,
+    left: <path d="m15 5-7 7 7 7" />,
+    right: <path d="m9 5 7 7-7 7" />,
+    copy: <><rect x="8" y="8" width="12" height="13" rx="2" /><path d="M15 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3" /></>,
+    external: <><path d="M14 3h7v7m0-7L10 14" /><path d="M10 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-5" /></>,
+    close: <path d="m6 6 12 12M6 18 18 6" />,
+  };
+  return <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{paths[name]}</svg>;
+}
+
+const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
+const years = Array.from({ length: 200 }, (_, index) => 1901 + index);
+const months = Array.from({ length: 12 }, (_, index) => index + 1);
+
+function scheduleLabel(day: CalendarDay) {
+  if (day.schedule.coverage === 'unavailable') return '调休未收录';
+  return ({ holiday: '放假', 'makeup-workday': '补班日', weekend: '周末', weekday: '工作日' })[day.schedule.kind];
+}
+
+function dayLabel(day: CalendarDay) {
+  return `${day.date}，农历${day.lunar.monthName}${day.lunar.dayName}，${[...day.festivals, day.solarTerm].filter(Boolean).join('，')}，${scheduleLabel(day)}`;
+}
+
+function detailLabel(day: CalendarDay) {
+  return day.festivals[0] ?? day.solarTerm ?? (day.lunar.day === 1 ? day.lunar.monthName : day.lunar.dayName);
+}
+
+function Feedback({ controller, state }: { controller: CalendarController; state: CalendarSnapshot }) {
+  if (!state.error && !state.notice) return null;
+  return <div className={`feedback ${state.error ? 'feedback-error' : ''}`} role={state.error ? 'alert' : 'status'}>
+    <span>{state.error ?? state.notice}</span>
+    <Button type="text" className="icon-button" aria-label="关闭提示" onClick={() => controller.dismissError()} icon={<Icon name="close" />} />
+  </div>;
+}
+
+/** 三端共用日历视图；平台壳不复制月历、节日或设置界面。 */
+export function CalendarApp({ controller }: { controller: CalendarController }) {
+  const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const [systemDark, setSystemDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const [focusAfterNavigation, setFocusAfterNavigation] = useState(false);
+  const grid = useRef<HTMLDivElement>(null);
+  const gear = useRef<HTMLButtonElement>(null);
+  const dark = state.preferences.appearance === 'dark' || (state.preferences.appearance === 'system' && systemDark);
+
+  useEffect(() => {
+    void controller.initialize();
+    const query = window.matchMedia('(prefers-color-scheme: dark)');
+    const changed = () => setSystemDark(query.matches);
+    query.addEventListener('change', changed);
+    const refresh = () => { if (document.visibilityState !== 'hidden') controller.refreshToday(); };
+    const interval = window.setInterval(refresh, 60_000);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { query.removeEventListener('change', changed); window.clearInterval(interval); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };
+  }, [controller]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+  }, [dark]);
+
+  useEffect(() => {
+    if (focusAfterNavigation) { grid.current?.querySelector<HTMLButtonElement>(`[data-date="${state.selected.date}"]`)?.focus(); setFocusAfterNavigation(false); }
+  }, [state.selected.date, focusAfterNavigation]);
+
+  useEffect(() => {
+    const keydown = (event: globalThis.KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey || event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement || event.target instanceof HTMLTextAreaElement) return;
+      if (event.key === 'Escape') {
+        if (state.panel === 'settings') { controller.showSettings(false); requestAnimationFrame(() => gear.current?.focus()); }
+        else void controller.platform.close?.();
+      } else if (state.panel === 'calendar') {
+        if (event.key.toLowerCase() === 't') { event.preventDefault(); controller.goToday(); setFocusAfterNavigation(true); }
+        else if (event.key === 'PageUp' || event.key === 'PageDown') { event.preventDefault(); controller.shiftMonth(event.key === 'PageUp' ? -1 : 1); setFocusAfterNavigation(true); }
+      }
+    };
+    window.addEventListener('keydown', keydown);
+    return () => window.removeEventListener('keydown', keydown);
+  }, [controller, state.panel]);
+
+  function moveInGrid(event: KeyboardEvent<HTMLButtonElement>) {
+    const directions: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+    if (event.key in directions) { event.preventDefault(); controller.moveSelection(directions[event.key]!); setFocusAfterNavigation(true); }
+    else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); controller.selectWeekEdge(event.key === 'End'); setFocusAfterNavigation(true); }
+  }
+
+  const displayedWeekdays = state.preferences.weekStartsOn === 1 ? weekdays : ['日', ...weekdays.slice(0, 6)];
+  const coverageText = state.month.coverage === 'unavailable' ? `${state.year}年调休未收录` : `调休已收录至${state.years.at(-1) ?? '—'}年`;
+  const busy = (value: boolean) => { void controller.platform.setInteractionBusy?.(value); };
+  const event = state.vacation ? { date: state.vacation.start, name: `${state.vacation.name} · 放假${state.vacation.days}天`, daysUntil: state.vacation.daysUntil } : state.nextFestival;
+  const nextEvents = [state.nextTerm, event].filter((item) => item !== undefined);
+
+  return <ConfigProvider theme={{ algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm, token: { colorPrimary: dark ? '#6bcfb5' : '#146e5e', fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif', fontSize: 12, borderRadius: 7, controlHeight: 30, colorBgContainer: dark ? '#202421' : '#ffffff' } }}>
+    <article className="calendar-app" aria-label="拾日历" aria-busy={!state.ready} data-platform={controller.platform.kind}>
+      {state.panel === 'settings' ? <Settings controller={controller} state={state} /> : <>
+        <header className="app-header">
+          <div className="brand"><Icon name="calendar" /><span>拾日历</span></div>
+          <Button ref={gear} type="text" className="icon-button" aria-label="设置与调休数据" title="设置与调休数据" onClick={() => controller.showSettings()} icon={<Icon name="settings" />} />
+        </header>
+        <div className="month-toolbar">
+          <h1 className="sr-only" id="month-title">{state.year}年{state.monthNumber}月</h1>
+          <div className="month-heading">
+            <select aria-label="年份" value={state.year} onFocus={() => busy(true)} onBlur={() => busy(false)} onChange={(event) => { controller.jump(Number(event.target.value), state.monthNumber); busy(false); }}>
+              {years.map((year) => <option key={year} value={year}>{year}年</option>)}
+            </select>
+            <select aria-label="月份" value={state.monthNumber} onFocus={() => busy(true)} onBlur={() => busy(false)} onChange={(event) => { controller.jump(state.year, Number(event.target.value)); busy(false); }}>
+              {months.map((month) => <option key={month} value={month}>{month}月</option>)}
+            </select>
+          </div>
+          <nav className="month-controls" aria-label="切换月份">
+            <Button type="text" className="tool-button" aria-label="上个月" title="上个月（PageUp）" disabled={state.year === 1901 && state.monthNumber === 1} icon={<Icon name="left" />} onClick={() => controller.shiftMonth(-1)} />
+            <Button type="text" className="today-button" onClick={() => controller.goToday()} title="回到今天（T）">今天</Button>
+            <Button type="text" className="tool-button" aria-label="下个月" title="下个月（PageDown）" disabled={state.year === 2100 && state.monthNumber === 12} icon={<Icon name="right" />} onClick={() => controller.shiftMonth(1)} />
+          </nav>
+        </div>
+        <div className="calendar-grid" role="grid" aria-labelledby="month-title" aria-rowcount={7} aria-colcount={7} ref={grid}>
+          <div className="week-row" role="row">
+            {displayedWeekdays.map((day) => <span role="columnheader" key={day} className={day === '六' || day === '日' ? 'weekend-heading' : ''}>{day}</span>)}
+          </div>
+          {Array.from({ length: 6 }, (_, row) => <div className="date-row" role="row" key={row}>
+            {state.month.cells.slice(row * 7, row * 7 + 7).map((day, index) => day ? <div role="gridcell" key={day.date} aria-selected={state.selected.date === day.date}>
+              <button type="button" className={['day-cell', day.month !== state.monthNumber ? 'outside-month' : '', state.selected.date === day.date ? 'selected' : '', state.today === day.date ? 'is-today' : '', day.schedule.kind === 'holiday' || (day.weekday >= 6 && day.schedule.kind !== 'makeup-workday') ? 'rest-day' : ''].filter(Boolean).join(' ')}
+                aria-label={dayLabel(day)} aria-current={state.today === day.date ? 'date' : undefined} tabIndex={state.selected.date === day.date ? 0 : -1} data-date={day.date}
+                title={dayLabel(day)} onClick={() => controller.selectDate(day.date)} onKeyDown={moveInGrid}>
+                <span className="solar-day">{day.day}</span>
+                <span className={`lunar-day ${day.solarTerm || day.festivals.length ? 'has-event' : ''}`}>{detailLabel(day)}</span>
+                {day.schedule.kind === 'holiday' || day.schedule.kind === 'makeup-workday' ? <span className={`day-mark ${day.schedule.kind === 'makeup-workday' ? 'makeup' : ''}`} aria-hidden="true">{day.schedule.kind === 'holiday' ? '休' : '班'}</span> : null}
+              </button>
+            </div> : <span key={`empty-${index}`} role="gridcell" className="empty-day" />)}
+          </div>)}
+        </div>
+        <div className="calendar-legend"><span><b>休</b> 放假</span><span><b className="makeup">班</b> 补班</span>{state.month.coverage === 'unavailable' ? <span className="missing-label">本年调休未收录</span> : null}</div>
+        <Dropdown trigger={['contextMenu']} menu={{ items: [{ key: 'copy', label: '复制日期与农历', onClick: () => { void controller.copySelected(); } }, ...(state.selected.schedule.sources[0] ? [{ key: 'source', label: '查看放假安排来源', onClick: () => { void controller.openSource(state.selected.schedule.sources[0]!); } }] : [])] }}>
+          <section className="date-summary" aria-label="所选日期">
+            <div><h2>{state.selected.month}月{state.selected.day}日 <span>周{weekdays[state.selected.weekday - 1]}</span></h2><p>农历{state.selected.lunar.monthName}{state.selected.lunar.dayName} · {state.selected.lunar.yearGanZhi}{state.selected.lunar.zodiac}年</p></div>
+            <div className="summary-status"><strong>{scheduleLabel(state.selected)}</strong><small>{state.selected.festivals[0] ?? state.selected.solarTerm}</small></div>
+            <Button type="text" className="icon-button copy-button" title="复制日期与农历" aria-label="复制日期与农历" onClick={() => { void controller.copySelected(); }} icon={<Icon name="copy" />} />
+          </section>
+        </Dropdown>
+        <section className="upcoming" aria-label="接下来的日子">
+          <header><h2>接下来的日子</h2><span>从今天起</span></header>
+          {nextEvents.map((next) => <button type="button" className="event-row" key={`${next.date}-${next.name}`} onClick={() => controller.selectDate(next.date)}>
+            <time dateTime={next.date}>{next.date.slice(0, 4) !== state.today.slice(0, 4) || state.year !== Number(state.today.slice(0, 4)) ? next.date.replaceAll('-', '/') : next.date.slice(5).replace('-', '/')}</time>
+            <span>{next.name}</span><small>{next.daysUntil === 0 ? '今天' : `${next.daysUntil}天后`}</small>
+          </button>)}
+        </section>
+        <Feedback controller={controller} state={state} />
+        <button className="data-footer" type="button" onClick={() => controller.showSettings()}><span className={`status-dot ${state.month.coverage === 'unavailable' ? 'unknown' : ''}`} /><span>中国大陆 · {coverageText}</span><Icon name="right" width="12" height="12" /></button>
+      </>}
+    </article>
+  </ConfigProvider>;
+}
+
+function Settings({ controller, state }: { controller: CalendarController; state: CalendarSnapshot }) {
+  const file = useRef<HTMLInputElement>(null);
+  const back = useRef<HTMLButtonElement>(null);
+  useEffect(() => { back.current?.focus(); }, []);
+  useEffect(() => {
+    const input = file.current;
+    const cancelled = () => { void controller.platform.setInteractionBusy?.(false); };
+    input?.addEventListener('cancel', cancelled);
+    return () => input?.removeEventListener('cancel', cancelled);
+  }, [controller]);
+
+  const interact = (value: boolean) => { void controller.platform.setInteractionBusy?.(value); };
+  return <section className="settings-panel" aria-labelledby="settings-title">
+    <header className="settings-header"><Button ref={back} type="text" icon={<Icon name="left" />} onClick={() => controller.showSettings(false)}>返回日历</Button><h1 id="settings-title">设置</h1></header>
+    <div className="settings-scroll">
+      <section><h2>日历显示</h2>
+        <div className="setting-label"><span>每周开始于</span><Segmented aria-label="每周开始于" options={[{ label: '周一', value: 1 }, { label: '周日', value: 7 }]} value={state.preferences.weekStartsOn} onChange={(value) => { void controller.setPreferences({ weekStartsOn: value as 1 | 7 }); }} /></div>
+        <div className="setting-label"><span>外观</span><Segmented aria-label="外观" options={[{ label: '跟随系统', value: 'system' }, { label: '浅色', value: 'light' }, { label: '深色', value: 'dark' }]} value={state.preferences.appearance} onChange={(value) => { void controller.setPreferences({ appearance: value as CalendarPreferences['appearance'] }); }} /></div>
+      </section>
+      <section><h2>放假与调休</h2><p>已收录：{state.years.join('、')}年</p><p>农历、节气和已收录的调休均可离线查询。放假安排根据全国统一通知整理，不包含个人排班及地方假期。</p>
+        <div className="data-actions"><Button loading={state.updating} disabled={!state.ready} onClick={() => { void controller.checkUpdates(); }}>检查调休更新</Button><Button disabled={state.updating || !state.ready} onClick={() => { interact(true); file.current?.click(); }}>导入 JSON…</Button></div>
+        <input ref={file} hidden type="file" accept=".json,application/json" aria-label="选择年度调休 JSON" onChange={(event) => {
+          const selected = event.target.files?.[0];
+          if (!selected) { interact(false); return; }
+          if (selected.size > 1_000_000) { controller.reportError('文件过大，请选择年度调休 JSON'); event.target.value = ''; interact(false); return; }
+          void selected.text().then((text) => controller.importDataset(text)).catch(() => controller.reportError('文件无法读取，请重新选择。')).finally(() => { event.target.value = ''; interact(false); });
+        }} />
+        <p className="setting-hint">只导入已核对来源的完整年度安排。</p>
+        {state.updatedAt ? <p className="setting-hint">上次同步：{new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', dateStyle: 'medium' }).format(new Date(state.updatedAt))}</p> : null}
+        <Feedback controller={controller} state={state} />
+      </section>
+      <section><h2>数据来源</h2>
+        <button type="button" className="source-link" onClick={() => { void controller.openSource('https://github.com/NateScarlet/holiday-cn'); }}>国务院节假日通知 · holiday-cn <Icon name="external" width="12" height="12" /></button>
+        <button type="button" className="source-link" onClick={() => { void controller.openSource('https://github.com/6tail/lunar-typescript'); }}>农历与节气计算 · lunar-typescript <Icon name="external" width="12" height="12" /></button>
+        {state.selected.schedule.sources.map((source, index) => <button type="button" className="source-link" key={source} onClick={() => { void controller.openSource(source); }}>{state.selected.year}年放假安排来源{state.selected.schedule.sources.length > 1 ? index + 1 : ''} <Icon name="external" width="12" height="12" /></button>)}
+        <p className="setting-hint">日期按北京时间计算 · 支持1901—2100年</p>
+      </section>
+      <section className="keyboard-help"><h2>键盘操作</h2><p>方向键选择日期，PageUp / PageDown 切月，T 回到今天，Esc 返回或收起日历。</p></section>
+    </div>
+    <footer className="settings-footer"><span>拾日历 0.1.0 · 免费无广告</span>{controller.platform.quit ? <Button type="text" onClick={() => { void controller.platform.quit?.(); }}>退出</Button> : null}</footer>
+  </section>;
+}

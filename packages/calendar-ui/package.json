@@ -1,0 +1,10 @@
+{
+  "name": "@shiri/calendar-ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "拾日历在 Mac、iOS 和官网共用的日历界面与应用状态",
+  "exports": {".": "./src/index.ts"},
+  "dependencies": {"@shiri/calendar-core": "0.1.0"},
+  "peerDependencies": {"react": "^19.3.1", "react-dom": "^19.3.1", "antd": "^6.7.0"}
+}

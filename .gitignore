@@ -6,3 +6,10 @@ outputs/
 .impeccable/review/
 .build/
 .swiftpm/
+.playwright-cli/
+target/
+gen/schemas/
+gen/apple/build/
+gen/apple/Pods/
+*.xcuserstate
+xcuserdata/

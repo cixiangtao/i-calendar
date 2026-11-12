@@ -20,11 +20,22 @@
     "paths": {
       "@shiri/calendar-core": [
         "./packages/calendar-core/src/index.ts"
+      ],
+      "@shiri/calendar-core/data": [
+        "./packages/calendar-core/src/data.ts"
+      ],
+      "@shiri/calendar-ui": [
+        "./packages/calendar-ui/src/index.ts"
       ]
-    }
+    },
+    "jsx": "react-jsx"
   },
   "include": [
     "scripts/**/*.ts",
-    "packages/calendar-core/src/**/*.ts"
+    "packages/*/src/**/*.ts",
+    "packages/*/src/**/*.tsx",
+    "apps/calendar/src/**/*.ts",
+    "apps/calendar/src/**/*.tsx",
+    "apps/calendar/vite.config.ts"
   ]
 }
