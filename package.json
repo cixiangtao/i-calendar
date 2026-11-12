@@ -7,15 +7,13 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build:core && npm run build:web && npm run build:apple-core",
+    "build": "npm run build:core && npm run build:web",
     "build:core": "npm run build --workspace @shiri/calendar-core",
-    "build:apple-core": "node scripts/bundle-apple-core.mjs",
     "typecheck": "tsc --noEmit && npm run typecheck --workspace @shiri/calendar-core",
     "test": "tsx --test packages/calendar-core/test/*.test.ts packages/calendar-ui/test/*.test.ts",
     "data:fetch": "tsx scripts/fetch-holidays.ts",
     "check": "npm run typecheck && npm test && npm run build",
     "build:mac": "node scripts/package-tauri-mac.mjs",
-    "check:apple": "swift run --package-path platforms/apple CalendarSmoke",
     "dev": "node scripts/license-notices.mjs --web && vite --config apps/calendar/vite.config.ts",
     "dev:web": "npm run dev",
     "build:web": "node scripts/license-notices.mjs --web && vite build --config apps/calendar/vite.config.ts",
