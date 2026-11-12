@@ -16,12 +16,9 @@
   background: var(--control);
   pointer-events: none;
 }
-.calendar-select:has(:focus-visible)::before {
-  outline: 2px solid var(--blue);
-  outline-offset: 3px;
-}
-.calendar-select:has(.ant-select-open)::before {
-  background: var(--blue-soft);
+.calendar-select[data-keyboard-focus='true']:focus-within::before {
+  outline: 1px solid var(--secondary);
+  outline-offset: 1px;
 }
 .calendar-select .calendar-select-field {
   width: 100%;
@@ -42,9 +39,6 @@
 .calendar-select .calendar-select-field.ant-select-focused {
   background: transparent;
   box-shadow: none;
-}
-.calendar-select .calendar-select-field.ant-select:focus-within {
-  outline: 0;
 }
 .calendar-select .calendar-select-field.ant-select .ant-select-content {
   min-width: 0;
@@ -97,9 +91,15 @@
 }
 .calendar-select-popup.ant-select-dropdown
   .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-  color: var(--blue);
-  background: var(--blue-soft);
-  font-weight: 500;
+  color: var(--ink);
+  background: transparent;
+  font-weight: 400;
+}
+.calendar-select-popup.ant-select-dropdown
+  .ant-select-item-option-selected.ant-select-item-option-active:not(
+    .ant-select-item-option-disabled
+  ) {
+  background: var(--control);
 }
 .calendar-select-popup.ant-select-dropdown .ant-select-item-option-disabled {
   color: var(--muted);
@@ -114,6 +114,7 @@
   width: 13px;
   height: 13px;
   flex-shrink: 0;
+  color: var(--secondary);
 }
 @media (pointer: coarse) {
   .calendar-select {

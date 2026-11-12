@@ -1,5 +1,5 @@
 import Select from 'antd/es/select';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import './CalendarSelect.css';
 
@@ -52,13 +52,26 @@ export function CalendarSelect<Value extends string | number>({
   disabled = false,
 }: CalendarSelectProps<Value>) {
   const [open, setOpen] = useState(false);
+  const [keyboardFocus, setKeyboardFocus] = useState(false);
+  const pointerInteraction = useRef(false);
   useEffect(() => {
-    const close = () => setOpen(false);
+    const close = () => {
+      setOpen(false);
+      setKeyboardFocus(false);
+      pointerInteraction.current = false;
+    };
     window.addEventListener('blur', close);
     return () => window.removeEventListener('blur', close);
   }, []);
   return (
-    <span className={`calendar-select ${className}`}>
+    <span
+      className={`calendar-select ${className}`}
+      data-keyboard-focus={keyboardFocus || undefined}
+      onPointerDownCapture={() => {
+        pointerInteraction.current = true;
+        setKeyboardFocus(false);
+      }}
+    >
       <Select<Value, CalendarSelectOption<Value>>
         id={id}
         aria-label={label}
@@ -74,6 +87,14 @@ export function CalendarSelect<Value extends string | number>({
         listHeight={240}
         popupMatchSelectWidth={popupWidth}
         classNames={{ root: 'calendar-select-field', popup: { root: 'calendar-select-popup' } }}
+        styles={{ root: { outline: 'none', boxShadow: 'none' } }}
+        onFocus={() => {
+          if (!pointerInteraction.current) setKeyboardFocus(true);
+        }}
+        onBlur={() => {
+          pointerInteraction.current = false;
+          setKeyboardFocus(false);
+        }}
         suffix={
           <svg
             viewBox="0 0 16 16"
@@ -84,6 +105,7 @@ export function CalendarSelect<Value extends string | number>({
         }
         optionRender={(option) => renderOption(option.label, option.value === value)}
         onInputKeyDown={(event) => {
+          setKeyboardFocus(true);
           if (open && event.key === 'Escape') {
             event.stopPropagation();
             setOpen(false);
