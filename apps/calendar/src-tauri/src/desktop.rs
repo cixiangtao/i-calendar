@@ -1,10 +1,69 @@
 use crate::RuntimeState;
+use objc2_app_kit::{NSColor, NSWindow};
 use std::{sync::atomic::Ordering, time::Duration};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Manager, PhysicalPosition, WindowEvent,
 };
+
+const POPUP_CORNER_RADIUS: f64 = 20.0;
+
+/// 仅在 setup 主线程调用；在原生内容视图裁切整棵 WebView，窗口四角真正透明。
+fn round_popup(window: &tauri::WebviewWindow) -> tauri::Result<()> {
+    let pointer = window.ns_window()?.cast::<NSWindow>();
+    // SAFETY: Tauri 的 setup 位于主线程，窗口仍由 WebviewWindow 持有。
+    let native = unsafe { pointer.as_ref() }.ok_or(tauri::Error::InvalidWindowHandle)?;
+    let content = native
+        .contentView()
+        .ok_or_else(|| std::io::Error::other("无法获取悬浮窗内容视图"))?;
+    content.setWantsLayer(true);
+    let layer = content
+        .layer()
+        .ok_or_else(|| std::io::Error::other("无法创建悬浮窗圆角图层"))?;
+    layer.setCornerRadius(POPUP_CORNER_RADIUS);
+    layer.setMasksToBounds(true);
+    native.setOpaque(false);
+    native.setBackgroundColor(Some(&NSColor::clearColor()));
+    native.invalidateShadow();
+    Ok(())
+}
+
+/// 从真实 AppKit 窗口读取裁切状态；通过主线程回调保证原生视图访问安全。
+pub async fn verify_rounded_popup(window: &tauri::WebviewWindow) -> Result<(), String> {
+    let (sender, receiver) = std::sync::mpsc::sync_channel(1);
+    window
+        .with_webview(move |webview| {
+            let result = (|| {
+                // SAFETY: with_webview 在主线程执行，原生窗口在回调期间有效。
+                let native = unsafe { webview.ns_window().cast::<NSWindow>().as_ref() }
+                    .ok_or("悬浮窗原生句柄不存在")?;
+                let layer = native
+                    .contentView()
+                    .and_then(|view| view.layer())
+                    .ok_or("悬浮窗圆角图层不存在")?;
+                let clear_background = native.backgroundColor().alphaComponent() == 0.0;
+                if (layer.cornerRadius() - POPUP_CORNER_RADIUS).abs() > f64::EPSILON
+                    || !layer.masksToBounds()
+                    || native.isOpaque()
+                    || !clear_background
+                    || !native.hasShadow()
+                {
+                    return Err("悬浮窗圆角、透明边角或系统阴影未生效");
+                }
+                Ok(())
+            })();
+            let _ = sender.send(result.map_err(str::to_owned));
+        })
+        .map_err(|_| "无法检查原生悬浮窗")?;
+    tauri::async_runtime::spawn_blocking(move || {
+        receiver
+            .recv_timeout(Duration::from_secs(3))
+            .map_err(|_| "原生悬浮窗检查超时".to_string())?
+    })
+    .await
+    .map_err(|_| "原生悬浮窗检查线程失败")?
+}
 
 pub fn show_calendar(app: &tauri::AppHandle) {
     app.state::<RuntimeState>().menu_clock.wake();
@@ -119,6 +178,7 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
         .build(app)?;
     crate::menu_clock::start(app.handle().clone());
     if let Some(window) = app.get_webview_window("main") {
+        round_popup(&window)?;
         let _ = window.set_visible_on_all_workspaces(true);
         let handle = app.handle().clone();
         window.on_window_event(move |event| match event {

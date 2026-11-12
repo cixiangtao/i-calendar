@@ -29,6 +29,13 @@ tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-single-instance = "2"
 plist = "1"
 chrono = { version = "=0.4.45", default-features = false, features = ["clock"] }
+objc2-app-kit = { version = "=0.3.2", default-features = false, features = [
+  "NSColor",
+  "NSView",
+  "NSWindow",
+  "objc2-core-foundation",
+  "objc2-quartz-core",
+] }
 
 [profile.release]
 codegen-units = 1

@@ -155,6 +155,7 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 app.exit(1);
                 return Err("菜单栏日历未显示".into());
             }
+            desktop::verify_rounded_popup(&window).await?;
             window.hide().map_err(|_| "日历收起失败")?;
             menu_clock::verify_smoke(&app).await?;
             desktop::show_calendar(&app);
@@ -162,6 +163,8 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 app.exit(1);
                 return Err("日历重新打开失败".into());
             }
+            desktop::verify_rounded_popup(&window).await?;
+            println!("PASS：原生悬浮窗 20px 圆角、透明边角和系统阴影在收起重开后保持生效");
             println!("PASS：Tauri 原生窗口、WebView 前端、共享日历核心与 Rust 命令交互通过");
             app.exit(0);
         }
