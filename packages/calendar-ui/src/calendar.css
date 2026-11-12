@@ -9,9 +9,10 @@
   -webkit-font-smoothing: antialiased;
   --canvas: #f1f2f6;
   --surface: #ffffff;
-  --ink: #24262d;
-  --secondary: #606775;
-  --muted: #707581;
+  --ink: #171b24;
+  --secondary: #5b6575;
+  --muted: #6e7786;
+  --leaf: #3269d9;
   --line: #eceef3;
   --control: #f0f1f5;
   --hover: #f5f6fa;
@@ -32,9 +33,9 @@
 :root[data-theme='dark'] {
   --canvas: #191b22;
   --surface: #24262f;
-  --ink: #eef0f7;
-  --secondary: #b2b7c7;
-  --muted: #a0a6b7;
+  --ink: #f6f7fb;
+  --secondary: #acb4c3;
+  --muted: #929dac;
   --line: #363946;
   --control: #30333e;
   --hover: #2c2f3a;
@@ -367,7 +368,7 @@ a:focus-visible {
   display: grid;
   place-items: center;
   border-radius: 13px;
-  background: #3269d9;
+  background: var(--leaf);
   color: #fff;
 }
 .date-leaf::before,
@@ -949,6 +950,68 @@ body[data-platform='ios'] .calendar-stage {
 .almanac-inline {
   margin-top: 14px;
   border-top: 1px solid var(--line);
+}
+
+.palette-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+.calendar-app .palette-choice {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 66px;
+  gap: 7px;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--line);
+  font-size: 12px;
+  line-height: 18px;
+}
+.calendar-app .palette-choice[aria-pressed='true'] {
+  border-color: var(--blue);
+  box-shadow: inset 0 0 0 1px var(--blue);
+}
+.palette-swatch {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-width: 40px;
+  height: 20px;
+  border-radius: 5px;
+}
+.palette-swatch > i {
+  width: 22px;
+  height: 7px;
+  border-radius: 3px;
+}
+.accent-setting {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 22px;
+}
+.accent-setting label {
+  margin-right: auto;
+}
+.accent-setting input {
+  width: 44px;
+  height: 32px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.accent-value {
+  color: var(--secondary);
+  font-variant-numeric: tabular-nums;
 }
 .almanac-content {
   min-width: 0;

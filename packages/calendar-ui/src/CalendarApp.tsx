@@ -8,6 +8,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useMemo,
   useSyncExternalStore,
   type KeyboardEvent,
   type SVGProps,
@@ -15,6 +16,7 @@ import {
 } from 'react';
 
 import { AlmanacContent } from './Almanac.js';
+import { colorThemes, resolveColorTheme } from './color-theme.js';
 import type { CalendarPreferences } from './platform.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 
@@ -127,18 +129,28 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const [systemDark, setSystemDark] = useState(
     () => window.matchMedia('(prefers-color-scheme: dark)').matches,
   );
+  const [increasedContrast, setIncreasedContrast] = useState(
+    () => window.matchMedia('(prefers-contrast: more)').matches,
+  );
   const focusAfterNavigation = useRef(false);
   const grid = useRef<HTMLDivElement>(null);
   const gear = useRef<HTMLButtonElement>(null);
   const dark =
     state.preferences.appearance === 'dark' ||
     (state.preferences.appearance === 'system' && systemDark);
+  const colors = useMemo(
+    () => resolveColorTheme(state.preferences, dark, increasedContrast),
+    [state.preferences, dark, increasedContrast],
+  );
 
   useEffect(() => {
     void controller.initialize();
     const query = window.matchMedia('(prefers-color-scheme: dark)');
     const changed = () => setSystemDark(query.matches);
     query.addEventListener('change', changed);
+    const contrast = window.matchMedia('(prefers-contrast: more)');
+    const contrastChanged = () => setIncreasedContrast(contrast.matches);
+    contrast.addEventListener('change', contrastChanged);
     const refresh = () => {
       if (document.visibilityState !== 'hidden') controller.refreshToday();
     };
@@ -147,6 +159,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
     document.addEventListener('visibilitychange', refresh);
     return () => {
       query.removeEventListener('change', changed);
+      contrast.removeEventListener('change', contrastChanged);
       window.clearInterval(interval);
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
@@ -156,7 +169,13 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
-  }, [dark]);
+    for (const [name, value] of Object.entries(colors.tokens))
+      document.documentElement.style.setProperty(name, value);
+    return () => {
+      for (const name of Object.keys(colors.tokens))
+        document.documentElement.style.removeProperty(name);
+    };
+  }, [dark, colors]);
 
   useEffect(() => {
     if (focusAfterNavigation.current) {
@@ -228,13 +247,18 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       theme={{
         algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {
-          colorPrimary: dark ? '#93b5ff' : '#3269d9',
+          colorPrimary: colors.tokens['--blue'],
+          colorText: colors.tokens['--ink'],
+          colorTextSecondary: colors.tokens['--secondary'],
+          colorTextTertiary: colors.tokens['--muted'],
           fontFamily:
             '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif',
           fontSize: 12,
           borderRadius: 12,
           controlHeight: 30,
-          colorBgContainer: dark ? '#24262f' : '#ffffff',
+          colorBgContainer: colors.tokens['--surface'],
+          colorBgElevated: colors.tokens['--surface'],
+          colorBorderSecondary: colors.tokens['--line'],
         },
       }}
     >
@@ -590,6 +614,66 @@ function Settings({
               }}
             />
           </div>
+        </section>
+        <section>
+          <h2>配色</h2>
+          <div
+            className="palette-choices"
+            role="group"
+            aria-label="主题预设"
+          >
+            {colorThemes.map((preset) => (
+              <Button
+                key={preset.id}
+                className="palette-choice"
+                aria-pressed={state.preferences.colorTheme === preset.id}
+                onClick={() => {
+                  void controller.setPreferences({ colorTheme: preset.id, accentColor: null });
+                }}
+              >
+                <span
+                  className="palette-swatch"
+                  style={{ background: preset.canvas }}
+                  aria-hidden="true"
+                >
+                  <i style={{ background: preset.accent }} />
+                </span>
+                {preset.name}
+              </Button>
+            ))}
+          </div>
+          <div className="accent-setting">
+            <label htmlFor="accent-color">强调色</label>
+            <input
+              id="accent-color"
+              type="color"
+              value={
+                state.preferences.accentColor ??
+                colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
+              }
+              onChange={(event) => {
+                void controller.setPreferences({ accentColor: event.target.value });
+              }}
+              onFocus={() => interact(true)}
+              onBlur={() => interact(false)}
+            />
+            <span className="accent-value">
+              {(
+                state.preferences.accentColor ??
+                colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
+              ).toUpperCase()}
+            </span>
+            <Button
+              type="text"
+              disabled={state.preferences.accentColor === null}
+              onClick={() => {
+                void controller.setPreferences({ accentColor: null });
+              }}
+            >
+              恢复默认
+            </Button>
+          </div>
+          <p>强调色用于选中日期和操作，自动适配明暗外观。切换预设会恢复该主题的默认强调色。</p>
         </section>
         <section>
           <h2>放假与调休</h2>
