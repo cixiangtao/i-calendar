@@ -20,7 +20,7 @@ async function start() {
   await controller.initialize();
   const root = createRoot(document.getElementById('root')!);
   flushSync(() => root.render(<StrictMode><AppBoundary><main className="calendar-stage"><CalendarApp controller={controller} /></main>
-    {platform.kind === 'web' ? <section className="web-info" aria-label="关于拾日历"><h2>查日子，打开就好。</h2><p>拾日历提供公农历、节气和中国大陆放假调休。日历计算在本地完成，免费、无广告，无需登录。</p><p>Mac、iOS 与网页版使用相同的日历核心和界面组件。当前为 0.1.0 开发预览，正式官网与应用下载将在 1.0 发布时同步提供。</p><p>放假与补班根据全国统一安排整理，个人排班以所在单位为准。数据来源可在日历设置中查看。</p></section> : null}
+    {platform.kind === 'web' ? <section className="web-info" aria-label="关于拾日历"><h2>查日子，打开就好。</h2><p>拾日历提供公农历、节气和中国大陆放假调休。日历计算在本地完成，免费、无广告，无需登录。</p><p>Mac、iOS 与网页版使用相同的日历核心和界面组件。当前为 0.1.0 开发预览，正式官网与应用下载将在 1.0 发布时同步提供。</p><p>放假与补班根据全国统一安排整理，个人排班以所在单位为准。数据来源可在日历设置中查看。</p><p><a href="./third-party-licenses.txt">第三方组件与许可证</a></p></section> : null}
   </AppBoundary></StrictMode>));
   window.addEventListener('pagehide', () => controller.dispose(), { once: true });
   if (platform.kind !== 'web') {

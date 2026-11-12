@@ -1,0 +1,5 @@
+{
+  "app": {
+    "windows": [{"label": "main", "title": "拾日历", "width": 400, "height": 660, "visible": false, "decorations": false, "resizable": false, "skipTaskbar": true, "shadow": true, "alwaysOnTop": true}]
+  }
+}

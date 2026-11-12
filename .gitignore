@@ -8,8 +8,9 @@ outputs/
 .swiftpm/
 .playwright-cli/
 target/
-gen/schemas/
-gen/apple/build/
-gen/apple/Pods/
+**/gen/schemas/
+**/gen/apple/build/
+**/gen/apple/Pods/
 *.xcuserstate
 xcuserdata/
+apps/calendar/public/third-party-licenses.txt
