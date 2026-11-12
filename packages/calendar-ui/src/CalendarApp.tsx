@@ -303,26 +303,28 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   {state.year}年{state.monthNumber}月
                 </h1>
                 <div className="month-heading">
-                  <select
-                    className="year-select"
-                    aria-label="年份"
-                    value={state.year}
-                    onFocus={() => busy(true)}
-                    onBlur={() => busy(false)}
-                    onChange={(event) => {
-                      controller.jump(Number(event.target.value), state.monthNumber);
-                      busy(false);
-                    }}
-                  >
-                    {years.map((year) => (
-                      <option
-                        key={year}
-                        value={year}
-                      >
-                        {year}年
-                      </option>
-                    ))}
-                  </select>
+                  <span className="month-select-control year-control">
+                    <select
+                      className="year-select"
+                      aria-label="年份"
+                      value={state.year}
+                      onFocus={() => busy(true)}
+                      onBlur={() => busy(false)}
+                      onChange={(event) => {
+                        controller.jump(Number(event.target.value), state.monthNumber);
+                        busy(false);
+                      }}
+                    >
+                      {years.map((year) => (
+                        <option
+                          key={year}
+                          value={year}
+                        >
+                          {year}年
+                        </option>
+                      ))}
+                    </select>
+                  </span>
                   <nav
                     className="month-controls"
                     aria-label="切换月份"
@@ -333,36 +335,48 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                       aria-label="上个月"
                       title="上个月（PageUp）"
                       disabled={state.year === 1901 && state.monthNumber === 1}
-                      icon={<Icon name="left" />}
+                      icon={
+                        <Icon
+                          name="left"
+                          viewBox="4 3 16 18"
+                        />
+                      }
                       onClick={() => controller.shiftMonth(-1)}
                     />
-                    <select
-                      className="month-select"
-                      aria-label="月份"
-                      value={state.monthNumber}
-                      onFocus={() => busy(true)}
-                      onBlur={() => busy(false)}
-                      onChange={(event) => {
-                        controller.jump(state.year, Number(event.target.value));
-                        busy(false);
-                      }}
-                    >
-                      {months.map((month) => (
-                        <option
-                          key={month}
-                          value={month}
-                        >
-                          {month}月
-                        </option>
-                      ))}
-                    </select>
+                    <span className="month-select-control month-control">
+                      <select
+                        className="month-select"
+                        aria-label="月份"
+                        value={state.monthNumber}
+                        onFocus={() => busy(true)}
+                        onBlur={() => busy(false)}
+                        onChange={(event) => {
+                          controller.jump(state.year, Number(event.target.value));
+                          busy(false);
+                        }}
+                      >
+                        {months.map((month) => (
+                          <option
+                            key={month}
+                            value={month}
+                          >
+                            {month}月
+                          </option>
+                        ))}
+                      </select>
+                    </span>
                     <Button
                       type="text"
                       className="tool-button"
                       aria-label="下个月"
                       title="下个月（PageDown）"
                       disabled={state.year === 2100 && state.monthNumber === 12}
-                      icon={<Icon name="right" />}
+                      icon={
+                        <Icon
+                          name="right"
+                          viewBox="4 3 16 18"
+                        />
+                      }
                       onClick={() => controller.shiftMonth(1)}
                     />
                   </nav>

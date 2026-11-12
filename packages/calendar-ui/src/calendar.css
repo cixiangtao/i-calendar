@@ -171,30 +171,55 @@ a:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 17px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 500;
 }
 .month-heading {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
-.month-heading select {
-  appearance: none;
-  border: 0;
-  border-radius: 10px;
+.month-select-control {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 28px;
+}
+.month-select-control::before,
+.calendar-app .tool-button::before,
+.calendar-app .today-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 28px;
+  width: 100%;
+  transform: translate(-50%, -50%);
+  border-radius: 8px;
   background: var(--control);
+  pointer-events: none;
+}
+.month-heading select {
+  position: relative;
+  appearance: none;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
   color: var(--ink);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   line-height: 20px;
-  padding: 6px 10px;
+  padding: 4px 8px;
 }
-.month-heading .year-select {
-  width: 84px;
+.year-control {
+  width: 72px;
 }
-.month-heading .month-select {
-  width: 57px;
+.month-control {
+  width: 48px;
 }
 .month-controls {
   display: flex;
@@ -209,31 +234,47 @@ a:focus-visible {
 }
 .calendar-app .tool-button,
 .calendar-app .today-button {
-  width: 30px;
-  min-width: 30px;
+  position: relative;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
   flex-shrink: 0;
-  height: 32px;
+  padding: 0;
   border: 0;
-  border-radius: 10px;
-  padding: 4px;
-  background: var(--control);
+  border-radius: 8px;
+  background: transparent;
   color: var(--ink);
   box-shadow: none;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.calendar-app .tool-button::before {
+  width: 28px;
 }
 .calendar-app .today-button {
-  width: 48px;
-  min-width: 48px;
-  white-space: nowrap;
-  background: var(--blue-soft);
+  width: 44px;
+  min-width: 44px;
   color: var(--blue);
-  font-size: 12px;
-  padding: 4px 10px;
-  font-weight: 500;
+  white-space: nowrap;
+}
+.calendar-app .today-button::before {
+  background: var(--blue-soft);
+}
+.month-toolbar .ant-btn > span {
+  position: relative;
+}
+.month-toolbar svg {
+  width: 13px;
+  height: 13px;
 }
 .calendar-app .tool-button:hover,
 .calendar-app .today-button:hover {
-  background: var(--blue-soft) !important;
+  background: transparent !important;
   color: var(--blue) !important;
+}
+.calendar-app .tool-button:hover::before {
+  background: var(--blue-soft);
 }
 .week-row,
 .date-row {
@@ -622,23 +663,6 @@ a:focus-visible {
   body[data-platform='web'] .brand {
     font-size: 14px;
   }
-  body[data-platform='web'] .month-toolbar {
-    margin-bottom: 24px;
-  }
-  body[data-platform='web'] .month-heading select {
-    background: transparent;
-    font-size: 16px;
-    font-weight: 500;
-    padding: 5px 8px;
-    line-height: 22px;
-    border-radius: 8px;
-  }
-  body[data-platform='web'] .month-heading .year-select {
-    width: 84px;
-  }
-  body[data-platform='web'] .month-heading .month-select {
-    width: 56px;
-  }
   body[data-platform='web'] .week-row,
   body[data-platform='web'] .date-row {
     gap: 8px;
@@ -746,9 +770,6 @@ body[data-platform='macos'] .app-header {
   min-height: 22px;
   margin-bottom: 8px;
 }
-body[data-platform='macos'] .month-toolbar {
-  margin-bottom: 10px;
-}
 body[data-platform='macos'] .week-row {
   margin-bottom: 6px;
 }
@@ -824,22 +845,11 @@ body[data-platform='ios'] .calendar-stage {
     min-width: 44px;
     min-height: 44px;
   }
-  .month-heading select {
-    min-height: 44px;
-    font-size: 14px;
-    padding: 6px;
-  }
-  .month-heading .year-select {
-    width: 66px;
-  }
-  .month-heading .month-select {
-    width: 45px;
+  .month-select-control {
+    height: 44px;
   }
   .month-controls {
     gap: 2px;
-  }
-  .calendar-app .today-button {
-    padding: 4px 6px;
   }
   .day-cell,
   .empty-day {
