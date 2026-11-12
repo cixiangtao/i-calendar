@@ -46,12 +46,26 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
         assert.equal(result.accent, accentColor ?? preset.accent);
         for (const fg of ['--ink', '--secondary', '--muted'] as const)
           assert.ok(contrastRatio(t[fg], t['--surface']) >= 4.5, `${preset.id}/${dark}/${fg}`);
-        for (const bg of ['--surface', '--blue-soft', '--control', '--hover'] as const)
+        for (const bg of [
+          '--surface',
+          '--blue-soft',
+          '--control',
+          '--hover',
+          '--control-hover',
+          '--control-active',
+        ] as const)
           assert.ok(
             contrastRatio(t['--blue'], t[bg]) >= 4.5,
             `${preset.id}/${dark}/${accentColor}/${bg}`,
           );
         assert.ok(contrastRatio('#ffffff', t['--leaf']) >= 4.5);
+        assert.ok(contrastRatio('#ffffff', t['--leaf-hover']) >= 4.5);
+        assert.ok(contrastRatio('#ffffff', t['--leaf-active']) >= 4.5);
+        for (const bg of ['--control', '--control-hover', '--control-active'] as const)
+          for (const fg of ['--ink', '--secondary'] as const)
+            assert.ok(contrastRatio(t[fg], t[bg]) >= 4.5, `${preset.id}/${dark}/${fg}/${bg}`);
+        assert.notEqual(t['--control'], t['--control-hover']);
+        assert.notEqual(t['--control-hover'], t['--control-active']);
         const high = resolveColorTheme(preferences, dark, true).tokens;
         assert.ok(contrastRatio(high['--secondary'], high['--surface']) >= 7);
         assert.ok(contrastRatio(high['--blue'], high['--blue-soft']) >= 7);

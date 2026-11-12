@@ -67,6 +67,7 @@ export function CalendarSelect<Value extends string | number>({
     <span
       className={`calendar-select ${className}`}
       data-keyboard-focus={keyboardFocus || undefined}
+      data-disabled={disabled || undefined}
       onPointerDownCapture={() => {
         pointerInteraction.current = true;
         setKeyboardFocus(false);
@@ -78,8 +79,8 @@ export function CalendarSelect<Value extends string | number>({
         value={value}
         options={[...options]}
         disabled={disabled}
-        open={open}
-        onOpenChange={setOpen}
+        open={open && !disabled}
+        onOpenChange={(next) => setOpen(next && !disabled)}
         onChange={onChange}
         showSearch={false}
         variant="borderless"

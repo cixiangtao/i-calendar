@@ -1,8 +1,8 @@
 import Button from 'antd/es/button';
-import Input from 'antd/es/input';
 import Switch from 'antd/es/switch';
 import { useEffect, useState } from 'react';
 
+import { CalendarInput } from './CalendarInput.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import {
   formatMenuClock,
@@ -95,7 +95,7 @@ export function MenuClockSettings({
           >
             自定义时间格式
           </label>
-          <Input
+          <CalendarInput
             id="menu-clock-custom"
             value={draft}
             maxLength={48}

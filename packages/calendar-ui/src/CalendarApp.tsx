@@ -21,11 +21,13 @@ import { version as appVersion } from '../../../package.json';
 import { AlmanacContent } from './Almanac.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import { colorThemes, resolveColorTheme } from './color-theme.js';
+import { createFormTheme, formControlVariables } from './form-theme.js';
 import { MenuClockSettings } from './MenuClockSettings.js';
 import type { CalendarPreferences } from './platform.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 
 import './calendar.css';
+import './form-controls.css';
 
 type IconName = 'settings' | 'left' | 'right' | 'external' | 'close';
 function Icon({ name, ...props }: SVGProps<SVGSVGElement> & { name: IconName }) {
@@ -203,10 +205,11 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
-    for (const [name, value] of Object.entries(colors.tokens))
+    const variables = { ...colors.tokens, ...formControlVariables };
+    for (const [name, value] of Object.entries(variables))
       document.documentElement.style.setProperty(name, value);
     return () => {
-      for (const name of Object.keys(colors.tokens))
+      for (const name of Object.keys(variables))
         document.documentElement.style.removeProperty(name);
     };
   }, [dark, colors]);
@@ -276,22 +279,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
 
   return (
     <ConfigProvider
+      wave={{ disabled: true }}
       theme={{
+        ...createFormTheme(colors.tokens),
         algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
-        token: {
-          colorPrimary: colors.tokens['--blue'],
-          colorText: colors.tokens['--ink'],
-          colorTextSecondary: colors.tokens['--secondary'],
-          colorTextTertiary: colors.tokens['--muted'],
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif',
-          fontSize: 12,
-          borderRadius: 12,
-          controlHeight: 30,
-          colorBgContainer: colors.tokens['--surface'],
-          colorBgElevated: colors.tokens['--surface'],
-          colorBorderSecondary: colors.tokens['--line'],
-        },
       }}
     >
       <article
@@ -754,19 +745,22 @@ function Settings({
                   </div>
                   <div className="accent-setting">
                     <label htmlFor="accent-color">强调色</label>
-                    <input
-                      id="accent-color"
-                      type="color"
-                      value={
-                        state.preferences.accentColor ??
-                        colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
-                      }
-                      onChange={(event) => {
-                        void controller.setPreferences({ accentColor: event.target.value });
-                      }}
-                      onFocus={() => interact(true)}
-                      onBlur={() => interact(false)}
-                    />
+                    <span className="calendar-color">
+                      <input
+                        id="accent-color"
+                        type="color"
+                        value={
+                          state.preferences.accentColor ??
+                          colorThemes.find((item) => item.id === state.preferences.colorTheme)!
+                            .accent
+                        }
+                        onChange={(event) => {
+                          void controller.setPreferences({ accentColor: event.target.value });
+                        }}
+                        onFocus={() => interact(true)}
+                        onBlur={() => interact(false)}
+                      />
+                    </span>
                     <span className="accent-value">
                       {(
                         state.preferences.accentColor ??

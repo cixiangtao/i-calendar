@@ -15,6 +15,8 @@
   --leaf: #3269d9;
   --line: #eceef3;
   --control: #f0f1f5;
+  --control-hover: #e3e4e8;
+  --control-active: #dcdde0;
   --hover: #f5f6fa;
   --blue: #3269d9;
   --blue-soft: #edf3ff;
@@ -38,6 +40,8 @@
   --muted: #929dac;
   --line: #363946;
   --control: #30333e;
+  --control-hover: #444750;
+  --control-active: #50535c;
   --hover: #2c2f3a;
   --blue: #93b5ff;
   --blue-soft: #2c3955;
@@ -156,13 +160,17 @@ a:focus-visible {
   width: 28px;
   height: 28px;
   padding: 5px;
-  border-radius: 50%;
+  border-radius: var(--form-radius);
   color: var(--secondary);
   flex-shrink: 0;
 }
 .calendar-app .icon-button:hover {
-  background: var(--control) !important;
-  color: var(--blue) !important;
+  background: var(--control-hover) !important;
+  color: var(--ink) !important;
+}
+.calendar-app .icon-button:not(:disabled):active {
+  background: var(--control-active) !important;
+  color: var(--ink) !important;
 }
 .month-toolbar {
   display: flex;
@@ -185,18 +193,19 @@ a:focus-visible {
   position: absolute;
   top: 50%;
   left: 50%;
-  height: 28px;
+  height: var(--form-height);
   width: 100%;
   transform: translate(-50%, -50%);
-  border-radius: 8px;
+  border-radius: var(--form-radius);
   background: var(--control);
   pointer-events: none;
+  transition: background-color var(--form-duration) ease-out;
 }
 .year-control {
-  width: 72px;
+  width: 78px;
 }
 .month-control {
-  width: 50px;
+  width: 62px;
 }
 .month-controls {
   display: flex;
@@ -241,12 +250,23 @@ a:focus-visible {
   height: 13px;
 }
 .calendar-app .tool-button:hover,
-.calendar-app .today-button:hover {
+.calendar-app .today-button:hover,
+.calendar-app .tool-button:active,
+.calendar-app .today-button:active {
   background: transparent !important;
+  color: var(--ink) !important;
+}
+.calendar-app .today-button:hover,
+.calendar-app .today-button:active {
   color: var(--blue) !important;
 }
-.calendar-app .tool-button:hover::before {
-  background: var(--blue-soft);
+.calendar-app .tool-button:hover::before,
+.calendar-app .today-button:hover::before {
+  background: var(--control-hover);
+}
+.calendar-app .tool-button:active::before,
+.calendar-app .today-button:active::before {
+  background: var(--control-active);
 }
 .week-row,
 .date-row {
@@ -630,9 +650,10 @@ a:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 13px;
-  font-size: 12px;
+  min-height: var(--form-height);
+  gap: var(--form-gap);
+  margin-bottom: 12px;
+  font-size: var(--form-font-size);
 }
 .setting-label:last-child {
   margin-bottom: 0;
@@ -643,7 +664,7 @@ a:focus-visible {
 }
 .clock-format-form {
   display: flex;
-  gap: 8px;
+  gap: var(--form-gap);
   margin-bottom: 8px;
 }
 .clock-format-form .ant-input {
@@ -690,23 +711,25 @@ a:focus-visible {
   flex: 1;
   max-width: 250px;
   background: var(--control);
-  padding: 3px;
-  border-radius: 10px;
+  padding: 2px;
+  border-radius: var(--form-radius);
 }
 .setting-label .ant-segmented-group {
   display: flex;
 }
 .setting-label .ant-segmented-item {
   flex: 1;
-  border-radius: 8px;
+  border-radius: 6px;
+}
+.setting-label .ant-segmented-item-label {
+  min-height: 24px;
+  padding: 0 8px;
+  line-height: 24px;
 }
 .data-actions {
   display: flex;
-  gap: 10px;
+  gap: var(--form-gap);
   margin: 14px 0 10px;
-}
-.data-actions .ant-btn {
-  border-radius: 10px;
 }
 .settings-scroll .setting-hint {
   font-size: 11px;
@@ -957,18 +980,20 @@ body[data-platform='ios'] .calendar-stage {
   .source-link {
     min-height: 44px;
   }
-  .data-actions .ant-btn,
-  .settings-panel .ant-segmented-item-label {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
   .date-summary {
     flex-wrap: wrap;
   }
 }
 @media (max-width: 350px) and (pointer: coarse) {
+  .month-toolbar {
+    gap: 0;
+  }
+  .month-heading {
+    gap: 0;
+  }
+  .month-controls {
+    gap: 0;
+  }
   .date-row,
   .week-row {
     gap: 3px;
@@ -1101,21 +1126,12 @@ body[data-platform='ios'] .calendar-stage {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  font-size: 12px;
-  line-height: 22px;
+  gap: var(--form-gap);
+  font-size: var(--form-font-size);
+  line-height: var(--form-line-height);
 }
 .accent-setting label {
   margin-right: auto;
-}
-.accent-setting input {
-  width: 44px;
-  height: 32px;
-  padding: 3px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--surface);
-  cursor: pointer;
 }
 .accent-value {
   color: var(--secondary);

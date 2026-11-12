@@ -4,17 +4,29 @@
   flex-shrink: 0;
   min-width: 0;
   max-width: 100%;
-  height: 28px;
+  height: var(--form-height, 28px);
 }
 .calendar-select::before {
   content: '';
   position: absolute;
   inset: 50% 0 auto;
-  height: 28px;
+  height: var(--form-height, 28px);
   transform: translateY(-50%);
-  border-radius: 8px;
+  border-radius: var(--form-radius, 8px);
   background: var(--control);
+  transition: background-color var(--form-duration, 130ms) ease-out;
   pointer-events: none;
+}
+@media (hover: hover) {
+  .calendar-select:not([data-disabled='true']):hover::before {
+    background: var(--control-hover, var(--control));
+  }
+}
+.calendar-select:not([data-disabled='true']):active::before {
+  background: var(--control-active, var(--control));
+}
+.calendar-select[data-disabled='true'] {
+  opacity: 0.5;
 }
 .calendar-select[data-keyboard-focus='true']:focus-within::before {
   outline: 1px solid var(--secondary);
@@ -23,14 +35,14 @@
 .calendar-select .calendar-select-field {
   width: 100%;
   height: 100%;
-  padding: 0 4px;
+  padding: 0 var(--form-inset, 8px);
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--form-radius, 8px);
   background: transparent;
   color: var(--ink);
-  font-size: 13px;
+  font-size: var(--form-font-size, 13px);
   font-weight: 500;
-  line-height: 20px;
+  line-height: var(--form-line-height, 20px);
   font-variant-numeric: tabular-nums;
   column-gap: 2px;
   box-shadow: none;
@@ -49,15 +61,15 @@
   font-weight: inherit;
 }
 .calendar-select .ant-select-suffix {
-  width: 10px;
-  flex: 0 0 10px;
-  font-size: 10px;
+  width: 13px;
+  flex: 0 0 13px;
+  font-size: 13px;
   color: var(--secondary);
 }
 .calendar-select-field svg,
 .calendar-select-option svg {
-  width: 10px;
-  height: 10px;
+  width: 13px;
+  height: 13px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.7;
@@ -65,6 +77,7 @@
   stroke-linejoin: round;
 }
 .calendar-select .ant-select-disabled {
+  background: transparent;
   color: var(--muted);
   cursor: default;
 }
@@ -84,10 +97,13 @@
   font-size: 13px;
   line-height: 20px;
   font-variant-numeric: tabular-nums;
+  transition:
+    background-color var(--form-duration, 130ms) ease-out,
+    color var(--form-duration, 130ms) ease-out;
 }
 .calendar-select-popup.ant-select-dropdown
   .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-  background: var(--control);
+  background: var(--control-hover, var(--control));
 }
 .calendar-select-popup.ant-select-dropdown
   .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
@@ -99,7 +115,7 @@
   .ant-select-item-option-selected.ant-select-item-option-active:not(
     .ant-select-item-option-disabled
   ) {
-  background: var(--control);
+  background: var(--control-hover, var(--control));
 }
 .calendar-select-popup.ant-select-dropdown .ant-select-item-option-disabled {
   color: var(--muted);

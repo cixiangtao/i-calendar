@@ -70,9 +70,11 @@ export function resolveColorTheme(
   const hover = dark ? mix(surface, '#ffffff', 0.05) : mix(surface, canvas, 0.55);
   const soft = mix(surface, accent, dark ? 0.14 : 0.08);
   const ink = dark ? '#f6f7fb' : '#171b24';
+  const controlHover = mix(control, ink, dark ? 0.1 : 0.06);
+  const controlActive = mix(control, ink, dark ? 0.16 : 0.1);
   const secondary = readable(
     dark ? '#acb4c3' : '#5b6575',
-    [surface, control],
+    [surface, control, controlHover, controlActive],
     dark,
     increasedContrast ? 7 : 4.5,
   );
@@ -84,7 +86,7 @@ export function resolveColorTheme(
   );
   const action = readable(
     accent,
-    [surface, soft, control, hover],
+    [surface, soft, control, hover, controlHover, controlActive],
     dark,
     increasedContrast ? 7 : 4.5,
   );
@@ -99,10 +101,14 @@ export function resolveColorTheme(
       '--muted': muted,
       '--line': increasedContrast ? (dark ? '#737b8e' : '#a1a8b5') : dark ? '#3a3e48' : '#e4e7ed',
       '--control': control,
+      '--control-hover': controlHover,
+      '--control-active': controlActive,
       '--hover': hover,
       '--blue': action,
       '--blue-soft': soft,
       '--leaf': leaf,
+      '--leaf-hover': mix(leaf, '#000000', 0.08),
+      '--leaf-active': mix(leaf, '#000000', 0.16),
     },
   };
 }

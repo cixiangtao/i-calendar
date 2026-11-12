@@ -1,0 +1,151 @@
+/* 几何值由 form-theme.ts 注入，与 Ant Design 主题共用同一份尺寸。 */
+.calendar-app :is(.ant-btn, .ant-switch, .source-link):focus-visible,
+.calendar-app .settings-panel .ant-segmented .ant-segmented-item-focused {
+  outline: 1px solid var(--secondary);
+  outline-offset: 2px;
+}
+.calendar-app .ant-btn:disabled {
+  opacity: 0.5;
+  color: var(--muted);
+  background: var(--control);
+  border-color: transparent;
+}
+.settings-panel :is(.ant-btn, .ant-switch, .ant-segmented, .calendar-color)::before,
+.settings-panel :is(.ant-btn, .ant-switch, .ant-segmented, .calendar-color) {
+  transition-duration: var(--form-duration);
+}
+.settings-panel .ant-switch.ant-switch-disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.settings-panel .ant-switch:not(.ant-switch-disabled):active {
+  background: var(--ink);
+}
+.settings-panel .ant-switch.ant-switch-checked:not(.ant-switch-disabled):active {
+  background: var(--leaf-active);
+}
+.calendar-input,
+.calendar-color {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: var(--form-height);
+  min-width: 0;
+}
+.calendar-input {
+  flex: 1;
+}
+.calendar-input::before,
+.calendar-color::before {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto;
+  height: var(--form-height);
+  transform: translateY(-50%);
+  border-radius: var(--form-radius);
+  background: var(--control);
+  pointer-events: none;
+  transition: background-color var(--form-duration) ease-out;
+}
+@media (hover: hover) {
+  .calendar-input:not([data-disabled='true']):hover::before,
+  .calendar-color:hover::before {
+    background: var(--control-hover);
+  }
+}
+.calendar-input:not([data-disabled='true']):active::before,
+.calendar-color:active::before {
+  background: var(--control-active);
+}
+.calendar-input:focus-within::before,
+.calendar-color:focus-within::before {
+  outline: 1px solid var(--secondary);
+  outline-offset: 1px;
+}
+.calendar-input[data-status='error']::before {
+  outline: 1px solid var(--red);
+  outline-offset: 1px;
+}
+.calendar-input[data-status='warning']::before {
+  outline: 1px solid var(--yellow);
+  outline-offset: 1px;
+}
+.calendar-input[data-disabled='true'] {
+  opacity: 0.5;
+}
+.calendar-input .calendar-input-field.ant-input {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 var(--form-inset);
+  border: 0;
+  border-radius: var(--form-radius);
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  color: var(--ink);
+  caret-color: var(--blue);
+  font-size: var(--form-font-size);
+  line-height: var(--form-line-height);
+}
+.calendar-input .calendar-input-field.ant-input::placeholder {
+  color: var(--secondary);
+}
+.calendar-input[data-disabled='true'] .calendar-input-field.ant-input {
+  color: var(--muted);
+}
+.calendar-color {
+  width: 44px;
+  flex-shrink: 0;
+}
+.calendar-color input[type='color'] {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: var(--form-radius);
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+}
+.calendar-color input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.calendar-color input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 5px;
+}
+.calendar-color input::-moz-color-swatch {
+  border: 0;
+  border-radius: 5px;
+}
+@media (pointer: coarse) {
+  /* 扩大的透明伪元素仍属于原按钮/label，点击和键盘语义由原生控件处理。 */
+  .settings-panel .ant-btn:not(.palette-choice)::after,
+  .settings-panel .ant-switch::before,
+  .settings-panel .ant-segmented-item::before {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, 44px);
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+  .calendar-input,
+  .calendar-color {
+    height: 44px;
+  }
+  .calendar-color input[type='color'] {
+    padding-block: 11px;
+  }
+  .setting-label,
+  .accent-setting,
+  .clock-format-form,
+  .data-actions {
+    min-height: 44px;
+    align-items: center;
+  }
+}
