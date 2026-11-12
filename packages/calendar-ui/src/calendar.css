@@ -1033,15 +1033,10 @@ body[data-platform='ios'] .calendar-stage {
   min-width: 0;
   padding-top: 18px;
 }
-.almanac-content > h2 {
-  margin: 0 0 13px;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 20px;
-}
 .almanac-pillars {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 4px 10px;
   margin: 0 0 14px;
   font-size: 13px;

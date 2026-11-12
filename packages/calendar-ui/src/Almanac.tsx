@@ -14,7 +14,6 @@ export function AlmanacContent({ almanac }: { almanac: DayAlmanac }) {
       className="almanac-content"
       aria-label="每日黄历"
     >
-      <h2>传统黄历</h2>
       <dl
         className="almanac-pillars"
         aria-label="年月日干支"
