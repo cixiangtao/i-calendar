@@ -39,9 +39,11 @@ flowchart TD
 
 Mac 使用系统 WKWebView，不携带 Chromium。Rust 只处理菜单栏、窗口位置、文件存储和固定来源的网络请求；iOS 复用相同入口与 `mobile_entry_point`，通过独立平台配置避免引入 Mac 菜单栏行为。Web 使用浏览器 localStorage、Fetch 和 Clipboard，不启动 Rust 服务端。
 
-Mac 菜单栏时间由 `src-tauri/src/menu_clock.rs` 的原生线程维护，使用系统本地时区，不依赖 WebView 可见状态或 JavaScript 定时器；格式包含秒时按秒边界刷新，其余按分钟边界刷新，仅在标题变化时调用菜单栏 API。偏好修改立即唤醒线程，重新打开窗口与原生恢复事件也触发刷新。关闭时间显示仅清空标题，图标保留。
+Mac 菜单栏时间由 `src-tauri/src/menu_clock.rs` 的原生线程维护，使用系统本地时区，不依赖 WebView 可见状态或 JavaScript 定时器；格式包含秒时按秒边界刷新，其余按分钟边界刷新，仅在标题变化时更新文字。偏好修改立即唤醒线程，重新打开窗口与原生恢复事件也触发刷新。关闭时间显示仅清空标题，图标保留。
 
-`calendar-ui/src/menu-clock.ts` 提供格式校验、预设及设置页预览；这属于显示偏好，不进入历法核心。Rust 与 TypeScript 读取同一份格式样例，校验补零、12 小时制、中文星期、固定文字与非法格式。`preferences.menuClock` 随既有 schemaVersion 1 状态保存，旧记录缺字段时采用启用和 `HH:mm` 默认值。iOS 与 Web 保留偏好结构兼容，不展示 Mac 专属设置。详细契约见[菜单栏时间格式](菜单栏时间格式.md)。
+`preferences.menuClock.showIcon` 控制图标显隐，旧记录缺字段时补齐为 true。TypeScript 与 Rust 共用显隐样例并拒绝同时隐藏图标和时间；图标隐藏时还需确保格式产生非空白文字。原生线程仅在图片状态变化时更新图标，隐藏前先设置有效标题、清空标题前先恢复图标；图片与模板属性通过同一次 API 更新，避免恢复时闪烁。空白输出的运行时兜底保留图标，入口对象和事件处理不重建。冒烟检查经主线程读取真实 `NSStatusBarButton` 的图片、模板属性、文字和按钮尺寸。
+
+`calendar-ui/src/menu-clock.ts` 提供格式校验、预设及设置页预览；这属于显示偏好，不进入历法核心。Rust 与 TypeScript 读取同一份样例，校验补零、12 小时制、中文星期、固定文字、非法格式与显隐组合。`preferences.menuClock` 随既有 schemaVersion 1 状态保存，旧记录缺少全部菜单栏设置时采用图标和时间均开启及 `HH:mm` 默认值。iOS 与 Web 保留偏好结构兼容，不展示 Mac 专属设置。详细契约见[菜单栏时间格式](菜单栏时间格式.md)。
 
 ## 平台能力与权限
 
