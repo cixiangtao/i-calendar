@@ -8,7 +8,7 @@ adaptive
 
 ## Stack
 
-目标平台为 macOS 与 iOS；1.0 发布时同步上线网页版官网。使用 Tauri 2 + React + TypeScript，Mac、iOS 与 Web 共用界面、应用状态和独立日历核心。Mac 与 Web 已运行验证；iOS 配置和入口已接入，完整工程生成及设备验证仍需 Xcode 环境。
+目标平台为 macOS 与 iOS；1.0 发布时同步上线网页版官网。使用 Tauri 2 + React + TypeScript，开发工具链为 pnpm、oxlint、oxfmt 与 Tailwind CSS；Mac、iOS 与 Web 共用界面、应用状态和独立日历核心。Mac 与 Web 已运行验证；iOS 配置和入口已接入，完整工程生成及设备验证仍需 Xcode 环境。
 
 ## Users
 

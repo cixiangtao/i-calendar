@@ -44,9 +44,17 @@ Mac 使用系统 WKWebView，不携带 Chromium。Rust 只处理菜单栏、窗�
 
 更新仅由用户触发，本年与次年并行获取，独立校验后合并。一个年份失败不丢弃另一个有效结果；网络失败不清空已有数据。JSON 校验只能证明结构与日期合法，维护者仍需核对完整年度通知。调休未收录时，常规周末与工作日不能表示最终休班安排。
 
+## 工具链
+
+pnpm 工作区通过 `workspace:*` 连接公共核心与界面，版本由根 `packageManager` 锁定。依赖采用隔离布局；许可证脚本遍历 `pnpm list --prod --depth Infinity --json` 的依赖树，覆盖实际生产依赖，不能通过根 `node_modules` 扫描推断依赖集合。
+
+Tailwind 3.4 通过 PostCSS 接入 Vite，显式扫描应用入口和共享 UI，使用 `tw-` 前缀防止类名冲突并关闭 Preflight。oxfmt 的 Tailwind 排序读取相同配置。
+
+oxlint 与 oxfmt 由 `pnpm run check` 统一检查。构建不自动修改源码格式，一次性格式化与功能变更分开提交。
+
 ## 构建与验证
 
-`npm run build` 生成清理后的核心 ESM/声明与静态前端；Tauri 再将前端嵌入应用。不再生成 JavaScriptCore IIFE 或 Swift 桥接资源。前端依赖按 React、控件和历法库分包；应用与网页均随附第三方许可信息。
+`pnpm run build` 生成清理后的核心 ESM/声明与静态前端；Tauri 再将前端嵌入应用。不再生成 JavaScriptCore IIFE 或 Swift 桥接资源。前端依赖按 React、控件和历法库分包；应用与网页均随附第三方许可信息。
 
 Mac 冒烟检查在真实 WKWebView 中渲染 42 格月历，调用共享核心核对春节农历及补班，然后通过 IPC 检查窗口显示、收起和重开。此检查不替代菜单栏鼠标、辅助功能或 iOS 验收。
 

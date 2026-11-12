@@ -11,16 +11,18 @@ Mac 菜单栏里的小月历，提供公历、农历、传统节日、节气、�
 在项目目录 `/Users/xbb/Desktop/@anys/shiri-calendar` 执行：
 
 ```sh
-npm ci
-npm run dev:mac
+corepack pnpm install --frozen-lockfile
+corepack pnpm run dev:mac
 ```
+
+项目固定使用 pnpm 12.18.0，由 Corepack 按 `packageManager` 选择版本。以下 `pnpm` 命令均使用该版本，也可统一写成 `corepack pnpm …`。工作区使用 `pnpm-workspace.yaml`，JavaScript 依赖锁文件为 `pnpm-lock.yaml`。
 
 Mac 开发需要 Node 24+、macOS 13+、Command Line Tools 和通过 rustup 安装的 Rust。项目在 `rust-toolchain.toml` 中锁定 Rust 1.99.1，不修改系统全局默认工具链。首次运行会下载和编译 Rust 依赖，耗时比后续启动长。`dev:mac` 会自动启动前端服务，再打开菜单栏日历。
 
 只看网页版不需要 Rust：
 
 ```sh
-npm run dev:web
+pnpm run dev:web
 ```
 
 打开终端显示的地址，默认是 <http://127.0.0.1:1420/>。Mac 开发和 Web 开发共用此端口，请勿同时启动两个开发服务。
@@ -28,7 +30,7 @@ npm run dev:web
 ## Mac 应用
 
 ```sh
-npm run build:mac
+pnpm run build:mac
 open outputs/mac/拾日历.app
 ```
 
@@ -48,10 +50,10 @@ open outputs/mac/拾日历.app
 需要完整 Xcode、iOS SDK、CocoaPods 和 Apple 开发团队配置。先完成 Xcode 首次启动及所需平台组件安装，然后执行：
 
 ```sh
-npm run ios:init
-npm run dev:ios
+pnpm run ios:init
+pnpm run dev:ios
 # 配置签名与团队后按需构建
-npm run build:ios
+pnpm run build:ios
 ```
 
 `ios:init` 使用官方 Tauri CLI 生成 `apps/calendar/src-tauri/gen/apple` 中的 Xcode 工程；生成的工程源码应提交，Pods、用户状态和构建缓存不提交。当前机器仅有 Command Line Tools，且缺少 CocoaPods，因此没有生成或交付可验证的 iOS 工程/安装包。共享界面的手机尺寸检查不等于 iOS 模拟器或真机验证。Widget 和系统日历集成尚未实现。
@@ -59,14 +61,25 @@ npm run build:ios
 ## 检查与构建
 
 ```sh
-npm run check          # 严格类型检查、20 项核心/状态测试、ESM 与网页构建
-npm run check:native   # Rust 测试：存储、旧数据迁移、多屏定位
-npm run build:mac      # 构建 Mac 应用、校验签名并生成 ZIP
-npm run check:mac      # Rust 测试 + 已打包应用的真实 WebView 冒烟验证
-npm run preview:web   # 预览已构建的静态网页
+pnpm run lint           # oxlint：问题和警告均须处理
+pnpm run format         # oxfmt：格式化所有支持的项目文件
+pnpm run format:check   # 只检查格式，不写文件
+pnpm run check          # lint、格式、类型检查、20 项测试及 ESM/网页构建
+pnpm run check:native   # Rust 测试：存储、旧数据迁移、多屏定位
+pnpm run build:mac      # 构建 Mac 应用、校验签名并生成 ZIP
+pnpm run check:mac      # Rust 测试 + 已打包应用的真实 WebView 冒烟验证
+pnpm run preview:web   # 预览已构建的静态网页
 ```
 
 `check:mac` 前请退出正在运行的拾日历；单实例保护可能把第二次启动交给现有进程，验证脚本会明确报错，不会据此判定通过。验证范围与限制见[验证记录](docs/验证记录.md)。
+
+## 工具链与格式约定
+
+- 使用 oxlint 1.93.0 检查 TypeScript、React、Node 和无障碍规则，配置为 `.oxlintrc.json`。
+- 使用 oxfmt 0.78.0 统一格式，启用导入排序、package.json 字段及脚本排序、Tailwind 类名排序、JSDoc、嵌入代码格式化和 JSX 单属性分行，配置为 `.oxfmtrc.json`。本轮已执行一次全项目格式化。
+- oxfmt 处理其支持的源码、CSS、HTML、JSON、Markdown、YAML 和 TOML。依赖、生成文件、构建缓存、输出目录及 pnpm 锁文件交给相应工具维护；Rust 使用 `cargo fmt`。
+- Tailwind CSS 3.4.19 经 PostCSS 接入 Vite，使用 `tw-` 前缀并复用已有主题变量；关闭 Preflight，保留现有基础样式和 Ant Design 行为。选择 3.4 是为了支持当前 macOS 13 / iOS 16；Tailwind 4 要求 Safari 16.4+。
+- oxlint 按自动 JSX 转换关闭旧 `react-in-jsx-scope` 规则；为兼容当前浏览器保留 `Array.sort`；仅在交互日历网格中允许显式 ARIA 行/单元格语义，其他无障碍规则继续执行。
 
 ## 目录与依赖边界
 
@@ -91,7 +104,7 @@ outputs/                       本地应用与 ZIP，不提交
 Mac 设置和调休缓存保存于 `~/Library/Application Support/local.shiri.calendar/calendar-state.json`，采用临时文件及原子替换。缺少新缓存时，只读迁移旧 `Application Support/ShiriCalendar/holidays.json` 及 `local.shiri.calendar` 偏好；首次成功保存后写入新位置，旧文件保留。iOS 使用应用沙盒，Web 使用当前站点的 localStorage，三端不自动同步。
 
 ```sh
-npm run data:fetch -- 2028  # 只暂存到 work/holiday-staging，不替换发布数据
+pnpm run data:fetch 2028  # 只暂存到 work/holiday-staging，不替换发布数据
 ```
 
 维护者核对官方通知、跨年日期、放假及补班后，再更新 `packages/calendar-core/src/data/`、数据入口和对应测试。日期按北京时间计算，范围不包含个人排班和地方假期。

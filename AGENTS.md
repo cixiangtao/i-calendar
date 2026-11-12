@@ -20,7 +20,7 @@
 - 提交前检查完整差异，说明本轮提交的数量及各自范围，按范围暂存。
 - 使用 Conventional Commits，描述用中文，格式为 `type(scope): 对应表情 中文描述`。
 - 功能修改执行适用的类型检查、测试和构建；纯文档修改检查内容与链接即可。
-- 公共核心修改后运行 `npm run build`，验证 ESM 与共享前端构建；涉及原生行为时运行 `npm run check:native`、`npm run build:mac` 和 `npm run check:mac`。`dist/`、`target/` 等构建目录不跟踪。
+- 公共核心修改后运行 `pnpm run build`，验证 ESM 与共享前端构建；涉及原生行为时运行 `pnpm run check:native`、`pnpm run build:mac` 和 `pnpm run check:mac`。`dist/`、`target/` 等构建目录不跟踪。
 - 任务结束报告提交记录和验证结果，并确认工作区状态。
 
 ## 产品与架构
@@ -47,14 +47,22 @@
 - 应用下载、项目介绍、数据来源与其他说明放到首屏之后或次级入口。
 - 保持结构简洁、无广告，复用公共核心；兼顾桌面与手机浏览。
 
+## 工具链与格式
+
+- 统一使用 pnpm 12.18.0，遵循根 `packageManager` 与 `pnpm-workspace.yaml`，通过 Corepack 选择锁定版本。只提交 `pnpm-lock.yaml`，不生成其他 JavaScript 包管理器锁文件。
+- JavaScript/TypeScript 使用 oxlint；提交前执行 `pnpm run lint`，不要为消除警告随意扩大规则豁免。
+- 使用 oxfmt 格式化其支持的文件，保留导入、package.json、Tailwind 类名、JSDoc 和嵌入代码格式化；提交前执行 `pnpm run format:check`。
+- Tailwind 使用 `tw-` 前缀，配置位于 `tailwind.config.ts`，通过 PostCSS/Vite 构建。保持现有最低平台兼容性，保留 Preflight 关闭设置。
+- Rust 使用 `cargo fmt`。依赖锁文件、生成资源、`work/` 和 `outputs/` 不手工格式化。
+
 ## 常用检查
 
 ```sh
-npm ci
-npm run check
-npm run check:native
-npm run build:mac
-npm run check:mac
+pnpm install --frozen-lockfile
+pnpm run check
+pnpm run check:native
+pnpm run build:mac
+pnpm run check:mac
 ```
 
-`check:mac` 使用已打包的真实 WKWebView 应用验证前端、共享核心、IPC 与窗口生命周期，执行前退出现有实例。iOS 通过 `npm run ios:init`、`npm run dev:ios` 和 `npm run build:ios` 接入；没有完整 Xcode/iOS SDK 时不宣称已编译 iOS、运行模拟器或完成真机验证。
+`check:mac` 使用已打包的真实 WKWebView 应用验证前端、共享核心、IPC 与窗口生命周期，执行前退出现有实例。iOS 通过 `pnpm run ios:init`、`pnpm run dev:ios` 和 `pnpm run build:ios` 接入；没有完整 Xcode/iOS SDK 时不宣称已编译 iOS、运行模拟器或完成真机验证。

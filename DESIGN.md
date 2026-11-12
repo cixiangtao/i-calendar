@@ -66,7 +66,7 @@ components:
 
 沿用用户确认的 A“月历优先”方向，以公农历双行、松绿选择态和轻量休班标记组织信息。日历保持紧凑，设置在同一界面内进入与返回。
 
-视觉规范由共享 React 界面与 CSS 实现，Mac 使用 Tauri 的系统 WebView。Web 采用相同月历，介绍位于首屏之后。iOS 复用该实现并处理安全区域与触控尺寸，尚未在模拟器或真机验证。
+视觉规范由共享 React 界面、CSS 和带 `tw-` 前缀的 Tailwind 工具类实现，Mac 使用 Tauri 的系统 WebView。Web 采用相同月历，介绍位于首屏之后。iOS 复用该实现并处理安全区域与触控尺寸，尚未在模拟器或真机验证。
 
 **Key Characteristics:**
 

@@ -32,7 +32,7 @@ calendar.getVacations('2026-11-11', 3);
 
 ## 分发
 
-`npm run build:core` 生成 ESM 与 TypeScript 声明；`npm pack --workspace @shiri/calendar-core` 生成可安装包，尚未发布至公共 npm。
+`pnpm run build:core` 生成 ESM 与 TypeScript 声明；`pnpm --filter @shiri/calendar-core pack --pack-destination ../../outputs` 生成可安装包，尚未发布至公共 npm。
 
 Mac、iOS 与 Web 均由共享 TypeScript 应用状态直接调用本包；Apple 平台通过 Tauri 的系统 WebView 加载相同前端，不再使用 Swift 或 JavaScriptCore 桥接。独立客户端也可只引入 ESM 核心，无需依赖共享 UI。每次构建先清理旧产物，避免分发残留声明。
 

@@ -138,7 +138,8 @@
     "runtime": {
       "platform": "Tauri 2 / React / WKWebView / Web",
       "source": "packages/calendar-ui/src/calendar.css",
-      "validation": "Mac 与 Web 已运行；iOS 尚无模拟器或真机验证"
+      "validation": "Mac 与 Web 已运行；iOS 尚无模拟器或真机验证",
+      "styling": "Tailwind CSS 3.4（tw- 前缀）与共享 CSS"
     }
   },
   "components": [
@@ -189,7 +190,7 @@
   ],
   "narrative": {
     "northStar": "随手翻开的松绿小月历",
-    "overview": "沿用用户确认的 A“月历优先”方向，以公农历双行、松绿选择态和轻量休班标记组织信息。日历保持紧凑，设置在同一界面内进入与返回。\n\n视觉规范由共享 React 界面与 CSS 实现，Mac 使用 Tauri 的系统 WebView。Web 采用相同月历，介绍位于首屏之后。iOS 复用该实现并处理安全区域与触控尺寸，尚未在模拟器或真机验证。",
+    "overview": "沿用用户确认的 A“月历优先”方向，以公农历双行、松绿选择态和轻量休班标记组织信息。日历保持紧凑，设置在同一界面内进入与返回。\n\n视觉规范由共享 React 界面、CSS 和带 `tw-` 前缀的 Tailwind 工具类实现，Mac 使用 Tauri 的系统 WebView。Web 采用相同月历，介绍位于首屏之后。iOS 复用该实现并处理安全区域与触控尺寸，尚未在模拟器或真机验证。",
     "keyCharacteristics": [
       "系统字体、清晰的公农历层级和固定七列六周。",
       "松绿组织选择和节气，红色提示休息日，赭色提示补班。",

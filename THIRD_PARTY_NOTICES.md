@@ -19,9 +19,9 @@
 
 ## 界面与应用运行组件
 
-界面使用 React 19.3.1、React DOM 19.3.1 与 Ant Design 6.7.0（MIT）；原生壳使用 Tauri 2 及 opener、clipboard-manager、single-instance 插件（MIT / Apache-2.0，具体以锁定依赖为准）。开发工具包括 Vite、TypeScript、esbuild 与 Rust 工具链。
+界面使用 React 19.3.1、React DOM 19.3.1 与 Ant Design 6.7.0（MIT）；原生壳使用 Tauri 2 及 opener、clipboard-manager、single-instance 插件（MIT / Apache-2.0，具体以锁定依赖为准）。开发工具包括 pnpm、oxlint、oxfmt、Tailwind CSS、PostCSS、Autoprefixer、Vite、TypeScript、esbuild 与 Rust 工具链。
 
-`npm run build:web` 会汇总实际前端依赖随附的许可证，在网页首屏后的入口提供 `third-party-licenses.txt`。原生构建另外根据 Cargo.lock 对应元数据汇总 Rust 组件与构建依赖的许可文件，随应用资源附带 `第三方许可证.txt`。生成文件与编译缓存不提交，构建时重新生成。
+`pnpm run build:web` 会汇总实际前端依赖随附的许可证，在网页首屏后的入口提供 `third-party-licenses.txt`。原生构建另外根据 Cargo.lock 对应元数据汇总 Rust 组件与构建依赖的许可文件，随应用资源附带 `第三方许可证.txt`。生成文件与编译缓存不提交，构建时重新生成。
 
 项目自身的开源许可证尚未确定，将在 1.0 发布前确认；上述第三方许可证不代表项目自身已采用同一许可。
 
@@ -72,3 +72,31 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Tailwind CSS 3.4.19
+
+Tailwind 工具类在构建时生成并随前端分发，采用 MIT 许可，项目地址：https://github.com/tailwindlabs/tailwindcss。
+
+```text
+MIT License
+
+Copyright (c) Tailwind Labs, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

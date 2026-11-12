@@ -17,6 +17,13 @@
 - 移除 SwiftUI、ShiriCalendarKit、JavaScriptCore 资源和旧构建脚本，避免维护双重实现。
 - 补齐开发、Mac 打包、真实 WebView 检查和三端第三方许可随附流程。
 
+### 开发工具链
+
+- 切换到固定版本 pnpm 12.18.0，使用工作区及锁文件，内部包通过 `workspace:*` 连接。
+- 接入 oxlint 与 oxfmt，开启导入、package.json 和脚本、Tailwind 类名、JSDoc 与嵌入代码格式化，完成一次全项目格式化。
+- 接入兼容当前系统范围的 Tailwind CSS 3.4，使用 `tw-` 前缀并保留既有样式。
+- 检查命令涵盖 lint、格式、类型检查、测试和构建；许可证汇总适配 pnpm 隔离依赖。
+
 ### 验证与项目约定
 
 - 20 项 TypeScript 测试、3 项 Rust 测试、严格类型检查及生产构建通过。
