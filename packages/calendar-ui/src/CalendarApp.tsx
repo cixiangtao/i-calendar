@@ -304,6 +304,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 </h1>
                 <div className="month-heading">
                   <select
+                    className="year-select"
                     aria-label="年份"
                     value={state.year}
                     onFocus={() => busy(true)}
@@ -322,57 +323,58 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                       </option>
                     ))}
                   </select>
-                  <select
-                    aria-label="月份"
-                    value={state.monthNumber}
-                    onFocus={() => busy(true)}
-                    onBlur={() => busy(false)}
-                    onChange={(event) => {
-                      controller.jump(state.year, Number(event.target.value));
-                      busy(false);
-                    }}
+                  <nav
+                    className="month-controls"
+                    aria-label="切换月份"
                   >
-                    {months.map((month) => (
-                      <option
-                        key={month}
-                        value={month}
-                      >
-                        {month}月
-                      </option>
-                    ))}
-                  </select>
+                    <Button
+                      type="text"
+                      className="tool-button"
+                      aria-label="上个月"
+                      title="上个月（PageUp）"
+                      disabled={state.year === 1901 && state.monthNumber === 1}
+                      icon={<Icon name="left" />}
+                      onClick={() => controller.shiftMonth(-1)}
+                    />
+                    <select
+                      className="month-select"
+                      aria-label="月份"
+                      value={state.monthNumber}
+                      onFocus={() => busy(true)}
+                      onBlur={() => busy(false)}
+                      onChange={(event) => {
+                        controller.jump(state.year, Number(event.target.value));
+                        busy(false);
+                      }}
+                    >
+                      {months.map((month) => (
+                        <option
+                          key={month}
+                          value={month}
+                        >
+                          {month}月
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      type="text"
+                      className="tool-button"
+                      aria-label="下个月"
+                      title="下个月（PageDown）"
+                      disabled={state.year === 2100 && state.monthNumber === 12}
+                      icon={<Icon name="right" />}
+                      onClick={() => controller.shiftMonth(1)}
+                    />
+                  </nav>
                 </div>
-                <nav
-                  className="month-controls tw-flex tw-shrink-0 tw-items-center tw-gap-control"
-                  aria-label="切换月份"
+                <Button
+                  type="text"
+                  className="today-button"
+                  onClick={() => controller.goToday()}
+                  title="回到今天（T）"
                 >
-                  <Button
-                    type="text"
-                    className="tool-button"
-                    aria-label="上个月"
-                    title="上个月（PageUp）"
-                    disabled={state.year === 1901 && state.monthNumber === 1}
-                    icon={<Icon name="left" />}
-                    onClick={() => controller.shiftMonth(-1)}
-                  />
-                  <Button
-                    type="text"
-                    className="today-button"
-                    onClick={() => controller.goToday()}
-                    title="回到今天（T）"
-                  >
-                    今天
-                  </Button>
-                  <Button
-                    type="text"
-                    className="tool-button"
-                    aria-label="下个月"
-                    title="下个月（PageDown）"
-                    disabled={state.year === 2100 && state.monthNumber === 12}
-                    icon={<Icon name="right" />}
-                    onClick={() => controller.shiftMonth(1)}
-                  />
-                </nav>
+                  今天
+                </Button>
               </div>
               <div
                 className="calendar-grid"

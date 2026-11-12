@@ -110,7 +110,7 @@ a:focus-visible {
 .calendar-stage {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  place-items: center;
+  place-items: start center;
   min-height: 100svh;
   padding: 32px 24px;
 }
@@ -175,7 +175,8 @@ a:focus-visible {
 }
 .month-heading {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
 .month-heading select {
@@ -189,11 +190,17 @@ a:focus-visible {
   line-height: 20px;
   padding: 6px 10px;
 }
-.month-heading select:first-child {
+.month-heading .year-select {
   width: 84px;
 }
-.month-heading select:last-child {
+.month-heading .month-select {
   width: 57px;
+}
+.month-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
 }
 .month-heading option {
   font-size: 14px;
@@ -202,8 +209,10 @@ a:focus-visible {
 }
 .calendar-app .tool-button,
 .calendar-app .today-button {
-  min-width: 29px;
-  height: 30px;
+  width: 30px;
+  min-width: 30px;
+  flex-shrink: 0;
+  height: 32px;
   border: 0;
   border-radius: 10px;
   padding: 4px;
@@ -212,6 +221,9 @@ a:focus-visible {
   box-shadow: none;
 }
 .calendar-app .today-button {
+  width: 48px;
+  min-width: 48px;
+  white-space: nowrap;
   background: var(--blue-soft);
   color: var(--blue);
   font-size: 12px;
@@ -620,10 +632,10 @@ a:focus-visible {
     line-height: 30px;
     border-radius: 8px;
   }
-  body[data-platform='web'] .month-heading select:first-child {
+  body[data-platform='web'] .month-heading .year-select {
     width: 115px;
   }
-  body[data-platform='web'] .month-heading select:last-child {
+  body[data-platform='web'] .month-heading .month-select {
     width: 66px;
   }
   body[data-platform='web'] .week-row,
@@ -816,14 +828,14 @@ body[data-platform='ios'] .calendar-stage {
     font-size: 14px;
     padding: 6px;
   }
-  .month-heading select:first-child {
-    width: 72px;
+  .month-heading .year-select {
+    width: 66px;
   }
-  .month-heading select:last-child {
-    width: 49px;
+  .month-heading .month-select {
+    width: 45px;
   }
   .month-controls {
-    gap: 3px;
+    gap: 2px;
   }
   .calendar-app .today-button {
     padding: 4px 6px;
@@ -847,13 +859,6 @@ body[data-platform='ios'] .calendar-stage {
   }
 }
 @media (max-width: 350px) and (pointer: coarse) {
-  .month-toolbar {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .month-controls {
-    margin-left: auto;
-  }
   .date-row,
   .week-row {
     gap: 3px;
