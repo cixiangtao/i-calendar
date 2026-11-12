@@ -15,17 +15,23 @@ export function AlmanacContent({ almanac }: { almanac: DayAlmanac }) {
       aria-label="每日黄历"
     >
       <h2>传统黄历</h2>
-      <dl className="almanac-pillars">
+      <dl
+        className="almanac-pillars"
+        aria-label="年月日干支"
+      >
         {(
           [
-            ['年干支', almanac.ganZhi.year],
-            ['月干支', almanac.ganZhi.month],
-            ['日干支', almanac.ganZhi.day],
+            ['年干支', almanac.ganZhi.year, '年'],
+            ['月干支', almanac.ganZhi.month, '月'],
+            ['日干支', almanac.ganZhi.day, '日'],
           ] as const
-        ).map(([label, value]) => (
+        ).map(([label, value, suffix]) => (
           <div key={label}>
-            <dt>{label}</dt>
-            <dd>{value}</dd>
+            <dt className="sr-only">{label}</dt>
+            <dd>
+              {value}
+              <span>{suffix}</span>
+            </dd>
           </div>
         ))}
       </dl>

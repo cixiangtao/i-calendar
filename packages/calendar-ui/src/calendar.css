@@ -1011,27 +1011,34 @@ body[data-platform='ios'] .calendar-stage {
   line-height: 20px;
 }
 .almanac-pillars {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0 0 19px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 22px;
 }
 .almanac-pillars > div {
-  padding: 9px 0;
-  background: var(--hover);
-  border-radius: 10px;
-  text-align: center;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
 }
-.almanac-pillars dt {
-  color: var(--secondary);
-  font-size: 11px;
-  line-height: 18px;
+.almanac-pillars > div + div::before {
+  content: '';
+  width: 2px;
+  height: 2px;
+  align-self: center;
+  border-radius: 50%;
+  background: var(--secondary);
 }
 .almanac-pillars dd {
-  margin: 3px 0 0;
-  font-size: 16px;
-  line-height: 23px;
-  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.almanac-pillars dd > span {
+  color: var(--secondary);
+  font-weight: 400;
 }
 .almanac-activities {
   display: grid;
