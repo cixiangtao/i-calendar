@@ -15,6 +15,7 @@ calendar.getDay('2026-11-11');
 calendar.getMonth(2026, 11); // 周一开始，42 个单元格
 calendar.getUpcoming('2026-11-11', { kind: 'solar-term', limit: 3 });
 calendar.getVacations('2026-11-11', 3);
+calendar.getAlmanac('2026-12-01'); // 独立查询，不让 42 格月历携带大字段
 ```
 
 ## 约定
@@ -29,6 +30,26 @@ calendar.getVacations('2026-11-11', 3);
 - `HolidayStore.import()` 只验证结构和日期，无法证明一个文件完整或来源可信。适配器必须审核年度通知后再将其视为完整年份。临时下载尚未发布的预填文件不可直接收录。
 - 同一日期被跨年通知覆盖时，较晚通知年份优先。
 - 本包不执行持久化、请求、用户设置或个人排班；这些能力由适配器注入。
+
+## 每日黄历 API
+
+```ts
+import { getAlmanac } from '@shiri/calendar-core';
+
+const value = getAlmanac('2026-12-01');
+value.ganZhi; // { year: '丙午', month: '己亥', day: '己酉' }
+value.yi; // 完整宜事项数组，本日 21 项
+value.ji; // ['移徙', '入宅', '出火', '入殓', '安葬']
+value.chong; // '(癸卯)兔'
+value.sha; // '东'
+value.positions.fu; // '正南'
+value.rules.id; // 'shiri-almanac-v1'
+value.source.version; // '1.8.7'
+```
+
+函数及 `CalendarEngine.getAlmanac` 返回同一 `DayAlmanac` 契约：日期、三柱干支、完整宜忌、冲煞、喜/福/财神及阴阳贵神方位、规则与来源元信息。每次返回独立普通对象和数组，可 JSON 序列化；不需要 HolidayStore 数据或网络，也不暴露上游实例。日期格式或范围无效时抛错，与 `getDay` 使用相同日期校验。
+
+固定口径为春节换年、节交接日零点换月、北京时间零点换日；宜忌和福神显式使用流派 1。上游“无”原样保留，不能解释为“诸事皆宜”。本轮是日期查询，不推导时柱或晚子时；规则变化须更新 `rules.id`、边界测试和文档。来源版本与实际锁定依赖有一致性测试。详见[黄历数据与口径](../../docs/黄历数据与口径.md)。
 
 ## 分发
 

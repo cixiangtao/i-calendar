@@ -7,6 +7,7 @@
 - 作者：6tail
 - 代码：https://github.com/6tail/lunar-typescript
 - 许可：MIT，全文位于 packages/calendar-core/LICENSE-lunar-typescript。
+- 干支、宜忌和方位 API 说明分别见 https://6tail.cn/calendar/lunar.ganzhi.html 、https://6tail.cn/calendar/lunar.yiji.html 和 https://6tail.cn/calendar/lunar.jishen.html 。上游说明宜忌来自对 2345 日历多年资料的整理归纳，各黄历流派可能存在差异；应用固定口径见 [黄历数据与口径](docs/黄历数据与口径.md)。
 
 ## holiday-cn
 
