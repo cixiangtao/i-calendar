@@ -94,7 +94,11 @@ export async function createPlatform(): Promise<{
       },
       setInteractionBusy: (busy) => invoke<void>('set_popup_busy', { busy }),
       ...(context.kind === 'macos'
-        ? { close: () => invoke<void>('close_calendar'), quit: () => invoke<void>('quit_calendar') }
+        ? {
+            close: () => invoke<void>('close_calendar'),
+            quit: () => invoke<void>('quit_calendar'),
+            setPopupHeight: (height: number) => invoke<void>('resize_popup', { height }),
+          }
         : {}),
     },
   };

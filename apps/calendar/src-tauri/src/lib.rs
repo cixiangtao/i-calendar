@@ -17,6 +17,8 @@ use tauri::Manager;
 #[derive(Default)]
 struct RuntimeState {
     popup_busy: AtomicBool,
+    #[cfg(target_os = "macos")]
+    popup_height: std::sync::atomic::AtomicU32,
     save_lock: Mutex<()>,
     #[cfg(target_os = "macos")]
     menu_clock: menu_clock::MenuClock,
@@ -116,6 +118,17 @@ fn set_popup_busy(busy: bool, runtime: tauri::State<'_, RuntimeState>) {
 }
 
 #[tauri::command]
+fn resize_popup(app: tauri::AppHandle, height: f64) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    return desktop::resize_popup(&app, height);
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (app, height);
+        Ok(())
+    }
+}
+
+#[tauri::command]
 fn close_calendar(app: tauri::AppHandle) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     if let Some(window) = app.get_webview_window("main") {
@@ -137,6 +150,7 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
         desktop::show_calendar(&app);
         if std::env::args().any(|argument| argument == "--smoke-test") {
             if report.get("renderedCells").and_then(Value::as_u64) != Some(42)
+                || report.get("detailScrollable").and_then(Value::as_bool) != Some(false)
                 || report.get("cells").and_then(Value::as_u64) != Some(42)
                 || report.get("lunar").and_then(Value::as_str) != Some("初一")
                 || report.get("makeup").and_then(Value::as_bool) != Some(true)
@@ -156,6 +170,7 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 return Err("菜单栏日历未显示".into());
             }
             desktop::verify_rounded_popup(&window).await?;
+            desktop::verify_content_height(&app)?;
             window.hide().map_err(|_| "日历收起失败")?;
             menu_clock::verify_smoke(&app).await?;
             desktop::show_calendar(&app);
@@ -164,6 +179,8 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 return Err("日历重新打开失败".into());
             }
             desktop::verify_rounded_popup(&window).await?;
+            desktop::verify_content_height(&app)?;
+            println!("PASS：详情卡片完整展开，原生窗口按内容高度适配屏幕可用区域");
             println!("PASS：原生悬浮窗 20px 圆角、透明边角和系统阴影在收起重开后保持生效");
             println!("PASS：Tauri 原生窗口、WebView 前端、共享日历核心与 Rust 命令交互通过");
             app.exit(0);
@@ -194,6 +211,7 @@ pub fn run() {
             save_state,
             fetch_holiday_year,
             set_popup_busy,
+            resize_popup,
             close_calendar,
             quit_calendar,
             frontend_ready

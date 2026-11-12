@@ -30,6 +30,8 @@ export interface CalendarPlatform {
   openExternal(url: string): Promise<void>;
   copyText(text: string): Promise<void>;
   setInteractionBusy?(busy: boolean): Promise<void>;
+  /** 请求悬浮窗内容高度（逻辑像素）；宿主按当前屏幕可用空间裁切。 */
+  setPopupHeight?(height: number): Promise<void>;
   close?(): Promise<void>;
   quit?(): Promise<void>;
 }

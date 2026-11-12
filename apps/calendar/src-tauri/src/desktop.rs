@@ -4,7 +4,7 @@ use std::{sync::atomic::Ordering, time::Duration};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Emitter, Manager, PhysicalPosition, WindowEvent,
+    Emitter, LogicalSize, Manager, PhysicalPosition, WindowEvent,
 };
 
 const POPUP_CORNER_RADIUS: f64 = 20.0;
@@ -65,45 +65,129 @@ pub async fn verify_rounded_popup(window: &tauri::WebviewWindow) -> Result<(), S
     .map_err(|_| "原生悬浮窗检查线程失败")?
 }
 
+/// 保留内容期望高度；每次打开时重新按菜单栏所在屏幕布局。
+pub fn resize_popup(app: &tauri::AppHandle, height: f64) -> Result<(), String> {
+    if !height.is_finite() || !(160.0..=4096.0).contains(&height) {
+        return Err("悬浮窗内容高度无效".into());
+    }
+    app.state::<RuntimeState>()
+        .popup_height
+        .store(height.ceil() as u32, Ordering::Relaxed);
+    layout_popup(app).map_err(|error| format!("无法调整悬浮窗：{error}"))
+}
+
+fn fitted_height(requested: f64, work_height: f64, scale: f64) -> f64 {
+    requested.min((work_height / scale - 16.0).max(1.0))
+}
+
+pub fn verify_content_height(app: &tauri::AppHandle) -> Result<(), String> {
+    let window = app.get_webview_window("main").ok_or("主界面不存在")?;
+    let monitor = window
+        .current_monitor()
+        .map_err(|_| "无法读取悬浮窗屏幕")?
+        .ok_or("悬浮窗屏幕不存在")?;
+    let desired = app
+        .state::<RuntimeState>()
+        .popup_height
+        .load(Ordering::Relaxed);
+    let expected = fitted_height(
+        desired as f64,
+        monitor.work_area().size.height as f64,
+        monitor.scale_factor(),
+    );
+    let actual = window
+        .inner_size()
+        .map_err(|_| "无法读取悬浮窗高度")?
+        .to_logical::<f64>(window.scale_factor().map_err(|_| "无法读取屏幕缩放")?);
+    if desired == 0 || (actual.height - expected).abs() > 1.0 {
+        return Err(format!(
+            "悬浮窗内容高度未生效：期望 {expected}，实际 {}",
+            actual.height
+        ));
+    }
+    Ok(())
+}
+
+fn layout_popup(app: &tauri::AppHandle) -> tauri::Result<()> {
+    let Some(window) = app.get_webview_window("main") else {
+        return Ok(());
+    };
+    let tray_rect = app
+        .tray_by_id("calendar")
+        .and_then(|tray| tray.rect().ok().flatten());
+    let scale = window.scale_factor()?;
+    let anchor = tray_rect.map(|rect| {
+        let point = rect.position.to_physical::<f64>(scale);
+        let icon = rect.size.to_physical::<f64>(scale);
+        (point.x, point.y, icon.width, icon.height)
+    });
+    let monitor = if let Some((x, y, _, _)) = anchor {
+        window.available_monitors()?.into_iter().find(|monitor| {
+            let origin = monitor.position();
+            let size = monitor.size();
+            x >= origin.x as f64
+                && x < origin.x as f64 + size.width as f64
+                && y >= origin.y as f64
+                && y < origin.y as f64 + size.height as f64
+        })
+    } else {
+        None
+    }
+    .or(window.current_monitor()?);
+    let Some(monitor) = monitor else {
+        return Ok(());
+    };
+    let scale = monitor.scale_factor();
+    let area = monitor.work_area();
+    let desired = app
+        .state::<RuntimeState>()
+        .popup_height
+        .load(Ordering::Relaxed);
+    let size = window
+        .inner_size()?
+        .to_logical::<f64>(window.scale_factor()?);
+    let height = fitted_height(
+        if desired == 0 {
+            size.height
+        } else {
+            desired as f64
+        },
+        area.size.height as f64,
+        scale,
+    );
+    if (size.height - height).abs() >= 0.5 {
+        window.set_size(LogicalSize::new(size.width, height))?;
+    }
+    let (center, bottom) = anchor
+        .map(|(x, y, width, height)| (x + width / 2.0, y + height))
+        .unwrap_or((
+            area.position.x as f64 + area.size.width as f64 / 2.0,
+            area.position.y as f64,
+        ));
+    let (x, y) = popup_position(
+        center,
+        bottom,
+        size.width * scale,
+        height * scale,
+        area.position.x as f64,
+        area.position.y as f64,
+        area.size.width as f64,
+        area.size.height as f64,
+        scale,
+    );
+    window.set_position(PhysicalPosition::new(x, y))?;
+    Ok(())
+}
+
 pub fn show_calendar(app: &tauri::AppHandle) {
     app.state::<RuntimeState>().menu_clock.wake();
-    let Some(window) = app.get_webview_window("main") else {
-        return;
-    };
-    if let Some(tray) = app.tray_by_id("calendar") {
-        if let Ok(Some(rect)) = tray.rect() {
-            let scale = window.scale_factor().unwrap_or(1.0);
-            let point = rect.position.to_physical::<f64>(scale);
-            let icon = rect.size.to_physical::<f64>(scale);
-            if let Ok(monitors) = window.available_monitors() {
-                if let Some(monitor) = monitors.iter().find(|monitor| {
-                    let origin = monitor.position();
-                    let size = monitor.size();
-                    point.x >= origin.x as f64
-                        && point.x < origin.x as f64 + size.width as f64
-                        && point.y >= origin.y as f64
-                        && point.y < origin.y as f64 + size.height as f64
-                }) {
-                    if let Ok(size) = window.outer_size() {
-                        let (x, y) = popup_position(
-                            point.x + icon.width / 2.0,
-                            point.y + icon.height,
-                            size.width as f64,
-                            size.height as f64,
-                            monitor.position().x as f64,
-                            monitor.position().y as f64,
-                            monitor.size().width as f64,
-                            monitor.size().height as f64,
-                            monitor.scale_factor(),
-                        );
-                        let _ = window.set_position(PhysicalPosition::new(x, y));
-                    }
-                }
-            }
-        }
+    if let Err(error) = layout_popup(app) {
+        eprintln!("悬浮窗布局失败：{error}");
     }
-    let _ = window.show();
-    let _ = window.set_focus();
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -211,7 +295,15 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::popup_position;
+    use super::{fitted_height, popup_position};
+    #[test]
+    fn content_height_fits_monitor_work_area_at_each_scale() {
+        assert_eq!(fitted_height(740.0, 1000.0, 1.0), 740.0);
+        assert_eq!(fitted_height(740.0, 1000.0, 2.0), 484.0);
+        assert_eq!(fitted_height(660.0, 2000.0, 2.0), 660.0);
+        assert_eq!(fitted_height(900.0, 800.0, 1.0), 784.0);
+    }
+
     #[test]
     fn popup_is_clamped_inside_primary_and_negative_origin_monitors() {
         assert_eq!(

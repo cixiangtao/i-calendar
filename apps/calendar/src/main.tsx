@@ -75,9 +75,18 @@ async function start() {
   if (platform.kind !== 'web') {
     const { listen } = await import('@tauri-apps/api/event');
     await listen('calendar:settings', () => controller.showSettings());
+    if (platform.kind === 'macos') {
+      // 首次显示前同步测量；隐藏的原生窗口可能暂停动画帧。
+      const content = document.querySelector<HTMLElement>('.calendar-app');
+      if (content) await platform.setPopupHeight?.(content.scrollHeight);
+    }
     // 原生冒烟测试经真实 WebView 调用共享核心，再把结果传回 Rust。
     const report = {
       renderedCells: document.querySelectorAll('[role="gridcell"]').length,
+      detailScrollable: (() => {
+        const detail = document.querySelector<HTMLElement>('.detail-panel');
+        return !detail || detail.scrollHeight > detail.clientHeight + 1;
+      })(),
       cells: controller.getSnapshot().month.cells.length,
       lunar: controller.engine.getDay('2026-02-17').lunar.dayName,
       makeup: controller.engine.getDay('2026-02-14').schedule.kind === 'makeup-workday',

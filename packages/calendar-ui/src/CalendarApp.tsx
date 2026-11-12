@@ -132,6 +132,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const focusAfterNavigation = useRef(false);
   const grid = useRef<HTMLDivElement>(null);
   const gear = useRef<HTMLButtonElement>(null);
+  const container = useRef<HTMLElement>(null);
   const dark =
     state.preferences.appearance === 'dark' ||
     (state.preferences.appearance === 'system' && systemDark);
@@ -139,6 +140,32 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
     () => resolveColorTheme(state.preferences, dark, increasedContrast),
     [state.preferences, dark, increasedContrast],
   );
+
+  useEffect(() => {
+    const element = container.current;
+    const resize = controller.platform.setPopupHeight;
+    if (!element || !resize) return;
+    let frame = 0;
+    let previousHeight = 0;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        // 日历按完整内容展开；设置保留稳定高度和自身的内容滚动。
+        const height = state.panel === 'settings' ? 660 : Math.ceil(element.scrollHeight);
+        if (height === previousHeight) return;
+        previousHeight = height;
+        void resize(height).catch((error: unknown) => console.error('悬浮窗高度调整失败', error));
+      });
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    for (const child of element.children) observer.observe(child);
+    measure();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [controller, state.panel]);
 
   useEffect(() => {
     void controller.initialize();
@@ -258,6 +285,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       }}
     >
       <article
+        ref={container}
         className="calendar-app"
         data-panel={state.panel}
         aria-label="i日历"

@@ -867,12 +867,15 @@ body[data-platform='macos'] .calendar-stage {
 }
 body[data-platform='macos'] .calendar-app {
   width: 100%;
-  height: 100vh;
+  max-height: 100vh;
   padding: 8px;
   gap: 8px;
   align-content: start;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
   overflow-y: auto;
+}
+body[data-platform='macos'] .calendar-app[data-panel='settings'] {
+  height: 100vh;
 }
 body[data-platform='macos'] .month-panel {
   padding: 10px 12px;
@@ -903,8 +906,6 @@ body[data-platform='macos'] .missing-schedule-note {
   margin-top: 8px;
 }
 body[data-platform='macos'] .detail-panel {
-  min-height: 0;
-  overflow-y: auto;
   padding: 10px 12px;
   border-radius: 18px;
 }
@@ -1236,11 +1237,6 @@ body[data-platform='ios'] .calendar-stage {
   grid-column: 1 / -1;
 }
 @media (min-width: 860px) {
-  body[data-platform='web'] .detail-panel {
-    contain: size;
-    min-height: 100%;
-    overflow-y: auto;
-  }
   body[data-platform='web'] .detail-panel > * {
     flex-shrink: 0;
   }
