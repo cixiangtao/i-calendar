@@ -450,17 +450,9 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   </div>
                 ))}
               </div>
-              <div className="calendar-legend">
-                <span>
-                  <b>休</b> 放假
-                </span>
-                <span>
-                  <b className="makeup">班</b> 补班
-                </span>
-                {state.month.coverage === 'unavailable' ? (
-                  <span className="missing-label">本年调休未收录</span>
-                ) : null}
-              </div>
+              {state.month.coverage === 'unavailable' ? (
+                <p className="missing-schedule-note">本年调休未收录</p>
+              ) : null}
             </section>
             <aside
               className="detail-panel"

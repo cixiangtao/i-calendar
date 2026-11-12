@@ -345,36 +345,11 @@ a:focus-visible {
   background: var(--yellow-soft);
   color: var(--yellow);
 }
-.calendar-legend {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 11px;
-  min-height: 18px;
-  color: var(--secondary);
+.missing-schedule-note {
+  margin: 11px 0 0;
+  color: var(--yellow);
   font-size: 11px;
-}
-.calendar-legend > span {
-  white-space: nowrap;
-}
-.calendar-legend b {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 17px;
-  height: 17px;
-  font-weight: 500;
-  color: var(--red);
-  background: var(--red-soft);
-  border-radius: 5px;
-}
-.calendar-legend b.makeup {
-  color: var(--yellow);
-  background: var(--yellow-soft);
-}
-.calendar-legend .missing-label {
-  color: var(--yellow);
-  margin-left: auto;
+  line-height: 18px;
 }
 .date-summary {
   display: grid;
@@ -681,7 +656,7 @@ a:focus-visible {
     font-size: 12px;
     line-height: 17px;
   }
-  body[data-platform='web'] .calendar-legend {
+  body[data-platform='web'] .missing-schedule-note {
     margin-top: 17px;
   }
   body[data-platform='web'] .detail-panel {
@@ -791,7 +766,7 @@ body[data-platform='macos'] .solar-day {
   font-size: 18px;
   line-height: 21px;
 }
-body[data-platform='macos'] .calendar-legend {
+body[data-platform='macos'] .missing-schedule-note {
   margin-top: 8px;
 }
 body[data-platform='macos'] .detail-panel {
