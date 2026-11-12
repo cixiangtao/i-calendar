@@ -8,11 +8,11 @@ Mac 菜单栏里的小月历，提供公历、农历、传统节日、节气、�
 
 项目达到 **1.0** 并完成验收后，再提交 GitHub，并同步上线网页版官网。目前只在本地 Git 管理，没有提前发布。官网第一屏只有日历与必要操作，介绍和下载放在首屏之后。见[版本规划](docs/版本规划.md)与[发布约定](docs/发布约定.md)。
 
-项目由“拾日历”更名为“i日历”；现有 `shiri-calendar` 目录、`@shiri/*` 包名及应用标识保持兼容，偏好和缓存继续沿用。
+项目由“拾日历”更名为“i日历”；本地工作目录为 `i-calendar`，根包名 `shiri-calendar`、`@shiri/*` 包名及应用标识保持兼容，偏好和缓存继续沿用。
 
 ## 快速启动
 
-在项目目录 `/Users/xbb/Desktop/@anys/shiri-calendar` 执行：
+在项目目录 `/Users/xbb/Desktop/@anys/i-calendar` 执行：
 
 ```sh
 corepack pnpm install --frozen-lockfile

@@ -3,13 +3,13 @@
 ## 沟通与语言
 
 - 称呼用户为“IKUN同学”，思考、交流和回复使用中文。
-- 项目名称：i日历（原名拾日历）；仓库与目录名：`shiri-calendar`。
+- 项目名称：i日历（原名拾日历）；仓库与目录名：`i-calendar`。
 - README、项目介绍、用户文案、版本说明、发布说明以及 commit 描述使用中文。
 - 程序标识符、标准 API、包名和工具结构字段保持技术规范要求的形式。
 
 ## 工作目录
 
-- 项目唯一源码目录为 `/Users/xbb/Desktop/@anys/shiri-calendar`；在此目录执行开发、检查和 Git 操作。
+- 项目唯一源码目录为 `/Users/xbb/Desktop/@anys/i-calendar`；在此目录执行开发、检查和 Git 操作。
 - 不再在最初生成的 Codex 临时目录中继续维护另一套源码。
 - 中间文件放在 `work/`，本机构建与分发文件放在 `outputs/`，两者不提交 Git。
 
