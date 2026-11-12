@@ -1,9 +1,14 @@
 import type { HolidayDataset } from '@shiri/calendar-core';
 
+import type { ColorThemeId } from './color-theme.js';
+
 /** 三端使用相同数据格式；存储、网络和窗口操作由宿主实现。 */
 export interface CalendarPreferences {
   weekStartsOn: 1 | 7;
   appearance: 'system' | 'light' | 'dark';
+  colorTheme: ColorThemeId;
+  /** Null 使用主题默认强调色；自定义值为 #RRGGBB。 */
+  accentColor: string | null;
 }
 
 /** 持久化格式显式版本化，避免以后升级时误读缓存。 */

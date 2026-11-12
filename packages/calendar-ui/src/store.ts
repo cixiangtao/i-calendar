@@ -11,6 +11,7 @@ import {
 } from '@shiri/calendar-core';
 import { bundledHolidayDatasets } from '@shiri/calendar-core/data';
 
+import { isAccentColor, isColorTheme } from './color-theme.js';
 import type { CalendarPlatform, CalendarPreferences, SavedCalendarState } from './platform.js';
 
 /** 可观察的应用快照；React、测试和宿主都读取同一状态。 */
@@ -31,7 +32,12 @@ export interface CalendarSnapshot {
   updatedAt?: string;
 }
 
-const defaults: CalendarPreferences = { weekStartsOn: 1, appearance: 'system' };
+const defaults: CalendarPreferences = {
+  weekStartsOn: 1,
+  appearance: 'system',
+  colorTheme: 'clear',
+  accentColor: null,
+};
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -46,9 +52,13 @@ export function parseSavedState(input: unknown): SavedCalendarState {
   )
     throw new Error('本地数据格式不受支持');
   const { weekStartsOn, appearance } = input.preferences;
+  const colorTheme = input.preferences.colorTheme ?? defaults.colorTheme;
+  const accentColor = input.preferences.accentColor ?? null;
   if (
     (weekStartsOn !== 1 && weekStartsOn !== 7) ||
-    !['system', 'light', 'dark'].includes(String(appearance))
+    !['system', 'light', 'dark'].includes(String(appearance)) ||
+    !isColorTheme(colorTheme) ||
+    (accentColor !== null && !isAccentColor(accentColor))
   )
     throw new Error('本地显示设置无效');
   const datasets = input.datasets.map(parseHolidayDataset);
@@ -61,7 +71,12 @@ export function parseSavedState(input: unknown): SavedCalendarState {
     throw new Error('本地更新时间无效');
   return {
     schemaVersion: 1,
-    preferences: { weekStartsOn, appearance: appearance as CalendarPreferences['appearance'] },
+    preferences: {
+      weekStartsOn,
+      appearance: appearance as CalendarPreferences['appearance'],
+      colorTheme,
+      accentColor,
+    },
     datasets,
     updatedAt: input.updatedAt as string | undefined,
   };
@@ -223,7 +238,9 @@ export class CalendarController {
     const next = { ...this.snapshot.preferences, ...preferences };
     if (
       (next.weekStartsOn !== 1 && next.weekStartsOn !== 7) ||
-      !['system', 'light', 'dark'].includes(next.appearance)
+      !['system', 'light', 'dark'].includes(next.appearance) ||
+      !isColorTheme(next.colorTheme) ||
+      (next.accentColor !== null && !isAccentColor(next.accentColor))
     )
       throw new Error('显示设置无效');
     this.patch({ preferences: next });

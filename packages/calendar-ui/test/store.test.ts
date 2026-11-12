@@ -182,3 +182,17 @@ test('黄历与所选日期同步，未收录调休仍可查看，设置返回�
   assert.ok(controller.getSnapshot().almanac.yi.length > 0);
   assert.equal(saves.length, 0);
 });
+
+test('主题和强调色持久化后可恢复，非法配色不改变现有偏好', async () => {
+  const { controller, saves } = fixture();
+  await controller.initialize();
+  await controller.setPreferences({ colorTheme: 'paper', accentColor: '#bb3366' });
+  const restored = fixture({ load: async () => saves.at(-1) }).controller;
+  await restored.initialize();
+  assert.equal(restored.getSnapshot().preferences.colorTheme, 'paper');
+  assert.equal(restored.getSnapshot().preferences.accentColor, '#bb3366');
+  assert.throws(() => restored.setPreferences({ accentColor: 'red' }));
+  assert.equal(restored.getSnapshot().preferences.accentColor, '#bb3366');
+  await restored.setPreferences({ accentColor: null });
+  assert.equal(restored.getSnapshot().preferences.accentColor, null);
+});
