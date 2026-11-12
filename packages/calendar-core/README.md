@@ -1,12 +1,12 @@
-# @shiri/calendar-core
+# @i-calendar/core
 
 平台与 UI 无关的中国日历核心。无网络、文件系统、DOM、React 或 Tauri 依赖。输出为可序列化的普通数据。
 
 ## 使用
 
 ```ts
-import { CalendarEngine, HolidayStore } from '@shiri/calendar-core';
-import { bundledHolidayDatasets } from '@shiri/calendar-core/data';
+import { CalendarEngine, HolidayStore } from '@i-calendar/core';
+import { bundledHolidayDatasets } from '@i-calendar/core/data';
 
 const holidays = new HolidayStore(bundledHolidayDatasets);
 const calendar = new CalendarEngine(holidays);
@@ -37,7 +37,7 @@ calendar.getAlmanac('2026-12-01'); // 独立查询，不让 42 格月历携带�
 ## 每日黄历 API
 
 ```ts
-import { getAlmanac } from '@shiri/calendar-core';
+import { getAlmanac } from '@i-calendar/core';
 
 const value = getAlmanac('2026-12-01');
 value.ganZhi; // { year: '丙午', month: '己亥', day: '己酉' }
@@ -46,7 +46,7 @@ value.ji; // ['移徙', '入宅', '出火', '入殓', '安葬']
 value.chong; // '(癸卯)兔'
 value.sha; // '东'
 value.positions.fu; // '正南'
-value.rules.id; // 'shiri-almanac-v1'
+value.rules.id; // 'i-calendar-almanac-v1'
 value.source.version; // '1.8.7'
 ```
 
@@ -56,7 +56,7 @@ value.source.version; // '1.8.7'
 
 ## 分发
 
-`pnpm run build:core` 生成 ESM 与 TypeScript 声明；`pnpm --filter @shiri/calendar-core pack --pack-destination ../../outputs` 生成可安装包，尚未发布至公共 npm。
+在项目根目录执行 `pnpm run build:core` 生成 ESM 与 TypeScript 声明；`pnpm --filter @i-calendar/core pack --pack-destination "$PWD/outputs"` 生成可安装包，尚未发布至公共 npm。
 
 Mac、iOS 与 Web 均由共享 TypeScript 应用状态直接调用本包；Apple 平台通过 Tauri 的系统 WebView 加载相同前端，不再使用 Swift 或 JavaScriptCore 桥接。独立客户端也可只引入 ESM 核心，无需依赖共享 UI。每次构建先清理旧产物，避免分发残留声明。
 

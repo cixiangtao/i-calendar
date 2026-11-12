@@ -677,7 +677,12 @@
         "pngMetadata": "Source"
       },
       "genericPng": "1024px 铺满底色，供后续 iOS 资源接入；未完成 iOS 编译或设备验收。",
-      "compatibility": ["shiri-calendar", "@shiri", "local.shiri.calendar", "既有存储键"],
+      "identifiers": ["i-calendar", "@i-calendar/core", "@i-calendar/ui", "local.icalendar.app"],
+      "compatibility": [
+        "旧版 Tauri 状态只读迁移",
+        "早期原生缓存与偏好只读迁移",
+        "旧网页存储键只读迁移"
+      ],
       "reviewEvidence": [
         "docs/images/i日历-宽屏.png",
         "docs/images/i日历-手机.png",

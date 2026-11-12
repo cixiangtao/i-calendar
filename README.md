@@ -8,7 +8,7 @@ Mac 菜单栏里的小月历，提供公历、农历、生肖、星座、传统�
 
 项目达到 **1.0** 并完成验收后，再提交 GitHub，并同步上线网页版官网。目前只在本地 Git 管理，没有提前发布。官网第一屏只有日历与必要操作，介绍和下载放在首屏之后。见[版本规划](docs/版本规划.md)与[发布约定](docs/发布约定.md)。
 
-项目由“拾日历”更名为“i日历”；本地工作目录为 `i-calendar`，根包名 `shiri-calendar`、`@shiri/*` 包名及应用标识保持兼容，偏好和缓存继续沿用。
+项目由“拾日历”更名为“i日历”；本地目录、根包名和 Rust 程序名统一为 `i-calendar`，共享包为 `@i-calendar/core` 与 `@i-calendar/ui`，应用标识为 `local.icalendar.app`。旧名称仅保留于数据迁移和历史记录，已有偏好和缓存可继续读取。
 
 ## 快速启动
 
@@ -128,7 +128,7 @@ pnpm run build:icons
 
 内置数据来自 holiday-cn，保留年度官方通知来源。仅在点击“检查调休更新”时请求本年及次年 JSON，失败继续使用内置或缓存数据。导入前验证大小、结构、日期、年份、来源 URL 和重复日期；格式校验不能自动证明一份年度安排完整可信。
 
-Mac 设置和调休缓存保存于 `~/Library/Application Support/local.shiri.calendar/calendar-state.json`，采用临时文件及原子替换。缺少新缓存时，只读迁移旧 `Application Support/ShiriCalendar/holidays.json` 及 `local.shiri.calendar` 偏好；首次成功保存后写入新位置，旧文件保留。iOS 使用应用沙盒，Web 使用当前站点的 localStorage，三端不自动同步。
+Mac 设置和调休缓存保存于 `~/Library/Application Support/local.icalendar.app/calendar-state.json`，采用临时文件及原子替换。新文件缺失时，先只读迁移 `Application Support/local.shiri.calendar/calendar-state.json` 中的完整状态，再回退到早期 `Application Support/ShiriCalendar/holidays.json` 及 `local.shiri.calendar` 偏好；首次成功保存后写入新位置，旧文件保留。已存在但损坏的新文件不会被旧数据静默替代。iOS 使用应用沙盒；Web 在当前站点的 localStorage 使用 `i-calendar:state:v1`，缺失时只读迁移 `shiri-calendar:state:v1`，后续保存使用新键。三端不自动同步。
 
 ```sh
 pnpm run data:fetch 2028  # 只暂存到 work/holiday-staging，不替换发布数据
