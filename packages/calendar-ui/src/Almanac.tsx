@@ -14,26 +14,6 @@ export function AlmanacContent({ almanac }: { almanac: DayAlmanac }) {
       className="almanac-content"
       aria-label="每日黄历"
     >
-      <dl
-        className="almanac-pillars"
-        aria-label="年月日干支"
-      >
-        {(
-          [
-            ['年干支', almanac.ganZhi.year, '年'],
-            ['月干支', almanac.ganZhi.month, '月'],
-            ['日干支', almanac.ganZhi.day, '日'],
-          ] as const
-        ).map(([label, value, suffix]) => (
-          <div key={label}>
-            <dt className="sr-only">{label}</dt>
-            <dd>
-              {value}
-              <span>{suffix}</span>
-            </dd>
-          </div>
-        ))}
-      </dl>
       <div className="almanac-activities">
         <div className="almanac-activity almanac-yi">
           <h3>宜</h3>

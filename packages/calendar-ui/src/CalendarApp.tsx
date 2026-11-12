@@ -504,10 +504,32 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         {scheduleLabel(state.selected)}
                       </strong>
                     </div>
-                    <p>
-                      农历{state.selected.lunar.monthName}
-                      {state.selected.lunar.dayName} · {state.selected.lunar.yearGanZhi}年
-                    </p>
+                    <div className="lunar-summary">
+                      <p>
+                        农历{state.selected.lunar.monthName}
+                        {state.selected.lunar.dayName}
+                      </p>
+                      <dl
+                        className="almanac-pillars"
+                        aria-label="年月日干支"
+                      >
+                        {(
+                          [
+                            ['年干支', state.almanac.ganZhi.year, '年'],
+                            ['月干支', state.almanac.ganZhi.month, '月'],
+                            ['日干支', state.almanac.ganZhi.day, '日'],
+                          ] as const
+                        ).map(([label, value, suffix]) => (
+                          <div key={label}>
+                            <dt className="sr-only">{label}</dt>
+                            <dd>
+                              {value}
+                              <span>{suffix}</span>
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
                   </div>
                   <div className="summary-status">
                     <span className="date-traits">
