@@ -21,6 +21,46 @@ function fixture(overrides: Partial<CalendarPlatform> = {}) {
   return { controller: new CalendarController(platform, () => instant), saves };
 }
 
+test('农历详情旧设置默认开启，显式布尔值保留，非法值拒绝载入', () => {
+  const legacy = {
+    schemaVersion: 1,
+    preferences: { weekStartsOn: 1, appearance: 'system' },
+    datasets: [],
+  };
+  assert.equal(parseSavedState(legacy).preferences.showLunarDetails, true);
+  for (const showLunarDetails of [true, false]) {
+    const saved = { ...legacy, preferences: { ...legacy.preferences, showLunarDetails } };
+    assert.equal(parseSavedState(saved).preferences.showLunarDetails, showLunarDetails);
+  }
+  for (const showLunarDetails of [null, 0, 1, 'false', {}, []]) {
+    assert.throws(
+      () =>
+        parseSavedState({ ...legacy, preferences: { ...legacy.preferences, showLunarDetails } }),
+      /显示设置无效/,
+    );
+  }
+});
+
+test('农历详情开关保存并恢复，不改变所选日期、月历与核心查询', async () => {
+  const { controller, saves } = fixture();
+  await controller.initialize();
+  const before = controller.getSnapshot();
+  await controller.setPreferences({ showLunarDetails: false });
+  assert.equal(controller.getSnapshot().preferences.showLunarDetails, false);
+  assert.deepEqual(controller.getSnapshot().month, before.month);
+  assert.deepEqual(controller.getSnapshot().selected, before.selected);
+  assert.deepEqual(controller.getSnapshot().almanac, before.almanac);
+  const { controller: restored } = fixture({ load: async () => saves.at(-1) });
+  await restored.initialize();
+  assert.equal(restored.getSnapshot().preferences.showLunarDetails, false);
+  await restored.setPreferences({ showLunarDetails: true });
+  assert.equal(restored.getSnapshot().preferences.showLunarDetails, true);
+  assert.throws(() => {
+    // @ts-expect-error 验证宿主绕过类型约束时仍拒绝非法设置。
+    restored.setPreferences({ showLunarDetails: 'false' });
+  }, /显示设置无效/);
+});
+
 test('月末切月、今天、方向键与周起始日在三端使用同一状态', async () => {
   const { controller, saves } = fixture();
   await controller.initialize();

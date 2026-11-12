@@ -7,6 +7,8 @@ import type { MenuClockPreferences } from './menu-clock.js';
 export interface CalendarPreferences {
   weekStartsOn: 1 | 7;
   appearance: 'system' | 'light' | 'dark';
+  /** 是否展示月历之外的农历详情卡片，默认开启。 */
+  showLunarDetails: boolean;
   colorTheme: ColorThemeId;
   /** Null 使用主题默认强调色；自定义值为 #RRGGBB。 */
   accentColor: string | null;

@@ -36,6 +36,7 @@ export interface CalendarSnapshot {
 const defaults: CalendarPreferences = {
   weekStartsOn: 1,
   appearance: 'system',
+  showLunarDetails: true,
   colorTheme: 'clear',
   accentColor: null,
   menuClock: { ...defaultMenuClock },
@@ -54,12 +55,17 @@ export function parseSavedState(input: unknown): SavedCalendarState {
   )
     throw new Error('本地数据格式不受支持');
   const { weekStartsOn, appearance } = input.preferences;
+  const showLunarDetails =
+    input.preferences.showLunarDetails === undefined
+      ? defaults.showLunarDetails
+      : input.preferences.showLunarDetails;
   const colorTheme = input.preferences.colorTheme ?? defaults.colorTheme;
   const accentColor = input.preferences.accentColor ?? null;
   const menuClock = parseMenuClock(input.preferences.menuClock);
   if (
     (weekStartsOn !== 1 && weekStartsOn !== 7) ||
     !['system', 'light', 'dark'].includes(String(appearance)) ||
+    typeof showLunarDetails !== 'boolean' ||
     !isColorTheme(colorTheme) ||
     (accentColor !== null && !isAccentColor(accentColor))
   )
@@ -77,6 +83,7 @@ export function parseSavedState(input: unknown): SavedCalendarState {
     preferences: {
       weekStartsOn,
       appearance: appearance as CalendarPreferences['appearance'],
+      showLunarDetails,
       colorTheme,
       accentColor,
       menuClock,
@@ -244,6 +251,7 @@ export class CalendarController {
     if (
       (next.weekStartsOn !== 1 && next.weekStartsOn !== 7) ||
       !['system', 'light', 'dark'].includes(next.appearance) ||
+      typeof next.showLunarDetails !== 'boolean' ||
       !isColorTheme(next.colorTheme) ||
       (next.accentColor !== null && !isAccentColor(next.accentColor))
     )

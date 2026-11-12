@@ -761,6 +761,10 @@ a:focus-visible {
     grid-template-columns: minmax(0, 1fr) 280px;
     gap: 16px;
   }
+  body[data-platform='web'] .calendar-app[data-panel='calendar'][data-show-lunar-details='false'] {
+    width: min(640px, 100%);
+    grid-template-columns: minmax(0, 1fr);
+  }
   body[data-platform='web'] .month-panel {
     padding: 24px;
   }

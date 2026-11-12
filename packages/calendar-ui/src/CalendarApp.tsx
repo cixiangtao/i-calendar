@@ -3,6 +3,7 @@ import Button from 'antd/es/button';
 import ConfigProvider from 'antd/es/config-provider';
 import Dropdown from 'antd/es/dropdown';
 import Segmented from 'antd/es/segmented';
+import Switch from 'antd/es/switch';
 import Tabs from 'antd/es/tabs';
 import theme from 'antd/es/theme';
 import {
@@ -158,10 +159,18 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       });
     };
     const observer = new ResizeObserver(measure);
-    observer.observe(element);
-    for (const child of element.children) observer.observe(child);
-    measure();
+    const observeContent = () => {
+      observer.disconnect();
+      observer.observe(element);
+      for (const child of element.children) observer.observe(child);
+      measure();
+    };
+    // 详情卡片可挂载或移除；重新观察直接子元素，避免窗口受限时漏掉高度变化。
+    const structure = new MutationObserver(observeContent);
+    structure.observe(element, { childList: true });
+    observeContent();
     return () => {
+      structure.disconnect();
       observer.disconnect();
       cancelAnimationFrame(frame);
     };
@@ -288,6 +297,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
         ref={container}
         className="calendar-app"
         data-panel={state.panel}
+        data-show-lunar-details={state.preferences.showLunarDetails}
         aria-label="i日历"
         aria-busy={!state.ready}
         data-platform={controller.platform.kind}
@@ -459,121 +469,129 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
               {state.month.coverage === 'unavailable' ? (
                 <p className="missing-schedule-note">本年调休未收录</p>
               ) : null}
+              {!state.preferences.showLunarDetails ? (
+                <Feedback
+                  controller={controller}
+                  state={state}
+                />
+              ) : null}
             </section>
-            <aside
-              className="detail-panel"
-              aria-label="日期详情"
-            >
-              <Dropdown
-                trigger={['contextMenu']}
-                menu={{
-                  items: [
-                    {
-                      key: 'copy',
-                      label: '复制日期与农历',
-                      onClick: () => {
-                        void controller.copySelected();
-                      },
-                    },
-                    ...(state.selected.schedule.sources[0]
-                      ? [
-                          {
-                            key: 'source',
-                            label: '查看放假安排来源',
-                            onClick: () => {
-                              void controller.openSource(state.selected.schedule.sources[0]!);
-                            },
-                          },
-                        ]
-                      : []),
-                  ],
-                }}
+            {state.preferences.showLunarDetails ? (
+              <aside
+                className="detail-panel"
+                aria-label="日期详情"
               >
-                <section
-                  className="date-summary"
-                  aria-label="所选日期"
+                <Dropdown
+                  trigger={['contextMenu']}
+                  menu={{
+                    items: [
+                      {
+                        key: 'copy',
+                        label: '复制日期与农历',
+                        onClick: () => {
+                          void controller.copySelected();
+                        },
+                      },
+                      ...(state.selected.schedule.sources[0]
+                        ? [
+                            {
+                              key: 'source',
+                              label: '查看放假安排来源',
+                              onClick: () => {
+                                void controller.openSource(state.selected.schedule.sources[0]!);
+                              },
+                            },
+                          ]
+                        : []),
+                    ],
+                  }}
                 >
-                  <div
-                    className="date-leaf"
-                    aria-hidden="true"
+                  <section
+                    className="date-summary"
+                    aria-label="所选日期"
                   >
-                    <span key={state.selected.date}>{state.selected.day}</span>
-                  </div>
-                  <div className="date-detail">
-                    <div className="date-heading">
-                      <h2>
-                        <span className="detail-year">{state.selected.year}年</span>
-                        {state.selected.month}月{state.selected.day}日{' '}
-                        <span>周{weekdays[state.selected.weekday - 1]}</span>
-                      </h2>
-                      {state.selected.solarTerm ? (
-                        <span
-                          className="date-event date-event-term"
-                          aria-label={`节气：${state.selected.solarTerm}`}
-                        >
-                          {state.selected.solarTerm}
-                        </span>
-                      ) : null}
-                      {state.selected.festivals.map((festival) => (
-                        <span
-                          key={festival}
-                          className="date-event date-event-festival"
-                          aria-label={`节日：${festival}`}
-                        >
-                          {festival}
-                        </span>
-                      ))}
-                      <strong
-                        className={`schedule-badge schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
-                      >
-                        {scheduleLabel(state.selected)}
-                      </strong>
+                    <div
+                      className="date-leaf"
+                      aria-hidden="true"
+                    >
+                      <span key={state.selected.date}>{state.selected.day}</span>
                     </div>
-                    <div className="lunar-summary">
-                      <p>
-                        农历{state.selected.lunar.monthName}
-                        {state.selected.lunar.dayName}
-                      </p>
-                      <dl
-                        className="almanac-pillars"
-                        aria-label="年月日干支"
-                      >
-                        {(
-                          [
-                            ['年干支', state.almanac.ganZhi.year, '年'],
-                            ['月干支', state.almanac.ganZhi.month, '月'],
-                            ['日干支', state.almanac.ganZhi.day, '日'],
-                          ] as const
-                        ).map(([label, value, suffix]) => (
-                          <div key={label}>
-                            <dt className="sr-only">{label}</dt>
-                            <dd>
-                              {value}
-                              <span>{suffix}</span>
-                            </dd>
-                          </div>
+                    <div className="date-detail">
+                      <div className="date-heading">
+                        <h2>
+                          <span className="detail-year">{state.selected.year}年</span>
+                          {state.selected.month}月{state.selected.day}日{' '}
+                          <span>周{weekdays[state.selected.weekday - 1]}</span>
+                        </h2>
+                        {state.selected.solarTerm ? (
+                          <span
+                            className="date-event date-event-term"
+                            aria-label={`节气：${state.selected.solarTerm}`}
+                          >
+                            {state.selected.solarTerm}
+                          </span>
+                        ) : null}
+                        {state.selected.festivals.map((festival) => (
+                          <span
+                            key={festival}
+                            className="date-event date-event-festival"
+                            aria-label={`节日：${festival}`}
+                          >
+                            {festival}
+                          </span>
                         ))}
-                      </dl>
+                        <strong
+                          className={`schedule-badge schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
+                        >
+                          {scheduleLabel(state.selected)}
+                        </strong>
+                      </div>
+                      <div className="lunar-summary">
+                        <p>
+                          农历{state.selected.lunar.monthName}
+                          {state.selected.lunar.dayName}
+                        </p>
+                        <dl
+                          className="almanac-pillars"
+                          aria-label="年月日干支"
+                        >
+                          {(
+                            [
+                              ['年干支', state.almanac.ganZhi.year, '年'],
+                              ['月干支', state.almanac.ganZhi.month, '月'],
+                              ['日干支', state.almanac.ganZhi.day, '日'],
+                            ] as const
+                          ).map(([label, value, suffix]) => (
+                            <div key={label}>
+                              <dt className="sr-only">{label}</dt>
+                              <dd>
+                                {value}
+                                <span>{suffix}</span>
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                      <span className="date-traits">
+                        <span>
+                          生肖 <b>{state.selected.lunar.zodiac}</b>
+                        </span>
+                        <span>
+                          星座 <b>{state.selected.constellation}</b>
+                        </span>
+                      </span>
                     </div>
-                    <span className="date-traits">
-                      <span>
-                        生肖 <b>{state.selected.lunar.zodiac}</b>
-                      </span>
-                      <span>
-                        星座 <b>{state.selected.constellation}</b>
-                      </span>
-                    </span>
-                  </div>
-                </section>
-              </Dropdown>
-              <div className="almanac-inline">
-                <AlmanacContent almanac={state.almanac} />
-              </div>
-              <Feedback
-                controller={controller}
-                state={state}
-              />
-            </aside>
+                  </section>
+                </Dropdown>
+                <div className="almanac-inline">
+                  <AlmanacContent almanac={state.almanac} />
+                </div>
+                <Feedback
+                  controller={controller}
+                  state={state}
+                />
+              </aside>
+            ) : null}
             <footer className="app-footer tw-flex tw-items-center tw-justify-between">
               <div className="brand tw-flex tw-items-center">
                 <img
@@ -657,6 +675,20 @@ function Settings({
               <div className="settings-scroll">
                 <section>
                   <h2>日历显示</h2>
+                  <div className="setting-label">
+                    <label htmlFor="show-lunar-details">显示农历详情</label>
+                    <Switch
+                      id="show-lunar-details"
+                      checked={state.preferences.showLunarDetails}
+                      aria-describedby="lunar-details-hint"
+                      onChange={(showLunarDetails) => {
+                        void controller.setPreferences({ showLunarDetails });
+                      }}
+                    />
+                  </div>
+                  <p id="lunar-details-hint">
+                    显示日期、农历干支与黄历详情；月历中的农历不受影响。
+                  </p>
                   <div className="setting-label">
                     <span>每周开始于</span>
                     <Segmented
