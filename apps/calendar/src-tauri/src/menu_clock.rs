@@ -18,13 +18,20 @@ const TOKENS: [&str; 17] = [
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 pub struct ClockPreferences {
     pub enabled: bool,
+    #[serde(rename = "showIcon", default = "default_show_icon")]
+    pub show_icon: bool,
     pub format: String,
+}
+
+fn default_show_icon() -> bool {
+    true
 }
 
 impl Default for ClockPreferences {
     fn default() -> Self {
         Self {
             enabled: true,
+            show_icon: true,
             format: "HH:mm".into(),
         }
     }
@@ -68,13 +75,24 @@ fn parse_format(format: &str) -> Result<Vec<Segment>, String> {
 }
 
 impl ClockPreferences {
+    fn validate(&self) -> Result<(), String> {
+        let parts = parse_format(&self.format)?;
+        let visible_text = parts.iter().any(|part| match part {
+            Segment::Token(_) => true,
+            Segment::Literal(text) => !text.trim().is_empty(),
+        });
+        if !self.show_icon && (!self.enabled || !visible_text) {
+            return Err("请至少显示图标或有效的时间文字".into());
+        }
+        Ok(())
+    }
     pub fn from_saved(state: Option<&Value>) -> Result<Self, String> {
         let Some(value) = state.and_then(|state| state.pointer("/preferences/menuClock")) else {
             return Ok(Self::default());
         };
         let settings: Self =
             serde_json::from_value(value.clone()).map_err(|_| "菜单栏时间设置无效")?;
-        parse_format(&settings.format)?;
+        settings.validate()?;
         Ok(settings)
     }
 }
@@ -137,17 +155,23 @@ fn next_delay(format: &str, now: &DateTime<Local>) -> Duration {
     })
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct RenderedAppearance {
+    title: String,
+    show_icon: bool,
+}
+
 #[derive(Default)]
 pub struct MenuClock {
     settings: Mutex<ClockPreferences>,
     changed: Condvar,
     stopped: AtomicBool,
-    rendered: Mutex<Option<String>>,
+    rendered: Mutex<Option<RenderedAppearance>>,
 }
 
 impl MenuClock {
     pub fn update(&self, settings: ClockPreferences) -> Result<(), String> {
-        parse_format(&settings.format)?;
+        settings.validate()?;
         *self.settings.lock().map_err(|_| "时钟设置正在更新")? = settings;
         self.changed.notify_all();
         Ok(())
@@ -161,9 +185,13 @@ impl MenuClock {
     }
 }
 
-/// 原生工作线程独立于 WebView；只有文字改变时才更新菜单栏。
+/// 原生工作线程独立于 WebView；仅更新发生变化的文字或图标。
 pub fn start(app: tauri::AppHandle) {
     std::thread::spawn(move || {
+        let Ok(icon) = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png")) else {
+            eprintln!("菜单栏图标无法加载");
+            return;
+        };
         let runtime = app.state::<crate::RuntimeState>();
         let clock = &runtime.menu_clock;
         while !clock.stopped.load(Ordering::Relaxed) {
@@ -176,20 +204,41 @@ pub fn start(app: tauri::AppHandle) {
             } else {
                 String::new()
             };
+            // 即使格式输出意外为空，也保留图标作为可点击入口。
+            let desired = RenderedAppearance {
+                show_icon: settings.show_icon || title.trim().is_empty(),
+                title,
+            };
             let current = clock.rendered.lock().ok().and_then(|value| value.clone());
-            if current.as_ref() != Some(&title) {
+            if current.as_ref() != Some(&desired) {
                 if let Some(tray) = app.tray_by_id("calendar") {
-                    // Tauri 在内部切到主线程；调用期间不持有设置锁，避免 IPC 更新死锁。
-                    if tray
-                        .set_title(if title.is_empty() {
-                            None
-                        } else {
-                            Some(title.as_str())
-                        })
-                        .is_ok()
-                    {
+                    let icon_changed = current
+                        .as_ref()
+                        .is_none_or(|value| value.show_icon != desired.show_icon);
+                    let title_changed = current
+                        .as_ref()
+                        .is_none_or(|value| value.title != desired.title);
+                    // 恢复图标在先、隐藏图标在后，任一步失败都不先移除最后一个入口。
+                    // Tauri 内部切到主线程；调用期间不持有设置锁，避免 IPC 死锁。
+                    let applied: tauri::Result<()> = (|| {
+                        if desired.show_icon && icon_changed {
+                            tray.set_icon_with_as_template(Some(icon.clone()), true)?;
+                        }
+                        if title_changed {
+                            tray.set_title(if desired.title.is_empty() {
+                                None
+                            } else {
+                                Some(desired.title.as_str())
+                            })?;
+                        }
+                        if !desired.show_icon && icon_changed {
+                            tray.set_icon_with_as_template(None, true)?;
+                        }
+                        Ok(())
+                    })();
+                    if applied.is_ok() {
                         if let Ok(mut rendered) = clock.rendered.lock() {
-                            *rendered = Some(title);
+                            *rendered = Some(desired);
                         }
                     }
                 }
@@ -212,7 +261,8 @@ pub fn start(app: tauri::AppHandle) {
 async fn wait_rendered(
     app: tauri::AppHandle,
     previous: Option<String>,
-    hidden: bool,
+    expect_icon: bool,
+    expect_time: bool,
 ) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let deadline = Instant::now() + Duration::from_secs(5);
@@ -224,11 +274,14 @@ async fn wait_rendered(
                 .lock()
                 .ok()
                 .and_then(|value| value.clone());
-            if let Some(title) = rendered {
-                if (hidden && title.is_empty())
-                    || (!hidden && title.len() == 8 && Some(&title) != previous.as_ref())
+            if let Some(rendered) = rendered {
+                if rendered.show_icon == expect_icon
+                    && ((!expect_time && rendered.title.is_empty())
+                        || (expect_time
+                            && rendered.title.len() == 8
+                            && Some(&rendered.title) != previous.as_ref()))
                 {
-                    return Ok(title);
+                    return Ok(rendered.title);
                 }
             }
             std::thread::sleep(Duration::from_millis(50));
@@ -239,18 +292,71 @@ async fn wait_rendered(
     .map_err(|_| "时钟验证线程失败")?
 }
 
-/// 冒烟实例只改内存：弹窗收起后秒钟继续走，关闭显示后清空标题。
+/// 通过主线程读取真实 NSStatusBarButton，校验图片、模板、文字和可点击尺寸。
+async fn verify_status(
+    app: tauri::AppHandle,
+    show_icon: bool,
+    show_time: bool,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let tray = app.tray_by_id("calendar").ok_or("菜单栏入口不存在")?;
+        tray.with_inner_tray_icon(move |inner| -> Result<(), String> {
+            let main = objc2::MainThreadMarker::new().ok_or("菜单栏检查不在主线程")?;
+            let button = inner
+                .ns_status_item()
+                .and_then(|item| item.button(main))
+                .ok_or("菜单栏按钮不存在")?;
+            let image = button.image();
+            let title = button.title().to_string();
+            if image.is_some() != show_icon
+                || (show_icon && !image.is_some_and(|image| image.isTemplate()))
+                || show_time != !title.trim().is_empty()
+                || button.frame().size.width <= 0.0
+            {
+                return Err("原生菜单栏图标、模板或文字状态不符合预期".into());
+            }
+            Ok(())
+        })
+        .map_err(|_| "无法读取原生菜单栏状态")?
+    })
+    .await
+    .map_err(|_| "菜单栏验证线程失败")?
+}
+
+/// 冒烟实例只改内存：校验图文、纯时间、纯图标，以及恢复后的原生状态。
 pub async fn verify_smoke(app: &tauri::AppHandle) -> Result<(), String> {
-    let first = wait_rendered(app.clone(), None, false).await?;
-    wait_rendered(app.clone(), Some(first), false).await?;
+    let first = wait_rendered(app.clone(), None, true, true).await?;
+    wait_rendered(app.clone(), Some(first), true, true).await?;
+    verify_status(app.clone(), true, true).await?;
+    app.state::<crate::RuntimeState>()
+        .menu_clock
+        .update(ClockPreferences {
+            enabled: true,
+            show_icon: false,
+            format: "HH:mm:ss".into(),
+        })?;
+    let first = wait_rendered(app.clone(), None, false, true).await?;
+    wait_rendered(app.clone(), Some(first), false, true).await?;
+    verify_status(app.clone(), false, true).await?;
     app.state::<crate::RuntimeState>()
         .menu_clock
         .update(ClockPreferences {
             enabled: false,
+            show_icon: true,
             format: "HH:mm:ss".into(),
         })?;
-    wait_rendered(app.clone(), None, true).await?;
-    println!("PASS：菜单栏时钟在弹窗收起后持续刷新，关闭显示可清空标题");
+    wait_rendered(app.clone(), None, true, false).await?;
+    verify_status(app.clone(), true, false).await?;
+    // 恢复时使用秒格式，以便共用冒烟等待条件；只影响此隔离实例。
+    app.state::<crate::RuntimeState>()
+        .menu_clock
+        .update(ClockPreferences {
+            format: "HH:mm:ss".into(),
+            ..ClockPreferences::default()
+        })?;
+    wait_rendered(app.clone(), None, true, true).await?;
+    verify_status(app.clone(), true, true).await?;
+    println!("PASS：菜单栏图文、纯时间、纯图标与模板恢复通过，收起后时间继续刷新");
     Ok(())
 }
 
@@ -295,5 +401,24 @@ mod tests {
             next_delay("HH:mm [ss]", &now),
             Duration::from_millis(50_750)
         );
+    }
+    #[test]
+    fn icon_visibility_matches_shared_preferences_and_never_removes_all_entries() {
+        let fixture: Value = serde_json::from_str(include_str!(
+            "../../../../packages/calendar-ui/test/fixtures/menu-clock.json"
+        ))
+        .unwrap();
+        for item in fixture["visibility"].as_array().unwrap() {
+            let state = serde_json::json!({"preferences":{"menuClock":item["input"]}});
+            let result = ClockPreferences::from_saved(Some(&state));
+            if let Some(expected) = item.get("expected") {
+                let value = result.unwrap();
+                assert_eq!(value.enabled, expected["enabled"].as_bool().unwrap());
+                assert_eq!(value.show_icon, expected["showIcon"].as_bool().unwrap());
+                assert_eq!(value.format, expected["format"].as_str().unwrap());
+            } else {
+                assert!(result.is_err());
+            }
+        }
     }
 }

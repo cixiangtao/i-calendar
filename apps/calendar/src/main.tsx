@@ -35,7 +35,9 @@ async function start() {
   const controller = new CalendarController(platform);
   await controller.initialize();
   if (smokeTest && platform.kind === 'macos')
-    await controller.setPreferences({ menuClock: { enabled: true, format: 'HH:mm:ss' } });
+    await controller.setPreferences({
+      menuClock: { enabled: true, showIcon: true, format: 'HH:mm:ss' },
+    });
   const root = createRoot(document.getElementById('root')!);
   flushSync(() =>
     root.render(

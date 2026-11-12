@@ -7,7 +7,7 @@ import { CalendarSelect } from './CalendarSelect.js';
 import {
   formatMenuClock,
   menuClockPresets,
-  parseClockFormat,
+  parseMenuClock,
   type MenuClockPreferences,
 } from './menu-clock.js';
 
@@ -32,7 +32,7 @@ export function MenuClockSettings({
   }, []);
   let error = '';
   try {
-    parseClockFormat(draft);
+    parseMenuClock({ ...settings, format: draft });
   } catch (reason) {
     error = reason instanceof Error ? reason.message : '格式无效';
   }
@@ -42,12 +42,24 @@ export function MenuClockSettings({
       className="menu-clock-settings"
       aria-labelledby="menu-clock-title"
     >
-      <h2 id="menu-clock-title">菜单栏时间</h2>
+      <h2 id="menu-clock-title">菜单栏显示</h2>
+      <div className="setting-label">
+        <label htmlFor="menu-clock-icon">显示图标</label>
+        <Switch
+          id="menu-clock-icon"
+          checked={settings.showIcon}
+          disabled={!settings.enabled || !formatMenuClock(settings.format, now).trim()}
+          aria-describedby="menu-entry-hint"
+          onChange={(showIcon) => onChange({ ...settings, showIcon })}
+        />
+      </div>
       <div className="setting-label">
         <label htmlFor="menu-clock-enabled">显示菜单栏时间</label>
         <Switch
           id="menu-clock-enabled"
           checked={settings.enabled}
+          disabled={!settings.showIcon}
+          aria-describedby="menu-entry-hint"
           onChange={(enabled) => onChange({ ...settings, enabled })}
         />
       </div>
@@ -120,7 +132,7 @@ export function MenuClockSettings({
         </>
       ) : null}
       <div className="clock-preview-row">
-        <span>{settings.enabled ? '菜单栏预览' : '格式预览（显示已关闭）'}</span>
+        <span>{settings.enabled ? '时间格式预览' : '时间格式预览（时间已关闭）'}</span>
         <output
           aria-label="菜单栏时间预览"
           aria-live="off"
@@ -128,7 +140,8 @@ export function MenuClockSettings({
           {preview}
         </output>
       </div>
-      <p>跟随 Mac 系统时区，弹窗收起后继续刷新。日历日期仍按北京时间查询。</p>
+      <p id="menu-entry-hint">图标和有效的时间文字至少保留一项。</p>
+      <p>时间跟随 Mac 系统时区，弹窗收起后继续刷新。日历日期仍按北京时间查询。</p>
     </section>
   );
 }

@@ -42,5 +42,77 @@
     "QQ:mm",
     "HH:mm zzz",
     "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+  ],
+  "visibility": [
+    {
+      "input": {
+        "enabled": false,
+        "format": "HH:mm"
+      },
+      "expected": {
+        "enabled": false,
+        "showIcon": true,
+        "format": "HH:mm"
+      }
+    },
+    {
+      "input": {
+        "enabled": true,
+        "showIcon": false,
+        "format": "HH:mm"
+      },
+      "expected": {
+        "enabled": true,
+        "showIcon": false,
+        "format": "HH:mm"
+      }
+    },
+    {
+      "input": {
+        "enabled": true,
+        "showIcon": false,
+        "format": "[i日历]"
+      },
+      "expected": {
+        "enabled": true,
+        "showIcon": false,
+        "format": "[i日历]"
+      }
+    },
+    {
+      "input": {
+        "enabled": false,
+        "showIcon": false,
+        "format": "HH:mm"
+      }
+    },
+    {
+      "input": {
+        "enabled": true,
+        "showIcon": false,
+        "format": "[]"
+      }
+    },
+    {
+      "input": {
+        "enabled": true,
+        "showIcon": false,
+        "format": "[ ]"
+      }
+    },
+    {
+      "input": {
+        "enabled": true,
+        "showIcon": "false",
+        "format": "HH:mm"
+      }
+    },
+    {
+      "input": {
+        "enabled": true,
+        "showIcon": null,
+        "format": "HH:mm"
+      }
+    }
   ]
 }

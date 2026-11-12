@@ -1,11 +1,14 @@
 /** 菜单栏时钟设置由原生层执行，Web 只复用格式校验和预览。 */
 export interface MenuClockPreferences {
   enabled: boolean;
+  /** 为 false 时只显示时间；至少保留图标或有效时间文字。 */
+  showIcon: boolean;
   format: string;
 }
 
 export const defaultMenuClock: Readonly<MenuClockPreferences> = Object.freeze({
   enabled: true,
+  showIcon: true,
   format: 'HH:mm',
 });
 export const menuClockPresets = [
@@ -84,8 +87,15 @@ export function parseMenuClock(input: unknown): MenuClockPreferences {
     typeof input.format !== 'string'
   )
     throw new Error('菜单栏时间设置无效');
-  parseClockFormat(input.format);
-  return { enabled: input.enabled, format: input.format };
+  const showIcon = 'showIcon' in input ? input.showIcon : true;
+  if (typeof showIcon !== 'boolean') throw new Error('菜单栏图标设置无效');
+  const parts = parseClockFormat(input.format);
+  if (
+    !showIcon &&
+    (!input.enabled || !parts.some((part) => 'token' in part || part.literal.trim()))
+  )
+    throw new Error('请至少显示图标或有效的时间文字');
+  return { enabled: input.enabled, showIcon, format: input.format };
 }
 
 /** 预览按系统时区显示；测试可显式提供时区，与日期查询的北京时间口径独立。 */

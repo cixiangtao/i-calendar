@@ -30,12 +30,17 @@ tauri-plugin-single-instance = "2"
 plist = "1"
 chrono = { version = "=0.4.45", default-features = false, features = ["clock"] }
 objc2-app-kit = { version = "=0.3.2", default-features = false, features = [
+  "NSButton",
   "NSColor",
+  "NSImage",
+  "NSStatusBarButton",
+  "NSStatusItem",
   "NSView",
   "NSWindow",
   "objc2-core-foundation",
   "objc2-quartz-core",
 ] }
+objc2 = "=0.6.5"
 
 [profile.release]
 codegen-units = 1
