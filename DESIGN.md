@@ -43,9 +43,9 @@ colors:
 typography:
   headline:
     fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
-    fontSize: '23px'
-    fontWeight: 600
-    lineHeight: '30px'
+    fontSize: '16px'
+    fontWeight: 500
+    lineHeight: '22px'
   title:
     fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
     fontSize: '15px'
@@ -188,7 +188,7 @@ Frontmatter 记录清爽白默认运行时色值；完整规则以共享 UI 的 
 
 全界面使用 Apple 系统字体、苹方与系统回退，不加载外部字体。字重以中等到半粗为主，日期和叶片数字使用等宽数字特性。frontmatter 的字号是实际角色，响应变化在下方补充。
 
-- **Headline**：宽屏年月入口，窄屏改用 Title 角色。
+- **Headline**：宽屏年月导航为 16px / 500 / 22px，保持工具栏文字的克制层级；窄屏为 15px。
 - **Title**：年月标签与设置标题；常规详情标题为（13px），宽屏为（14px）。
 - **Date / Date Compact / Date Wide**：分别对应普通月历、Mac 紧凑月历、宽屏月历；短屏宽屏会回落至（19px / 23px 行高）。
 - **Leaf / Leaf Wide**：详情叶片的大号数字，数字变化时短暂淡入上移。
@@ -223,7 +223,7 @@ Web 从（860px）起使用月历与（280px）详情双栏，总宽最大（960
 
 ### 月份标签与导航
 
-年月使用真实 select，普通/紧凑形态为浅灰圆角标签，宽屏转为无底大标题。工具栏左侧为“年份＋〈月份〉”，箭头贴近月份；右侧独立放“今天”，使用强调色文字和轻染底色。桌面方向按钮 30×32px，“今天”48×32px，触控目标至少 44px。禁用透明度（0.38），键盘焦点保留外描边。
+年月使用真实 select，普通/紧凑形态为浅灰圆角标签，宽屏采用无底的中等字重导航文字，不作为大标题。年份宽 84px、月份宽 56px，避免字号与控件间距压过日期网格。工具栏左侧为“年份＋〈月份〉”，箭头贴近月份；右侧独立放“今天”，使用强调色文字和轻染底色。桌面方向按钮 30×32px，“今天”48×32px，触控目标至少 44px。禁用透明度（0.38），键盘焦点保留外描边。
 
 网页日历顶部对齐、水平居中，不再按黄历详情总高度垂直居中；切月或回到今天时，详情长短变化不移动顶部工具栏。Mac 维持固定窗口中的上月历、下详情。
 
