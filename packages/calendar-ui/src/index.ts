@@ -1,3 +1,5 @@
+export { CalendarButton } from './CalendarButton.js';
+export type { CalendarButtonProps } from './CalendarButton.js';
 export { CalendarApp } from './CalendarApp.js';
 export { CalendarSelect } from './CalendarSelect.js';
 export type { CalendarSelectOption, CalendarSelectProps } from './CalendarSelect.js';

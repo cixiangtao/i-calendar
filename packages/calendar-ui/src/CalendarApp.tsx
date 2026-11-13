@@ -1,5 +1,4 @@
 import type { CalendarDay } from '@i-calendar/core';
-import Button from 'antd/es/button';
 import ConfigProvider from 'antd/es/config-provider';
 import Dropdown from 'antd/es/dropdown';
 import Segmented from 'antd/es/segmented';
@@ -19,6 +18,7 @@ import {
 
 import { version as appVersion } from '../../../package.json';
 import { AlmanacContent } from './Almanac.js';
+import { CalendarButton } from './CalendarButton.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import { colorThemes, resolveColorTheme } from './color-theme.js';
 import { createFormTheme, formControlVariables } from './form-theme.js';
@@ -113,8 +113,8 @@ function Feedback({
       role={state.error ? 'alert' : 'status'}
     >
       <span>{state.error ?? state.notice}</span>
-      <Button
-        type="text"
+      <CalendarButton
+        appearance="icon"
         className="icon-button"
         aria-label="关闭提示"
         onClick={() => controller.dismissError()}
@@ -324,8 +324,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                     className="month-controls"
                     aria-label="切换月份"
                   >
-                    <Button
-                      type="text"
+                    <CalendarButton
+                      appearance="toolbar"
                       className="tool-button"
                       aria-label="上个月"
                       title="上个月（PageUp）"
@@ -345,8 +345,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                       options={months}
                       onChange={(month) => controller.jump(state.year, month)}
                     />
-                    <Button
-                      type="text"
+                    <CalendarButton
+                      appearance="toolbar"
                       className="tool-button"
                       aria-label="下个月"
                       title="下个月（PageDown）"
@@ -361,14 +361,14 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                     />
                   </nav>
                 </div>
-                <Button
-                  type="text"
+                <CalendarButton
+                  appearance="accent"
                   className="today-button"
                   onClick={() => controller.goToday()}
                   title="回到今天（T）"
                 >
                   今天
-                </Button>
+                </CalendarButton>
               </div>
               <div
                 className="calendar-grid"
@@ -594,9 +594,9 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 />
                 <span>i日历</span>
               </div>
-              <Button
+              <CalendarButton
                 ref={gear}
-                type="text"
+                appearance="icon"
                 className="icon-button"
                 aria-label="设置与调休数据"
                 title="设置与调休数据"
@@ -641,14 +641,14 @@ function Settings({
       aria-labelledby="settings-title"
     >
       <header className="settings-header">
-        <Button
+        <CalendarButton
           ref={back}
-          type="text"
+          appearance="text"
           icon={<Icon name="left" />}
           onClick={() => controller.showSettings(false)}
         >
           返回日历
-        </Button>
+        </CalendarButton>
         <h1 id="settings-title">设置</h1>
       </header>
       <Tabs
@@ -721,8 +721,9 @@ function Settings({
                     aria-label="主题预设"
                   >
                     {colorThemes.map((preset) => (
-                      <Button
+                      <CalendarButton
                         key={preset.id}
+                        appearance="choice"
                         className="palette-choice"
                         aria-pressed={state.preferences.colorTheme === preset.id}
                         onClick={() => {
@@ -740,7 +741,7 @@ function Settings({
                           <i style={{ background: preset.accent }} />
                         </span>
                         {preset.name}
-                      </Button>
+                      </CalendarButton>
                     ))}
                   </div>
                   <div className="accent-setting">
@@ -767,15 +768,15 @@ function Settings({
                         colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
                       ).toUpperCase()}
                     </span>
-                    <Button
-                      type="text"
+                    <CalendarButton
+                      appearance="text"
                       disabled={state.preferences.accentColor === null}
                       onClick={() => {
                         void controller.setPreferences({ accentColor: null });
                       }}
                     >
                       恢复默认
-                    </Button>
+                    </CalendarButton>
                   </div>
                   <p>
                     强调色用于选中日期和操作，自动适配明暗外观。切换预设会恢复该主题的默认强调色。
@@ -814,7 +815,7 @@ function Settings({
                     农历、节气和已收录的调休均可离线查询。放假安排根据全国统一通知整理，不包含个人排班及地方假期。
                   </p>
                   <div className="data-actions">
-                    <Button
+                    <CalendarButton
                       loading={state.updating}
                       disabled={!state.ready}
                       onClick={() => {
@@ -822,8 +823,8 @@ function Settings({
                       }}
                     >
                       检查调休更新
-                    </Button>
-                    <Button
+                    </CalendarButton>
+                    <CalendarButton
                       disabled={state.updating || !state.ready}
                       onClick={() => {
                         interact(true);
@@ -831,7 +832,7 @@ function Settings({
                       }}
                     >
                       导入 JSON…
-                    </Button>
+                    </CalendarButton>
                   </div>
                   <p className="setting-hint">只导入已核对来源的完整年度安排。</p>
                   {state.updatedAt ? (
@@ -857,13 +858,13 @@ function Settings({
                   <p>版本 {appVersion}</p>
                   <p>免费、无广告的公农历日历。</p>
                   {controller.platform.quit ? (
-                    <Button
+                    <CalendarButton
                       onClick={() => {
                         void controller.platform.quit?.();
                       }}
                     >
                       退出i日历
-                    </Button>
+                    </CalendarButton>
                   ) : null}
                 </section>
                 <section>

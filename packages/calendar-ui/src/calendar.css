@@ -164,14 +164,6 @@ a:focus-visible {
   color: var(--secondary);
   flex-shrink: 0;
 }
-.calendar-app .icon-button:hover {
-  background: var(--control-hover) !important;
-  color: var(--ink) !important;
-}
-.calendar-app .icon-button:not(:disabled):active {
-  background: var(--control-active) !important;
-  color: var(--ink) !important;
-}
 .month-toolbar {
   display: flex;
   align-items: center;
@@ -186,20 +178,6 @@ a:focus-visible {
   align-items: center;
   gap: 4px;
   min-width: 0;
-}
-.calendar-app .tool-button::before,
-.calendar-app .today-button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  height: var(--form-height);
-  width: 100%;
-  transform: translate(-50%, -50%);
-  border-radius: var(--form-radius);
-  background: var(--control);
-  pointer-events: none;
-  transition: background-color var(--form-duration) ease-out;
 }
 .year-control {
   width: 78px;
@@ -230,17 +208,11 @@ a:focus-visible {
   font-weight: 500;
   line-height: 20px;
 }
-.calendar-app .tool-button::before {
-  width: 28px;
-}
 .calendar-app .today-button {
   width: 44px;
   min-width: 44px;
   color: var(--blue);
   white-space: nowrap;
-}
-.calendar-app .today-button::before {
-  background: var(--blue-soft);
 }
 .month-toolbar .ant-btn > span {
   position: relative;
@@ -248,25 +220,6 @@ a:focus-visible {
 .month-toolbar svg {
   width: 13px;
   height: 13px;
-}
-.calendar-app .tool-button:hover,
-.calendar-app .today-button:hover,
-.calendar-app .tool-button:active,
-.calendar-app .today-button:active {
-  background: transparent !important;
-  color: var(--ink) !important;
-}
-.calendar-app .today-button:hover,
-.calendar-app .today-button:active {
-  color: var(--blue) !important;
-}
-.calendar-app .tool-button:hover::before,
-.calendar-app .today-button:hover::before {
-  background: var(--control-hover);
-}
-.calendar-app .tool-button:active::before,
-.calendar-app .today-button:active::before {
-  background: var(--control-active);
 }
 .week-row,
 .date-row {
@@ -1098,15 +1051,8 @@ body[data-platform='ios'] .calendar-stage {
   min-height: 66px;
   gap: 7px;
   padding: 8px 10px;
-  color: var(--ink);
-  background: var(--surface);
-  border-color: var(--line);
   font-size: 12px;
   line-height: 18px;
-}
-.calendar-app .palette-choice[aria-pressed='true'] {
-  border-color: var(--blue);
-  box-shadow: inset 0 0 0 1px var(--blue);
 }
 .palette-swatch {
   display: flex;

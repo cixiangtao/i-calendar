@@ -1,7 +1,7 @@
-import Button from 'antd/es/button';
 import Switch from 'antd/es/switch';
 import { useEffect, useState } from 'react';
 
+import { CalendarButton } from './CalendarButton.js';
 import { CalendarInput } from './CalendarInput.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import {
@@ -105,12 +105,12 @@ export function MenuClockSettings({
             aria-describedby="clock-format-help clock-format-error"
             onChange={(event) => setDraft(event.target.value)}
           />
-          <Button
+          <CalendarButton
             htmlType="submit"
             disabled={!!error || draft === settings.format}
           >
             应用格式
-          </Button>
+          </CalendarButton>
         </form>
       ) : null}
       {mode === 'custom' ? (

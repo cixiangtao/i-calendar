@@ -1,14 +1,8 @@
 /* 几何值由 form-theme.ts 注入，与 Ant Design 主题共用同一份尺寸。 */
-.calendar-app :is(.ant-btn, .ant-switch, .source-link):focus-visible,
+.calendar-app :is(.ant-switch, .source-link):focus-visible,
 .calendar-app .settings-panel .ant-segmented .ant-segmented-item-focused {
   outline: 1px solid var(--secondary);
   outline-offset: 2px;
-}
-.calendar-app .ant-btn:disabled {
-  opacity: 0.5;
-  color: var(--muted);
-  background: var(--control);
-  border-color: transparent;
 }
 .settings-panel :is(.ant-btn, .ant-switch, .ant-segmented, .calendar-color)::before,
 .settings-panel :is(.ant-btn, .ant-switch, .ant-segmented, .calendar-color) {
@@ -124,7 +118,6 @@
 }
 @media (pointer: coarse) {
   /* 扩大的透明伪元素仍属于原按钮/label，点击和键盘语义由原生控件处理。 */
-  .settings-panel .ant-btn:not(.palette-choice)::after,
   .settings-panel .ant-switch::before,
   .settings-panel .ant-segmented-item::before {
     content: '';
