@@ -106,7 +106,10 @@ export function CalendarSelect<Value extends string | number>({
           position="popper"
           sideOffset={4}
           collisionPadding={12}
-          className={cn('calendar-select-popup tw-max-w-[calc(100vw-24px)]', popupClasses)}
+          className={cn(
+            'calendar-select-popup tw-max-w-[calc(100vw-24px)] tw-overflow-hidden',
+            popupClasses,
+          )}
           style={{
             minWidth: 'var(--radix-select-trigger-width)',
             width: popupWidth,
@@ -115,7 +118,12 @@ export function CalendarSelect<Value extends string | number>({
           onEscapeKeyDown={(event) => event.stopPropagation()}
           onKeyDown={(event) => event.stopPropagation()}
         >
-          <Select.Viewport className="tw-max-h-60 tw-overflow-y-auto tw-overscroll-contain">
+          <Select.Viewport
+            className="tw-max-h-60 tw-overflow-y-auto tw-overscroll-contain"
+            style={{
+              maxHeight: 'min(240px, calc(var(--radix-select-content-available-height) - 10px))',
+            }}
+          >
             {options.map((option) => (
               <Select.Item
                 key={optionKey(option.value)}

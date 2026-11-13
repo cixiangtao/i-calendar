@@ -42,9 +42,10 @@ export function CalendarButton({
       data-appearance={appearance}
       data-hovered={hovered && !disabled && !loading ? 'true' : undefined}
       className={cn(
-        'calendar-button tw-relative tw-isolate tw-inline-flex tw-h-[var(--form-height)] tw-shrink-0 tw-items-center tw-justify-center tw-gap-2 tw-whitespace-nowrap tw-rounded-[var(--form-radius)] tw-border-0 tw-bg-transparent tw-px-[var(--form-inset)] tw-py-0 tw-font-sans tw-text-[length:var(--form-font-size)] tw-font-medium tw-leading-[var(--form-line-height)] tw-shadow-none tw-outline-none disabled:tw-cursor-default disabled:tw-text-muted disabled:tw-opacity-50',
-        "before:tw-pointer-events-none before:tw-absolute before:tw-left-1/2 before:tw-top-1/2 before:tw-z-[-1] before:tw-h-[var(--form-height)] before:tw-w-[var(--button-width,calc(100%+2px))] before:-tw-translate-x-1/2 before:-tw-translate-y-1/2 before:tw-rounded-[inherit] before:tw-border before:tw-border-solid before:tw-transition-colors before:tw-duration-[130ms] before:tw-content-['']",
+        'calendar-button tw-relative tw-isolate tw-inline-flex tw-shrink-0 tw-items-center tw-justify-center tw-gap-2 tw-whitespace-nowrap tw-rounded-[var(--form-radius)] tw-border tw-border-solid tw-border-transparent tw-bg-transparent tw-px-[var(--form-inset)] tw-py-0 tw-font-sans tw-text-[length:var(--form-font-size)] tw-font-medium tw-leading-[var(--form-line-height)] tw-shadow-none tw-outline-none disabled:tw-cursor-default disabled:tw-text-muted disabled:tw-opacity-50',
+        "before:tw-pointer-events-none before:tw-absolute before:tw-left-1/2 before:tw-top-1/2 before:tw-z-[-1] before:tw-w-[var(--button-width,calc(100%+2px))] before:-tw-translate-x-1/2 before:-tw-translate-y-1/2 before:tw-rounded-[inherit] before:tw-border before:tw-border-solid before:tw-transition-colors before:tw-duration-[130ms] before:tw-content-['']",
         'focus-visible:before:tw-outline focus-visible:before:tw-outline-1 focus-visible:before:tw-outline-offset-2 focus-visible:before:tw-outline-secondary enabled:active:before:tw-bg-control-active data-[hovered=true]:before:tw-bg-control-hover',
+        appearance !== 'choice' && 'tw-h-[var(--form-height)] before:tw-h-[var(--form-height)]',
         appearance !== 'choice' &&
           "coarse:after:tw-absolute coarse:after:tw-left-1/2 coarse:after:tw-top-1/2 coarse:after:tw-h-11 coarse:after:tw-w-[max(100%,44px)] coarse:after:-tw-translate-x-1/2 coarse:after:-tw-translate-y-1/2 coarse:after:tw-content-['']",
         (appearance === 'neutral' || appearance === 'toolbar') &&
