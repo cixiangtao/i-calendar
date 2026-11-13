@@ -9,9 +9,13 @@
   -webkit-font-smoothing: antialiased;
   --canvas: #f1f2f6;
   --surface: #ffffff;
-  --ink: #171b24;
-  --secondary: #5b6575;
-  --muted: #6e7786;
+  --ink: #303030;
+  --secondary: #626262;
+  --muted: #767676;
+  --lunar-ink: #707070;
+  --weekday-ink: #4b4b4b;
+  --hint-ink: #707070;
+  --selected-ink: #303030;
   --leaf: #3269d9;
   --line: #eceef3;
   --control: #f0f1f5;
@@ -20,13 +24,16 @@
   --hover: #f5f6fa;
   --blue: #3269d9;
   --blue-soft: #edf3ff;
-  --red: #cf3049;
+  --red: #d21936;
+  --outside-red: #ad3c4e;
   --red-soft: #fff0f2;
-  --green: #16804d;
+  --green: #00834c;
+  --outside-green: #29815c;
   --green-soft: #eaf7ef;
   --yellow: #956300;
   --yellow-soft: #fff5d8;
-  --purple: #8150bd;
+  --purple: #8b4fc5;
+  --outside-purple: #825b9f;
   --purple-soft: #f4edfc;
   --accent: var(--blue);
   color: var(--ink);
@@ -35,9 +42,13 @@
 :root[data-theme='dark'] {
   --canvas: #191b22;
   --surface: #24262f;
-  --ink: #f6f7fb;
-  --secondary: #acb4c3;
-  --muted: #929dac;
+  --ink: #f3f3f3;
+  --secondary: #c4c4c4;
+  --muted: #999999;
+  --lunar-ink: #b5b5b5;
+  --weekday-ink: #d0d0d0;
+  --hint-ink: #a8a8a8;
+  --selected-ink: #f3f3f3;
   --line: #363946;
   --control: #30333e;
   --control-hover: #444750;
@@ -45,13 +56,16 @@
   --hover: #2c2f3a;
   --blue: #93b5ff;
   --blue-soft: #2c3955;
-  --red: #ff94a3;
+  --red: #ff8d9b;
+  --outside-red: #db919a;
   --red-soft: #452c37;
-  --green: #83d9ab;
+  --green: #72d6a1;
+  --outside-green: #80c19e;
   --green-soft: #263d36;
   --yellow: #ebc568;
   --yellow-soft: #423b29;
-  --purple: #c6a4f2;
+  --purple: #c6a0ed;
+  --outside-purple: #b6a0d0;
   --purple-soft: #3b304b;
 }
 * {
@@ -235,7 +249,7 @@ a:focus-visible {
   line-height: 22px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--secondary);
+  color: var(--weekday-ink);
 }
 .week-row .weekend-heading {
   color: var(--red);
@@ -278,7 +292,7 @@ a:focus-visible {
   letter-spacing: -0.025em;
 }
 .lunar-day {
-  color: var(--secondary);
+  color: var(--lunar-ink);
   font-size: 11px;
   line-height: 14px;
   max-width: 100%;
@@ -304,8 +318,14 @@ a:focus-visible {
   color: var(--muted);
   font-weight: 400;
 }
-.day-cell.outside-month.holiday-day .solar-day {
-  color: var(--red);
+.day-cell.outside-month.rest-day .solar-day {
+  color: var(--outside-red);
+}
+.day-cell.outside-month .term-label {
+  color: var(--outside-green);
+}
+.day-cell.outside-month .festival-label {
+  color: var(--outside-purple);
 }
 .day-cell.is-today::after {
   content: '';
@@ -326,7 +346,13 @@ a:focus-visible {
   font-weight: 650;
 }
 .day-cell.selected .lunar-day {
-  color: var(--ink);
+  color: var(--selected-ink);
+}
+.day-cell.selected .term-label {
+  color: var(--green);
+}
+.day-cell.selected .festival-label {
+  color: var(--purple);
 }
 .day-mark {
   position: absolute;
@@ -445,6 +471,7 @@ a:focus-visible {
   line-height: 17px;
 }
 .lunar-summary > p {
+  color: var(--lunar-ink);
   white-space: nowrap;
 }
 .date-traits {
@@ -595,7 +622,7 @@ a:focus-visible {
 }
 .settings-scroll p {
   margin: 0 0 8px;
-  color: var(--secondary);
+  color: var(--hint-ink);
   font-size: 12px;
   line-height: 1.8;
 }
@@ -704,7 +731,7 @@ a:focus-visible {
   max-width: 880px;
   margin: 0 auto;
   padding: 48px 24px 72px;
-  color: var(--secondary);
+  color: var(--hint-ink);
   font-size: 13px;
   line-height: 1.9;
 }
@@ -1029,10 +1056,6 @@ body[data-platform='ios'] .calendar-stage {
   }
 }
 
-.day-cell.outside-month.holiday-day .lunar-day {
-  color: var(--red);
-}
-
 .almanac-inline {
   margin-top: 10px;
   border-top: 1px solid var(--line);
@@ -1108,6 +1131,7 @@ body[data-platform='ios'] .calendar-stage {
   background: var(--secondary);
 }
 .almanac-pillars dd {
+  color: var(--ink);
   margin: 0;
   white-space: nowrap;
   font-weight: 400;

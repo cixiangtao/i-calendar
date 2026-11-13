@@ -44,7 +44,14 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
         const result = resolveColorTheme(preferences, dark);
         const t = result.tokens;
         assert.equal(result.accent, accentColor ?? preset.accent);
-        for (const fg of ['--ink', '--secondary', '--muted'] as const)
+        for (const fg of [
+          '--ink',
+          '--secondary',
+          '--muted',
+          '--lunar-ink',
+          '--weekday-ink',
+          '--hint-ink',
+        ] as const)
           assert.ok(contrastRatio(t[fg], t['--surface']) >= 4.5, `${preset.id}/${dark}/${fg}`);
         for (const bg of [
           '--surface',
@@ -68,8 +75,36 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
             assert.ok(contrastRatio(t[fg], t[bg]) >= 4.5, `${preset.id}/${dark}/${fg}/${bg}`);
         assert.notEqual(t['--control'], t['--control-hover']);
         assert.notEqual(t['--control-hover'], t['--control-active']);
+        assert.ok(contrastRatio(t['--selected-ink'], t['--blue-soft']) >= 4.5);
+        for (const foreground of ['--muted', '--lunar-ink'] as const)
+          for (const background of ['--control', '--red-soft'] as const)
+            assert.ok(contrastRatio(t[foreground], t[background]) >= 4.5);
+
+        for (const role of ['red', 'green', 'yellow', 'purple'] as const)
+          for (const foreground of [`--${role}`, `--outside-${role}`] as const)
+            for (const background of [
+              '--surface',
+              '--control',
+              '--blue-soft',
+              `--${role}-soft`,
+            ] as const)
+              assert.ok(
+                contrastRatio(t[foreground], t[background]) >= 4.5,
+                `${preset.id}/${dark}/${accentColor}/${foreground}/${background}`,
+              );
         const high = resolveColorTheme(preferences, dark, true).tokens;
         assert.ok(contrastRatio(high['--secondary'], high['--surface']) >= 7);
         assert.ok(contrastRatio(high['--blue'], high['--blue-soft']) >= 7);
+        for (const foreground of [
+          '--lunar-ink',
+          '--weekday-ink',
+          '--hint-ink',
+          '--muted',
+          '--red',
+          '--green',
+          '--yellow',
+          '--purple',
+        ] as const)
+          assert.ok(contrastRatio(high[foreground], high['--surface']) >= 7);
       }
 });

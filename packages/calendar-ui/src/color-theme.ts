@@ -69,18 +69,28 @@ export function resolveColorTheme(
   const control = dark ? (warm ? '#36312b' : '#303642') : mix(surface, canvas, 0.8);
   const hover = dark ? mix(surface, '#ffffff', 0.05) : mix(surface, canvas, 0.55);
   const soft = mix(surface, accent, dark ? 0.14 : 0.08);
-  const ink = dark ? '#f6f7fb' : '#171b24';
+  const ink = dark ? '#f3f3f3' : '#303030';
   const controlHover = mix(control, ink, dark ? 0.1 : 0.06);
   const controlActive = mix(control, ink, dark ? 0.16 : 0.1);
+  // 节日与休班配色也由主题生成，覆盖三种预设、选中底色和增加对比度模式。
+  const semanticBases = {
+    red: dark ? '#ff8d9b' : '#e51c3c',
+    green: dark ? '#72d6a1' : '#00894f',
+    yellow: dark ? '#edc56b' : '#946200',
+    purple: dark ? '#c6a0ed' : '#8b4fc5',
+  };
+  const semanticSurfaces = Object.values(semanticBases).map((base) =>
+    mix(surface, base, dark ? 0.16 : 0.07),
+  );
   const secondary = readable(
-    dark ? '#acb4c3' : '#5b6575',
+    dark ? '#c4c4c4' : '#626262',
     [surface, control, controlHover, controlActive],
     dark,
     increasedContrast ? 7 : 4.5,
   );
   const muted = readable(
-    dark ? '#929dac' : '#717b8b',
-    [surface],
+    dark ? '#999999' : '#767676',
+    [surface, control, hover, ...semanticSurfaces],
     dark,
     increasedContrast ? 7 : 4.5,
   );
@@ -90,6 +100,33 @@ export function resolveColorTheme(
     dark,
     increasedContrast ? 7 : 4.5,
   );
+  const minimum = increasedContrast ? 7 : 4.5;
+  const lunar = readable(
+    dark ? '#b5b5b5' : '#707070',
+    [surface, control, ...semanticSurfaces],
+    dark,
+    minimum,
+  );
+  const hint = readable(dark ? '#a8a8a8' : '#707070', [surface, control], dark, minimum);
+  const weekday = readable(dark ? '#d0d0d0' : '#4b4b4b', [surface], dark, minimum);
+  const semanticColor = (base: string) => {
+    const tint = mix(surface, base, dark ? 0.16 : 0.07);
+    const foreground = readable(base, [surface, ...semanticSurfaces, control, soft], dark, minimum);
+    return {
+      foreground,
+      tint,
+      outside: readable(
+        mix(foreground, muted, 0.35),
+        [surface, ...semanticSurfaces, control, soft],
+        dark,
+        minimum,
+      ),
+    };
+  };
+  const red = semanticColor(semanticBases.red);
+  const green = semanticColor(semanticBases.green);
+  const yellow = semanticColor(semanticBases.yellow);
+  const purple = semanticColor(semanticBases.purple);
   const leaf = readable(accent, ['#ffffff'], false);
   const switchOff = readable(controlActive, ['#ffffff'], false);
   return {
@@ -100,6 +137,10 @@ export function resolveColorTheme(
       '--ink': ink,
       '--secondary': secondary,
       '--muted': muted,
+      '--lunar-ink': lunar,
+      '--weekday-ink': weekday,
+      '--hint-ink': hint,
+      '--selected-ink': readable(ink, [soft], dark, minimum),
       '--line': increasedContrast ? (dark ? '#737b8e' : '#a1a8b5') : dark ? '#3a3e48' : '#e4e7ed',
       '--control': control,
       '--control-hover': controlHover,
@@ -113,6 +154,18 @@ export function resolveColorTheme(
       '--switch-off': switchOff,
       '--switch-off-hover': mix(switchOff, '#000000', 0.08),
       '--switch-off-active': mix(switchOff, '#000000', 0.16),
+      '--red': red.foreground,
+      '--red-soft': red.tint,
+      '--outside-red': red.outside,
+      '--green': green.foreground,
+      '--green-soft': green.tint,
+      '--outside-green': green.outside,
+      '--yellow': yellow.foreground,
+      '--yellow-soft': yellow.tint,
+      '--outside-yellow': yellow.outside,
+      '--purple': purple.foreground,
+      '--purple-soft': purple.tint,
+      '--outside-purple': purple.outside,
     },
   };
 }
