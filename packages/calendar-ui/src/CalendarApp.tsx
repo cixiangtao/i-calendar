@@ -1,10 +1,4 @@
 import type { CalendarDay } from '@i-calendar/core';
-import ConfigProvider from 'antd/es/config-provider';
-import Dropdown from 'antd/es/dropdown';
-import Segmented from 'antd/es/segmented';
-import Switch from 'antd/es/switch';
-import Tabs from 'antd/es/tabs';
-import theme from 'antd/es/theme';
 import {
   useEffect,
   useRef,
@@ -20,16 +14,20 @@ import { version as appVersion } from '../../../package.json';
 import { AlmanacContent } from './Almanac.js';
 import { AppUpdateNotice, AppUpdateSection } from './AppUpdateSection.js';
 import { CalendarButton } from './CalendarButton.js';
+import { CalendarColorInput } from './CalendarColorInput.js';
+import { CalendarContextMenu } from './CalendarContextMenu.js';
+import { CalendarSegmented } from './CalendarSegmented.js';
 import { CalendarSelect } from './CalendarSelect.js';
+import { CalendarSwitch } from './CalendarSwitch.js';
+import { CalendarTabs } from './CalendarTabs.js';
 import { colorThemes, resolveColorTheme } from './color-theme.js';
-import { createFormTheme, formControlVariables } from './form-theme.js';
+import { formControlVariables } from './form-theme.js';
 import { LaunchAtLoginSettings } from './LaunchAtLoginSettings.js';
 import { MenuClockSettings } from './MenuClockSettings.js';
 import type { CalendarPreferences } from './platform.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 
 import './calendar.css';
-import './form-controls.css';
 
 type IconName = 'settings' | 'left' | 'right' | 'external' | 'close';
 function Icon({ name, ...props }: SVGProps<SVGSVGElement> & { name: IconName }) {
@@ -243,13 +241,16 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   useEffect(() => {
     const keydown = (event: globalThis.KeyboardEvent) => {
       if (
+        event.defaultPrevented ||
         event.ctrlKey ||
         event.metaKey ||
         event.altKey ||
         (event.key !== 'Escape' &&
           (event.target instanceof HTMLInputElement ||
             event.target instanceof HTMLSelectElement ||
-            event.target instanceof HTMLTextAreaElement))
+            event.target instanceof HTMLTextAreaElement ||
+            (event.target instanceof Element &&
+              !!event.target.closest('[role="combobox"], [data-calendar-popup]'))))
       )
         return;
       if (event.key === 'Escape') {
@@ -295,337 +296,326 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
     state.preferences.weekStartsOn === 1 ? weekdays : ['日', ...weekdays.slice(0, 6)];
 
   return (
-    <ConfigProvider
-      wave={{ disabled: true }}
-      theme={{
-        ...createFormTheme(colors.tokens),
-        algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
-      }}
+    <article
+      ref={container}
+      className="calendar-app"
+      data-panel={state.panel}
+      data-show-lunar-details={state.preferences.showLunarDetails}
+      aria-label="i日历"
+      aria-busy={!state.ready}
+      data-platform={controller.platform.kind}
     >
-      <article
-        ref={container}
-        className="calendar-app"
-        data-panel={state.panel}
-        data-show-lunar-details={state.preferences.showLunarDetails}
-        aria-label="i日历"
-        aria-busy={!state.ready}
-        data-platform={controller.platform.kind}
-      >
-        {state.panel === 'settings' ? (
-          <Settings
-            controller={controller}
-            state={state}
-          />
-        ) : (
-          <>
-            <section
-              className="month-panel"
-              aria-label="月历"
-            >
-              <div className="month-toolbar">
-                <h1
-                  className="sr-only"
-                  id="month-title"
+      {state.panel === 'settings' ? (
+        <Settings
+          controller={controller}
+          state={state}
+        />
+      ) : (
+        <>
+          <section
+            className="month-panel"
+            aria-label="月历"
+          >
+            <div className="month-toolbar">
+              <h1
+                className="sr-only"
+                id="month-title"
+              >
+                {state.year}年{state.monthNumber}月
+              </h1>
+              <div className="month-heading">
+                <CalendarSelect
+                  className="year-control"
+                  label="年份"
+                  value={state.year}
+                  options={years}
+                  onChange={(year) => controller.jump(year, state.monthNumber)}
+                />
+                <nav
+                  className="month-controls"
+                  aria-label="切换月份"
                 >
-                  {state.year}年{state.monthNumber}月
-                </h1>
-                <div className="month-heading">
-                  <CalendarSelect
-                    className="year-control"
-                    label="年份"
-                    value={state.year}
-                    options={years}
-                    onChange={(year) => controller.jump(year, state.monthNumber)}
+                  <CalendarButton
+                    appearance="toolbar"
+                    className="tool-button"
+                    aria-label="上个月"
+                    title="上个月（PageUp）"
+                    disabled={state.year === 1901 && state.monthNumber === 1}
+                    icon={
+                      <Icon
+                        name="left"
+                        viewBox="4 3 16 18"
+                      />
+                    }
+                    onClick={() => controller.shiftMonth(-1)}
                   />
-                  <nav
-                    className="month-controls"
-                    aria-label="切换月份"
-                  >
-                    <CalendarButton
-                      appearance="toolbar"
-                      className="tool-button"
-                      aria-label="上个月"
-                      title="上个月（PageUp）"
-                      disabled={state.year === 1901 && state.monthNumber === 1}
-                      icon={
-                        <Icon
-                          name="left"
-                          viewBox="4 3 16 18"
-                        />
-                      }
-                      onClick={() => controller.shiftMonth(-1)}
-                    />
-                    <CalendarSelect
-                      className="month-control"
-                      label="月份"
-                      value={state.monthNumber}
-                      options={months}
-                      onChange={(month) => controller.jump(state.year, month)}
-                    />
-                    <CalendarButton
-                      appearance="toolbar"
-                      className="tool-button"
-                      aria-label="下个月"
-                      title="下个月（PageDown）"
-                      disabled={state.year === 2100 && state.monthNumber === 12}
-                      icon={
-                        <Icon
-                          name="right"
-                          viewBox="4 3 16 18"
-                        />
-                      }
-                      onClick={() => controller.shiftMonth(1)}
-                    />
-                  </nav>
-                </div>
-                <CalendarButton
-                  appearance="accent"
-                  className="today-button"
-                  onClick={() => controller.goToday()}
-                  title="回到今天（T）"
-                >
-                  今天
-                </CalendarButton>
-              </div>
-              <div
-                className="calendar-grid"
-                role="grid"
-                aria-labelledby="month-title"
-                aria-rowcount={7}
-                aria-colcount={7}
-                ref={grid}
-              >
-                <div
-                  className="week-row"
-                  role="row"
-                >
-                  {displayedWeekdays.map((day) => (
-                    <span
-                      role="columnheader"
-                      key={day}
-                      className={day === '六' || day === '日' ? 'weekend-heading' : ''}
-                    >
-                      {day}
-                    </span>
-                  ))}
-                </div>
-                {Array.from({ length: 6 }, (_, row) => (
-                  <div
-                    className="date-row"
-                    role="row"
-                    key={row}
-                  >
-                    {state.month.cells.slice(row * 7, row * 7 + 7).map((day, index) =>
-                      day ? (
-                        <div
-                          role="gridcell"
-                          key={day.date}
-                          aria-selected={state.selected.date === day.date}
-                        >
-                          <button
-                            type="button"
-                            className={[
-                              'day-cell',
-                              day.month !== state.monthNumber ? 'outside-month' : '',
-                              state.selected.date === day.date ? 'selected' : '',
-                              state.today === day.date ? 'is-today' : '',
-                              day.schedule.kind === 'holiday' ||
-                              (day.weekday >= 6 && day.schedule.kind !== 'makeup-workday')
-                                ? 'rest-day'
-                                : '',
-                              day.schedule.kind === 'holiday' ? 'holiday-day' : '',
-                              day.schedule.kind === 'makeup-workday' ? 'makeup-day' : '',
-                            ]
-                              .filter(Boolean)
-                              .join(' ')}
-                            aria-label={dayLabel(day)}
-                            aria-current={state.today === day.date ? 'date' : undefined}
-                            tabIndex={state.selected.date === day.date ? 0 : -1}
-                            data-date={day.date}
-                            title={dayLabel(day)}
-                            onClick={() => controller.selectDate(day.date)}
-                            onKeyDown={moveInGrid}
-                          >
-                            <span className="solar-day">{day.day}</span>
-                            <span
-                              className={`lunar-day ${day.festivals.length ? 'festival-label' : day.solarTerm ? 'term-label' : ''}`}
-                            >
-                              {detailLabel(day)}
-                            </span>
-                            {day.schedule.kind === 'holiday' ||
-                            day.schedule.kind === 'makeup-workday' ? (
-                              <span
-                                className={`day-mark ${day.schedule.kind === 'makeup-workday' ? 'makeup' : ''}`}
-                                aria-hidden="true"
-                              >
-                                {day.schedule.kind === 'holiday' ? '休' : '班'}
-                              </span>
-                            ) : null}
-                          </button>
-                        </div>
-                      ) : (
-                        <span
-                          key={`empty-${index}`}
-                          role="gridcell"
-                          className="empty-day"
-                          aria-label="日期范围之外"
-                        />
-                      ),
-                    )}
-                  </div>
-                ))}
-              </div>
-              {state.month.coverage === 'unavailable' ? (
-                <p className="missing-schedule-note">本年调休未收录</p>
-              ) : null}
-              {!state.preferences.showLunarDetails ? (
-                <Feedback
-                  controller={controller}
-                  state={state}
-                />
-              ) : null}
-            </section>
-            {state.preferences.showLunarDetails ? (
-              <aside
-                className="detail-panel"
-                aria-label="日期详情"
-              >
-                <Dropdown
-                  trigger={['contextMenu']}
-                  menu={{
-                    items: [
-                      {
-                        key: 'copy',
-                        label: '复制日期与农历',
-                        onClick: () => {
-                          void controller.copySelected();
-                        },
-                      },
-                      ...(state.selected.schedule.sources[0]
-                        ? [
-                            {
-                              key: 'source',
-                              label: '查看放假安排来源',
-                              onClick: () => {
-                                void controller.openSource(state.selected.schedule.sources[0]!);
-                              },
-                            },
-                          ]
-                        : []),
-                    ],
-                  }}
-                >
-                  <section
-                    className="date-summary"
-                    aria-label="所选日期"
-                  >
-                    <div
-                      className="date-leaf"
-                      aria-hidden="true"
-                    >
-                      <span key={state.selected.date}>{state.selected.day}</span>
-                    </div>
-                    <div className="date-detail">
-                      <div className="date-heading">
-                        <h2>
-                          <span className="detail-year">{state.selected.year}年</span>
-                          {state.selected.month}月{state.selected.day}日{' '}
-                          <span>周{weekdays[state.selected.weekday - 1]}</span>
-                        </h2>
-                        {state.selected.solarTerm ? (
-                          <span
-                            className="date-event date-event-term"
-                            aria-label={`节气：${state.selected.solarTerm}`}
-                          >
-                            {state.selected.solarTerm}
-                          </span>
-                        ) : null}
-                        {state.selected.festivals.map((festival) => (
-                          <span
-                            key={festival}
-                            className="date-event date-event-festival"
-                            aria-label={`节日：${festival}`}
-                          >
-                            {festival}
-                          </span>
-                        ))}
-                        <strong
-                          className={`schedule-badge schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
-                        >
-                          {scheduleLabel(state.selected)}
-                        </strong>
-                      </div>
-                      <div className="lunar-summary">
-                        <p>
-                          农历{state.selected.lunar.monthName}
-                          {state.selected.lunar.dayName}
-                        </p>
-                        <dl
-                          className="almanac-pillars"
-                          aria-label="年月日干支"
-                        >
-                          {(
-                            [
-                              ['年干支', state.almanac.ganZhi.year, '年'],
-                              ['月干支', state.almanac.ganZhi.month, '月'],
-                              ['日干支', state.almanac.ganZhi.day, '日'],
-                            ] as const
-                          ).map(([label, value, suffix]) => (
-                            <div key={label}>
-                              <dt className="sr-only">{label}</dt>
-                              <dd>
-                                {value}
-                                <span>{suffix}</span>
-                              </dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </div>
-                      <span className="date-traits">
-                        <span>
-                          生肖 <b>{state.selected.lunar.zodiac}</b>
-                        </span>
-                        <span>
-                          星座 <b>{state.selected.constellation}</b>
-                        </span>
-                      </span>
-                    </div>
-                  </section>
-                </Dropdown>
-                <div className="almanac-inline">
-                  <AlmanacContent almanac={state.almanac} />
-                </div>
-                <Feedback
-                  controller={controller}
-                  state={state}
-                />
-              </aside>
-            ) : null}
-            <AppUpdateNotice controller={controller} />
-            <footer className="app-footer tw-flex tw-items-center tw-justify-between">
-              <div className="brand tw-flex tw-items-center">
-                <img
-                  src={new URL('./assets/logo.svg', import.meta.url).href}
-                  width="19"
-                  height="19"
-                  alt=""
-                />
-                <span>i日历</span>
+                  <CalendarSelect
+                    className="month-control"
+                    label="月份"
+                    value={state.monthNumber}
+                    options={months}
+                    onChange={(month) => controller.jump(state.year, month)}
+                  />
+                  <CalendarButton
+                    appearance="toolbar"
+                    className="tool-button"
+                    aria-label="下个月"
+                    title="下个月（PageDown）"
+                    disabled={state.year === 2100 && state.monthNumber === 12}
+                    icon={
+                      <Icon
+                        name="right"
+                        viewBox="4 3 16 18"
+                      />
+                    }
+                    onClick={() => controller.shiftMonth(1)}
+                  />
+                </nav>
               </div>
               <CalendarButton
-                ref={gear}
-                appearance="icon"
-                className="icon-button"
-                aria-label="设置与调休数据"
-                title="设置与调休数据"
-                onClick={() => controller.showSettings()}
-                icon={<Icon name="settings" />}
+                appearance="accent"
+                className="today-button"
+                onClick={() => controller.goToday()}
+                title="回到今天（T）"
+              >
+                今天
+              </CalendarButton>
+            </div>
+            <div
+              className="calendar-grid"
+              role="grid"
+              aria-labelledby="month-title"
+              aria-rowcount={7}
+              aria-colcount={7}
+              ref={grid}
+            >
+              <div
+                className="week-row"
+                role="row"
+              >
+                {displayedWeekdays.map((day) => (
+                  <span
+                    role="columnheader"
+                    key={day}
+                    className={day === '六' || day === '日' ? 'weekend-heading' : ''}
+                  >
+                    {day}
+                  </span>
+                ))}
+              </div>
+              {Array.from({ length: 6 }, (_, row) => (
+                <div
+                  className="date-row"
+                  role="row"
+                  key={row}
+                >
+                  {state.month.cells.slice(row * 7, row * 7 + 7).map((day, index) =>
+                    day ? (
+                      <div
+                        role="gridcell"
+                        key={day.date}
+                        aria-selected={state.selected.date === day.date}
+                      >
+                        <button
+                          type="button"
+                          className={[
+                            'day-cell',
+                            day.month !== state.monthNumber ? 'outside-month' : '',
+                            state.selected.date === day.date ? 'selected' : '',
+                            state.today === day.date ? 'is-today' : '',
+                            day.schedule.kind === 'holiday' ||
+                            (day.weekday >= 6 && day.schedule.kind !== 'makeup-workday')
+                              ? 'rest-day'
+                              : '',
+                            day.schedule.kind === 'holiday' ? 'holiday-day' : '',
+                            day.schedule.kind === 'makeup-workday' ? 'makeup-day' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                          aria-label={dayLabel(day)}
+                          aria-current={state.today === day.date ? 'date' : undefined}
+                          tabIndex={state.selected.date === day.date ? 0 : -1}
+                          data-date={day.date}
+                          title={dayLabel(day)}
+                          onClick={() => controller.selectDate(day.date)}
+                          onKeyDown={moveInGrid}
+                        >
+                          <span className="solar-day">{day.day}</span>
+                          <span
+                            className={`lunar-day ${day.festivals.length ? 'festival-label' : day.solarTerm ? 'term-label' : ''}`}
+                          >
+                            {detailLabel(day)}
+                          </span>
+                          {day.schedule.kind === 'holiday' ||
+                          day.schedule.kind === 'makeup-workday' ? (
+                            <span
+                              className={`day-mark ${day.schedule.kind === 'makeup-workday' ? 'makeup' : ''}`}
+                              aria-hidden="true"
+                            >
+                              {day.schedule.kind === 'holiday' ? '休' : '班'}
+                            </span>
+                          ) : null}
+                        </button>
+                      </div>
+                    ) : (
+                      <span
+                        key={`empty-${index}`}
+                        role="gridcell"
+                        className="empty-day"
+                        aria-label="日期范围之外"
+                      />
+                    ),
+                  )}
+                </div>
+              ))}
+            </div>
+            {state.month.coverage === 'unavailable' ? (
+              <p className="missing-schedule-note">本年调休未收录</p>
+            ) : null}
+            {!state.preferences.showLunarDetails ? (
+              <Feedback
+                controller={controller}
+                state={state}
               />
-            </footer>
-          </>
-        )}
-      </article>
-    </ConfigProvider>
+            ) : null}
+          </section>
+          {state.preferences.showLunarDetails ? (
+            <aside
+              className="detail-panel"
+              aria-label="日期详情"
+            >
+              <CalendarContextMenu
+                items={[
+                  {
+                    key: 'copy',
+                    label: '复制日期与农历',
+                    onSelect: () => {
+                      void controller.copySelected();
+                    },
+                  },
+                  ...(state.selected.schedule.sources[0]
+                    ? [
+                        {
+                          key: 'source',
+                          label: '查看放假安排来源',
+                          onSelect: () => {
+                            void controller.openSource(state.selected.schedule.sources[0]!);
+                          },
+                        },
+                      ]
+                    : []),
+                ]}
+              >
+                <section
+                  className="date-summary"
+                  aria-label="所选日期"
+                >
+                  <div
+                    className="date-leaf"
+                    aria-hidden="true"
+                  >
+                    <span key={state.selected.date}>{state.selected.day}</span>
+                  </div>
+                  <div className="date-detail">
+                    <div className="date-heading">
+                      <h2>
+                        <span className="detail-year">{state.selected.year}年</span>
+                        {state.selected.month}月{state.selected.day}日{' '}
+                        <span>周{weekdays[state.selected.weekday - 1]}</span>
+                      </h2>
+                      {state.selected.solarTerm ? (
+                        <span
+                          className="date-event date-event-term"
+                          aria-label={`节气：${state.selected.solarTerm}`}
+                        >
+                          {state.selected.solarTerm}
+                        </span>
+                      ) : null}
+                      {state.selected.festivals.map((festival) => (
+                        <span
+                          key={festival}
+                          className="date-event date-event-festival"
+                          aria-label={`节日：${festival}`}
+                        >
+                          {festival}
+                        </span>
+                      ))}
+                      <strong
+                        className={`schedule-badge schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
+                      >
+                        {scheduleLabel(state.selected)}
+                      </strong>
+                    </div>
+                    <div className="lunar-summary">
+                      <p>
+                        农历{state.selected.lunar.monthName}
+                        {state.selected.lunar.dayName}
+                      </p>
+                      <dl
+                        className="almanac-pillars"
+                        aria-label="年月日干支"
+                      >
+                        {(
+                          [
+                            ['年干支', state.almanac.ganZhi.year, '年'],
+                            ['月干支', state.almanac.ganZhi.month, '月'],
+                            ['日干支', state.almanac.ganZhi.day, '日'],
+                          ] as const
+                        ).map(([label, value, suffix]) => (
+                          <div key={label}>
+                            <dt className="sr-only">{label}</dt>
+                            <dd>
+                              {value}
+                              <span>{suffix}</span>
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                    <span className="date-traits">
+                      <span>
+                        生肖 <b>{state.selected.lunar.zodiac}</b>
+                      </span>
+                      <span>
+                        星座 <b>{state.selected.constellation}</b>
+                      </span>
+                    </span>
+                  </div>
+                </section>
+              </CalendarContextMenu>
+              <div className="almanac-inline">
+                <AlmanacContent almanac={state.almanac} />
+              </div>
+              <Feedback
+                controller={controller}
+                state={state}
+              />
+            </aside>
+          ) : null}
+          <AppUpdateNotice controller={controller} />
+          <footer className="app-footer tw-flex tw-items-center tw-justify-between">
+            <div className="brand tw-flex tw-items-center">
+              <img
+                src={new URL('./assets/logo.svg', import.meta.url).href}
+                width="19"
+                height="19"
+                alt=""
+              />
+              <span>i日历</span>
+            </div>
+            <CalendarButton
+              ref={gear}
+              appearance="icon"
+              className="icon-button"
+              aria-label="设置与调休数据"
+              title="设置与调休数据"
+              onClick={() => controller.showSettings()}
+              icon={<Icon name="settings" />}
+            />
+          </footer>
+        </>
+      )}
+    </article>
   );
 }
 
@@ -673,14 +663,9 @@ function Settings({
         </CalendarButton>
         <h1 id="settings-title">设置</h1>
       </header>
-      <Tabs
+      <CalendarTabs
         className="settings-tabs"
-        defaultActiveKey={state.settingsTab}
-        animated={false}
-        destroyOnHidden={false}
-        tabBarGutter={12}
-        indicator={{ size: 20, align: 'center' }}
-        styles={{ indicator: { background: 'var(--ink)', height: 2, borderRadius: 2 } }}
+        defaultValue={state.settingsTab}
         items={[
           {
             key: 'general',
@@ -694,7 +679,7 @@ function Settings({
                   <h2>日历显示</h2>
                   <div className="setting-label">
                     <label htmlFor="show-lunar-details">显示农历详情</label>
-                    <Switch
+                    <CalendarSwitch
                       id="show-lunar-details"
                       checked={state.preferences.showLunarDetails}
                       aria-describedby="lunar-details-hint"
@@ -708,7 +693,7 @@ function Settings({
                   </p>
                   <div className="setting-label">
                     <span>每周开始于</span>
-                    <Segmented
+                    <CalendarSegmented
                       aria-label="每周开始于"
                       options={[
                         { label: '周一', value: 1 },
@@ -722,7 +707,7 @@ function Settings({
                   </div>
                   <div className="setting-label">
                     <span>外观</span>
-                    <Segmented
+                    <CalendarSegmented
                       aria-label="外观"
                       options={[
                         { label: '跟随系统', value: 'system' },
@@ -771,22 +756,19 @@ function Settings({
                   </div>
                   <div className="accent-setting">
                     <label htmlFor="accent-color">强调色</label>
-                    <span className="calendar-color">
-                      <input
-                        id="accent-color"
-                        type="color"
-                        value={
-                          state.preferences.accentColor ??
-                          colorThemes.find((item) => item.id === state.preferences.colorTheme)!
-                            .accent
-                        }
-                        onChange={(event) => {
-                          void controller.setPreferences({ accentColor: event.target.value });
-                        }}
-                        onFocus={() => interact(true)}
-                        onBlur={() => interact(false)}
-                      />
-                    </span>
+                    <CalendarColorInput
+                      id="accent-color"
+                      value={
+                        state.preferences.accentColor ??
+                        colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
+                      }
+                      onChange={(event) => {
+                        void controller.setPreferences({ accentColor: event.target.value });
+                      }}
+                      onFocus={() => interact(true)}
+                      onBlur={() => interact(false)}
+                    />
+
                     <span className="accent-value">
                       {(
                         state.preferences.accentColor ??

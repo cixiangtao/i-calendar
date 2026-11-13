@@ -1,7 +1,7 @@
-import Switch from 'antd/es/switch';
 import { useSyncExternalStore } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
+import { CalendarSwitch } from './CalendarSwitch.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 
 /** 更新提醒只在发现新版时出现，安装前可先查看说明或稍后处理。 */
@@ -60,7 +60,7 @@ export function AppUpdateSection({
       <h2>应用更新</h2>
       <div className="setting-label">
         <label htmlFor="automatic-app-updates">自动检查新版本</label>
-        <Switch
+        <CalendarSwitch
           id="automatic-app-updates"
           checked={state.preferences.automaticAppUpdates}
           onChange={(automaticAppUpdates) => {

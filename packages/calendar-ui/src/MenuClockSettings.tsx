@@ -1,9 +1,9 @@
-import Switch from 'antd/es/switch';
 import { useEffect, useState } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
 import { CalendarInput } from './CalendarInput.js';
 import { CalendarSelect } from './CalendarSelect.js';
+import { CalendarSwitch } from './CalendarSwitch.js';
 import {
   formatMenuClock,
   menuClockPresets,
@@ -45,7 +45,7 @@ export function MenuClockSettings({
       <h2 id="menu-clock-title">菜单栏显示</h2>
       <div className="setting-label">
         <label htmlFor="menu-clock-icon">显示图标</label>
-        <Switch
+        <CalendarSwitch
           id="menu-clock-icon"
           checked={settings.showIcon}
           disabled={!settings.enabled || !formatMenuClock(settings.format, now).trim()}
@@ -55,7 +55,7 @@ export function MenuClockSettings({
       </div>
       <div className="setting-label">
         <label htmlFor="menu-clock-enabled">显示菜单栏时间</label>
-        <Switch
+        <CalendarSwitch
           id="menu-clock-enabled"
           checked={settings.enabled}
           disabled={!settings.showIcon}
@@ -106,7 +106,7 @@ export function MenuClockSettings({
             onChange={(event) => setDraft(event.target.value)}
           />
           <CalendarButton
-            htmlType="submit"
+            type="submit"
             disabled={!!error || draft === settings.format}
           >
             应用格式

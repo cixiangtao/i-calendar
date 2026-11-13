@@ -1,7 +1,7 @@
-import Switch from 'antd/es/switch';
 import { useEffect, useSyncExternalStore } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
+import { CalendarSwitch } from './CalendarSwitch.js';
 import type { LaunchAtLoginController } from './launch-at-login.js';
 
 /** 开关与现有设置共用尺寸、颜色与状态反馈，进入设置及返回窗口时读取系统记录。 */
@@ -21,7 +21,7 @@ export function LaunchAtLoginSettings({ controller }: { controller: LaunchAtLogi
       <h2>启动</h2>
       <div className="setting-label">
         <label htmlFor="launch-at-login">开机自启</label>
-        <Switch
+        <CalendarSwitch
           id="launch-at-login"
           checked={state.enabled === true}
           disabled={state.phase === 'unavailable' || state.enabled === null || busy}

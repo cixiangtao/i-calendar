@@ -291,9 +291,6 @@ a:focus-visible {
   color: var(--blue);
   white-space: nowrap;
 }
-.month-toolbar .ant-btn > span {
-  position: relative;
-}
 .month-toolbar svg {
   width: 13px;
   height: 13px;
@@ -606,7 +603,7 @@ a:focus-visible {
   min-height: 30px;
   margin-bottom: 14px;
 }
-.settings-header > .ant-btn {
+.settings-header > .calendar-button {
   color: var(--blue);
   padding-left: 0;
 }
@@ -622,51 +619,7 @@ a:focus-visible {
   overscroll-behavior: contain;
   padding: 0 2px;
 }
-.settings-tabs.ant-tabs {
-  flex: 1;
-  min-height: 0;
-}
-.settings-tabs.ant-tabs > .ant-tabs-nav {
-  flex-shrink: 0;
-  margin: 0 0 8px;
-}
-.settings-tabs.ant-tabs .ant-tabs-tab {
-  min-width: 44px;
-  min-height: 34px;
-  padding: 6px 2px;
-  justify-content: center;
-}
-.settings-tabs.ant-tabs .ant-tabs-tab-btn {
-  color: var(--secondary);
-  font-size: 13px;
-  line-height: 20px;
-  text-shadow: none;
-}
-.settings-tabs.ant-tabs .ant-tabs-tab-active .ant-tabs-tab-btn,
-.settings-tabs.ant-tabs .ant-tabs-tab-btn:hover {
-  color: var(--ink);
-}
-.settings-tabs.ant-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-  font-weight: 600;
-}
-.settings-tabs.ant-tabs .ant-tabs-tab-btn:focus-visible {
-  outline: 1px solid var(--secondary);
-  outline-offset: 3px;
-  border-radius: 3px;
-}
 /* 保留标准 tab 语义与中文名称，屏蔽底层附加的英文序号播报。 */
-.settings-tabs .ant-tabs-tab-btn > [aria-live] {
-  display: none;
-}
-.settings-tabs > .ant-tabs-body-holder {
-  min-height: 0;
-  overflow: hidden;
-}
-.settings-tabs .ant-tabs-body,
-.settings-tabs .ant-tabs-content {
-  height: 100%;
-  min-height: 0;
-}
 .settings-scroll > section {
   padding: 18px 0;
   border-bottom: 1px solid var(--line);
@@ -710,11 +663,11 @@ a:focus-visible {
   gap: var(--form-gap);
   margin-bottom: 8px;
 }
-.clock-format-form .ant-input {
+.clock-format-form .calendar-input-field {
   min-width: 0;
   font-variant-numeric: tabular-nums;
 }
-.clock-format-form .ant-btn {
+.clock-format-form .calendar-button {
   flex-shrink: 0;
 }
 .settings-scroll .clock-help {
@@ -749,25 +702,6 @@ a:focus-visible {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
-}
-.setting-label .ant-segmented {
-  flex: 1;
-  max-width: 250px;
-  background: var(--control);
-  padding: 2px;
-  border-radius: var(--form-radius);
-}
-.setting-label .ant-segmented-group {
-  display: flex;
-}
-.setting-label .ant-segmented-item {
-  flex: 1;
-  border-radius: 6px;
-}
-.setting-label .ant-segmented-item-label {
-  min-height: 24px;
-  padding: 0 8px;
-  line-height: 24px;
 }
 .data-actions {
   display: flex;
@@ -1004,9 +938,6 @@ body[data-platform='ios'] .calendar-stage {
   }
 }
 @media (pointer: coarse) {
-  .settings-tabs.ant-tabs .ant-tabs-tab {
-    min-height: 44px;
-  }
   .calendar-app .icon-button,
   .calendar-app .tool-button,
   .calendar-app .today-button {
