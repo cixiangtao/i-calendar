@@ -5,7 +5,7 @@ export function CalendarColorInput(
   props: Omit<ComponentPropsWithoutRef<'input'>, 'type' | 'className'>,
 ) {
   return (
-    <span className="calendar-color tw-relative tw-inline-flex tw-h-[var(--form-height)] tw-w-11 tw-shrink-0 tw-items-center before:tw-pointer-events-none before:tw-absolute before:tw-inset-x-0 before:tw-top-1/2 before:tw-h-[var(--form-height)] before:-tw-translate-y-1/2 before:tw-rounded-[var(--form-radius)] before:tw-bg-control before:tw-content-[''] focus-within:before:tw-outline focus-within:before:tw-outline-1 focus-within:before:tw-outline-offset-1 focus-within:before:tw-outline-secondary active:before:tw-bg-control-active coarse:tw-h-11 fine:hover:before:tw-bg-control-hover">
+    <span className="calendar-color tw-relative tw-inline-flex tw-h-[var(--form-height)] tw-w-11 tw-shrink-0 tw-items-center before:tw-pointer-events-none before:tw-absolute before:tw-inset-x-0 before:tw-top-1/2 before:tw-h-[var(--form-height)] before:-tw-translate-y-1/2 before:tw-rounded-[var(--form-radius)] before:tw-bg-control before:tw-transition-colors before:tw-duration-[var(--motion-feedback)] before:tw-ease-[var(--motion-ease)] before:tw-content-[''] focus-within:before:tw-outline focus-within:before:tw-outline-1 focus-within:before:tw-outline-offset-1 focus-within:before:tw-outline-secondary active:before:tw-bg-control-active coarse:tw-h-11 fine:hover:before:tw-bg-control-hover">
       <input
         {...props}
         type="color"

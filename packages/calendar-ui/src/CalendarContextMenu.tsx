@@ -38,7 +38,7 @@ export function CalendarContextMenu({ children, items }: CalendarContextMenuProp
               key={item.key}
               disabled={item.disabled}
               onSelect={item.onSelect}
-              className="tw-flex tw-min-h-7 tw-cursor-default tw-select-none tw-items-center tw-rounded-md tw-px-3 tw-py-1 tw-font-normal tw-outline-none data-[disabled]:tw-pointer-events-none data-[highlighted]:tw-bg-control-hover data-[disabled]:tw-text-muted coarse:tw-min-h-11"
+              className="tw-flex tw-min-h-7 tw-cursor-default tw-select-none tw-items-center tw-rounded-md tw-px-3 tw-py-1 tw-font-normal tw-outline-none tw-transition-colors tw-duration-[var(--motion-feedback)] tw-ease-[var(--motion-ease)] data-[disabled]:tw-pointer-events-none data-[highlighted]:tw-bg-control-hover data-[disabled]:tw-text-muted coarse:tw-min-h-11"
             >
               {item.label}
             </ContextMenu.Item>

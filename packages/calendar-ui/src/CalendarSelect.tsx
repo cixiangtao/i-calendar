@@ -56,7 +56,7 @@ export function CalendarSelect<Value extends string | number>({
       <span
         className={cn(
           'calendar-select tw-relative tw-inline-flex tw-h-[var(--form-height)] tw-max-w-full tw-shrink-0 tw-items-center coarse:tw-h-11',
-          "before:tw-pointer-events-none before:tw-absolute before:tw-inset-x-0 before:tw-top-1/2 before:tw-h-[var(--form-height)] before:-tw-translate-y-1/2 before:tw-rounded-[var(--form-radius)] before:tw-bg-control before:tw-transition-colors before:tw-duration-[130ms] before:tw-content-['']",
+          "before:tw-pointer-events-none before:tw-absolute before:tw-inset-x-0 before:tw-top-1/2 before:tw-h-[var(--form-height)] before:-tw-translate-y-1/2 before:tw-rounded-[var(--form-radius)] before:tw-bg-control before:tw-transition-colors before:tw-duration-[var(--motion-feedback)] before:tw-ease-[var(--motion-ease)] before:tw-content-['']",
           'data-[disabled=true]:tw-opacity-50 data-[keyboard-focus=true]:before:tw-outline data-[keyboard-focus=true]:before:tw-outline-1 data-[keyboard-focus=true]:before:tw-outline-offset-1 data-[keyboard-focus=true]:before:tw-outline-secondary data-[disabled=false]:active:before:tw-bg-control-active data-[disabled=false]:fine:hover:before:tw-bg-control-hover',
           className,
         )}
@@ -70,7 +70,7 @@ export function CalendarSelect<Value extends string | number>({
         <Select.Trigger
           id={id}
           aria-label={label}
-          className="calendar-select-field tw-relative tw-inline-flex tw-h-full tw-w-full tw-min-w-0 tw-items-center tw-justify-between tw-gap-0.5 tw-rounded-[var(--form-radius)] tw-border-0 tw-bg-transparent tw-px-[var(--form-inset)] tw-py-0 tw-font-sans tw-text-[length:var(--form-font-size)] tw-font-medium tw-tabular-nums tw-leading-[var(--form-line-height)] tw-text-ink tw-outline-none disabled:tw-text-muted"
+          className="calendar-select-field tw-group tw-relative tw-inline-flex tw-h-full tw-w-full tw-min-w-0 tw-items-center tw-justify-between tw-gap-0.5 tw-rounded-[var(--form-radius)] tw-border-0 tw-bg-transparent tw-px-[var(--form-inset)] tw-py-0 tw-font-sans tw-text-[length:var(--form-font-size)] tw-font-medium tw-tabular-nums tw-leading-[var(--form-line-height)] tw-text-ink tw-outline-none disabled:tw-text-muted"
           onFocus={() => {
             if (!pointer.current) setKeyboardFocus(true);
           }}
@@ -85,7 +85,7 @@ export function CalendarSelect<Value extends string | number>({
           }}
         >
           <Select.Value>{options.find((option) => option.value === value)?.label}</Select.Value>
-          <Select.Icon className="tw-flex tw-h-[13px] tw-w-[13px] tw-shrink-0 tw-items-center tw-text-secondary">
+          <Select.Icon className="tw-flex tw-h-[13px] tw-w-[13px] tw-shrink-0 tw-items-center tw-text-secondary tw-transition-transform tw-duration-[var(--motion-state)] tw-ease-[var(--motion-ease)] group-data-[state=open]:tw-rotate-180">
             <svg
               viewBox="0 0 16 16"
               className="tw-h-full tw-w-full tw-fill-none tw-stroke-current tw-stroke-[1.7]"

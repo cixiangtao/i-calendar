@@ -37,6 +37,11 @@
   --outside-purple: #ae9fbd;
   --purple-soft: #f4edfc;
   --accent: var(--blue);
+  --motion-feedback: 140ms;
+  --motion-state: 200ms;
+  --motion-enter: 160ms;
+  --motion-exit: 100ms;
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
   color: var(--ink);
   background: var(--canvas);
 }
@@ -122,8 +127,12 @@ a:focus-visible {
 }
 .day-cell {
   transition:
-    background-color 130ms ease-out,
-    box-shadow 130ms ease-out;
+    background-color var(--motion-feedback) var(--motion-ease),
+    box-shadow var(--motion-feedback) var(--motion-ease);
+}
+.solar-day,
+.lunar-day {
+  transition: color var(--motion-feedback) var(--motion-ease);
 }
 .day-cell:hover {
   background: var(--control);
@@ -253,6 +262,51 @@ body[data-platform='macos'] .calendar-app[data-panel='settings'] {
     --secondary: #d8dce7;
     --muted: #c2c8d7;
     --line: #737b8e;
+  }
+}
+[data-calendar-popup] {
+  transform-origin: var(
+    --radix-select-content-transform-origin,
+    var(--radix-context-menu-content-transform-origin, top left)
+  );
+}
+[data-calendar-popup][data-state='open'] {
+  animation: calendar-popup-enter var(--motion-enter) var(--motion-ease);
+}
+[data-calendar-popup][data-state='closed'] {
+  /* Radix 为内容写入行内 pointer-events，退场期间显式禁止误点。 */
+  pointer-events: none !important;
+  animation: calendar-popup-exit var(--motion-exit) ease-in;
+}
+[role='tabpanel'][data-state='active'] > .settings-tab-content {
+  animation: calendar-content-enter var(--motion-enter) var(--motion-ease);
+}
+@keyframes calendar-popup-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes calendar-popup-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+}
+@keyframes calendar-content-enter {
+  from {
+    opacity: 0.65;
+  }
+  to {
+    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
