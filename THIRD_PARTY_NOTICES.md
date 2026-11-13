@@ -20,7 +20,7 @@
 
 ## 界面与应用运行组件
 
-界面使用 React 19.3.1、React DOM 19.3.1 与 Ant Design 6.7.0（MIT）；原生壳使用 Tauri 2 及 opener、clipboard-manager、single-instance 插件（MIT / Apache-2.0，具体以锁定依赖为准）。开发工具包括 pnpm、oxlint、oxfmt、Tailwind CSS、PostCSS、Autoprefixer、Vite、TypeScript、esbuild 与 Rust 工具链。
+界面使用 React 19.3.1、React DOM 19.3.1 与 Radix Primitives（MIT）：Select 2.4.1、Switch 1.4.1、Tabs 1.2.1、Context Menu 2.4.1、Radio Group 1.5.1。原生壳使用 Tauri 2 及 opener、clipboard-manager、single-instance、updater、autostart 插件（MIT / Apache-2.0，具体以锁定依赖为准）。开发工具包括 pnpm、oxlint、oxfmt、Tailwind CSS、PostCSS、Autoprefixer、Vite、TypeScript、esbuild 与 Rust 工具链。
 
 `pnpm run build:web` 会汇总实际前端依赖随附的许可证，在网页首屏后的入口提供 `third-party-licenses.txt`。原生构建另外根据 Cargo.lock 对应元数据汇总 Rust 组件与构建依赖的许可文件，随应用资源附带 `第三方许可证.txt`。生成文件与编译缓存不提交，构建时重新生成。
 
