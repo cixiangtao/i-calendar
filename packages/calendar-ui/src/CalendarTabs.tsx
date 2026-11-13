@@ -12,6 +12,7 @@ export interface CalendarTabsProps {
 export function CalendarTabs({ defaultValue, items, className }: CalendarTabsProps) {
   const [value, setValue] = useState(defaultValue);
   const [visited, setVisited] = useState(() => new Set([defaultValue]));
+  const [pointerFocus, setPointerFocus] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const [indicatorLeft, setIndicatorLeft] = useState<number>();
   useLayoutEffect(() => {
@@ -53,6 +54,11 @@ export function CalendarTabs({ defaultValue, items, className }: CalendarTabsPro
         ref={listRef}
         aria-label="设置分类"
         className="tw-relative tw-mb-2 tw-flex tw-shrink-0 tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-line"
+        onPointerDownCapture={() => setPointerFocus(true)}
+        onKeyDownCapture={() => setPointerFocus(false)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setPointerFocus(false);
+        }}
       >
         {items.map((item) => (
           <Tabs.Trigger
@@ -60,7 +66,7 @@ export function CalendarTabs({ defaultValue, items, className }: CalendarTabsPro
             value={item.key}
             className={cn(
               'tw-relative tw-inline-flex tw-min-h-[34px] tw-min-w-11 tw-select-none tw-items-center tw-justify-center tw-rounded-[3px] tw-border-0 tw-bg-transparent tw-px-0.5 tw-py-1.5 tw-font-sans tw-text-[13px] tw-font-normal tw-leading-5 tw-text-secondary tw-outline-none tw-transition-colors tw-duration-[var(--motion-feedback)] tw-ease-[var(--motion-ease)] data-[state=active]:tw-font-semibold data-[state=active]:tw-text-ink coarse:tw-min-h-11 data-[state=inactive]:fine:hover:tw-text-ink',
-              controlFocus,
+              pointerFocus ? 'focus-visible:tw-outline-none' : controlFocus,
             )}
           >
             {item.label}
