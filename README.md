@@ -6,7 +6,7 @@ Mac 菜单栏里的小月历，提供公历、农历、生肖、星座、传统�
 
 当前版本 **0.1.0**。项目已迁移为 **Tauri 2 + React + TypeScript**：Mac、iOS 和 Web 复用同一份界面、应用状态和日历核心。Mac 菜单栏应用与本地网页版已可运行；iOS 的入口及配置已接入，工程生成、模拟器和真机验证仍需完整 Xcode 环境。
 
-项目达到 **1.0** 并完成验收后，再提交 GitHub，并同步上线网页版官网。项目源码目前只在本地 Git 管理，正式官网尚未发布。已按用户要求提供[手机私有预览](docs/手机预览.md)，供 0.1.0 界面测试。官网第一屏只有日历与必要操作，介绍和下载放在首屏之后。见[版本规划](docs/版本规划.md)与[发布约定](docs/发布约定.md)。
+项目达到 **1.0** 并完成验收后，再提交 GitHub，并同步上线网页版官网。项目源码目前只在本地 Git 管理，正式官网尚未发布。已按用户要求提供[手机私有预览](docs/手机预览.md)，供 0.1.0 界面测试。官网第一屏只有日历与必要操作，介绍和下载放在首屏之后。首个 1.0 已确定交付 Mac 与网页版，iOS 在后续版本交付。见[版本规划](docs/版本规划.md)、[发布约定](docs/发布约定.md)与[1.0 验收清单](docs/1.0验收清单.md)。
 
 项目由“拾日历”更名为“i日历”；本地目录、根包名和 Rust 程序名统一为 `i-calendar`，共享包为 `@i-calendar/core` 与 `@i-calendar/ui`，应用标识为 `local.icalendar.app`。旧名称仅保留于数据迁移和历史记录，已有偏好和缓存可继续读取。
 
@@ -77,7 +77,7 @@ pnpm run build:ios
 pnpm run lint           # oxlint：问题和警告均须处理
 pnpm run format         # oxfmt：格式化所有支持的项目文件
 pnpm run format:check   # 只检查格式，不写文件
-pnpm run check          # lint、格式、类型检查、39 项测试及 ESM/网页构建
+pnpm run check          # lint、格式、类型检查、45 项测试及 ESM/网页构建
 pnpm run check:native   # Rust 测试：存储、旧数据迁移、多屏定位、菜单栏时钟
 pnpm run build:mac      # 构建 Mac 应用、校验签名并生成 ZIP
 pnpm run check:mac      # Rust 测试 + 已打包应用的真实 WebView 冒烟验证
