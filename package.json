@@ -48,7 +48,6 @@
     "@tauri-apps/api": "2.12.4",
     "@tauri-apps/plugin-clipboard-manager": "^2",
     "@tauri-apps/plugin-opener": "2.7.3",
-    "antd": "6.7.0",
     "lunar-typescript": "1.8.7",
     "react": "19.3.1",
     "react-dom": "19.3.1"

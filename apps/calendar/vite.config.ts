@@ -51,7 +51,7 @@ export default defineConfig({
           groups: [
             { name: 'lunar', test: /node_modules\/lunar-typescript/ },
             { name: 'react', test: /node_modules\/(react|react-dom|scheduler)\// },
-            { name: 'controls', test: /node_modules\/(antd|@ant-design|@rc-component|rc-)/ },
+            { name: 'controls', test: /node_modules\/@radix-ui\// },
           ],
         },
       },
