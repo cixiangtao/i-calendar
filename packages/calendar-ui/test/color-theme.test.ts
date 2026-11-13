@@ -77,8 +77,12 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
         assert.notEqual(t['--control-hover'], t['--control-active']);
         assert.ok(contrastRatio(t['--selected-ink'], t['--blue-soft']) >= 4.5);
         assert.notEqual(t['--outside-ink'], t['--lunar-ink']);
+        assert.ok(
+          contrastRatio(t['--outside-ink'], t['--surface']) <
+            contrastRatio(t['--lunar-ink'], t['--surface']),
+        );
         for (const background of ['--surface', '--control', '--red-soft'] as const)
-          assert.ok(contrastRatio(t['--outside-ink'], t[background]) >= 3);
+          assert.ok(contrastRatio(t['--outside-ink'], t[background]) >= 2.2);
         for (const foreground of ['--muted', '--lunar-ink'] as const)
           for (const background of ['--control', '--red-soft'] as const)
             assert.ok(contrastRatio(t[foreground], t[background]) >= 4.5);
@@ -93,7 +97,7 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
             ] as const)
               assert.ok(
                 contrastRatio(t[foreground], t[background]) >=
-                  (foreground.startsWith('--outside-') ? 3 : 4.5),
+                  (foreground.startsWith('--outside-') ? 2.2 : 4.5),
                 `${preset.id}/${dark}/${accentColor}/${foreground}/${background}`,
               );
         const high = resolveColorTheme(preferences, dark, true).tokens;

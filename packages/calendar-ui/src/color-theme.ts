@@ -102,9 +102,9 @@ export function resolveColorTheme(
   );
   const minimum = increasedContrast ? 7 : 4.5;
   // 月外日期是上下文提示，按用户要求单独退后；增加对比度模式恢复完整可读性。
-  const outsideMinimum = increasedContrast ? 7 : 3;
+  const outsideMinimum = increasedContrast ? 7 : 2.2;
   const outsideInk = readable(
-    mix(ink, surface, 0.65),
+    mix(ink, surface, 0.74),
     [surface, control, ...semanticSurfaces],
     dark,
     outsideMinimum,
@@ -124,7 +124,7 @@ export function resolveColorTheme(
       foreground,
       tint,
       outside: readable(
-        mix(foreground, surface, 0.55),
+        mix(foreground, surface, 0.68),
         [surface, ...semanticSurfaces, control, soft],
         dark,
         outsideMinimum,
