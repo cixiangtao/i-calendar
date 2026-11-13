@@ -53,12 +53,14 @@ colors:
   hint-ink-dark: '#a8a8a8'
   selected-ink: '#303030'
   selected-ink-dark: '#f3f3f3'
-  outside-red: '#b2374b'
-  outside-red-dark: '#e197a0'
-  outside-green: '#277956'
-  outside-green-dark: '#86c7a4'
-  outside-purple: '#815aa7'
-  outside-purple-dark: '#bca4d6'
+  outside-red: '#bb7882'
+  outside-red-dark: '#a58089'
+  outside-green: '#699482'
+  outside-green-dark: '#6d9284'
+  outside-purple: '#9884ac'
+  outside-purple-dark: '#9186a4'
+  outside-ink: '#8b8b8b'
+  outside-ink-dark: '#878a8e'
 typography:
   headline:
     fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
@@ -310,7 +312,7 @@ Mac 的“菜单栏”标签包含“菜单栏显示”分区：“显示图标�
 
 ## 主题与文字层级
 
-主要文字采用中性炭灰，星期、详情标签、农历、说明和月外日期使用独立中性色角色；月外主要通过灰色与较轻字重降低层级。普通主题的文字目标为 4.5:1，系统增加对比度偏好下相关文字目标提升至 7:1。背景提供清爽白、暖纸色、雾灰蓝三套预设，浅深色分别定义，红绿黄紫语义保持稳定。极端强调色保存原始值，按背景派生可读文字与叶片底色。详见[配色与文字层级](docs/配色与文字层级.md)。
+主要文字采用中性炭灰，星期、详情标签、农历、说明和月外日期使用独立中性色角色；月外主要通过灰色与较轻字重降低层级。当前月和详情的普通文字目标为 4.5:1；常规模式的月外上下文文字按用户要求单独淡化，下限为 3:1，休班角标及选中态不淡化。系统增加对比度偏好下相关文字目标提升至 7:1。背景提供清爽白、暖纸色、雾灰蓝三套预设，浅深色分别定义，红绿黄紫语义保持稳定。极端强调色保存原始值，按背景派生可读文字与叶片底色。详见[配色与文字层级](docs/配色与文字层级.md)。
 
 ## Do's and Don'ts
 
