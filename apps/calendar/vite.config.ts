@@ -5,6 +5,8 @@ import autoprefixer from 'autoprefixer';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 
+import calendarTailwind from '../../tailwind.config.ts';
+
 const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 const nativeHost = process.env.TAURI_DEV_HOST;
 
@@ -14,7 +16,18 @@ export default defineConfig({
   plugins: [react()],
   css: {
     postcss: {
-      plugins: [tailwindcss({ config: source('../../tailwind.config.ts') }), autoprefixer()],
+      plugins: [
+        // 静态导入让 Vite 跟踪配置变更并重启，避免长驻开发服务沿用旧的主题与变体。
+        // 使用绝对内容路径，保证从仓库根目录或 Tauri 应用目录启动时扫描结果相同。
+        tailwindcss({
+          ...calendarTailwind,
+          content: {
+            ...calendarTailwind.content,
+            files: calendarTailwind.content.files.map((file) => source(`../../${file}`)),
+          },
+        }),
+        autoprefixer(),
+      ],
     },
   },
   resolve: {

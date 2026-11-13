@@ -23,6 +23,7 @@
     "build:mac:update": "node scripts/package-tauri-mac.mjs --updater",
     "build:web": "node scripts/license-notices.mjs --web && vite build --config apps/calendar/vite.config.ts",
     "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm test && pnpm run build",
+    "check:dev": "node scripts/check-dev-styles.mjs",
     "check:mac": "node scripts/check-native.mjs --app",
     "check:native": "node scripts/check-native.mjs",
     "data:fetch": "tsx scripts/fetch-holidays.ts",
