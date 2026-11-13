@@ -23,6 +23,8 @@ struct RuntimeState {
     popup_busy: AtomicBool,
     #[cfg(target_os = "macos")]
     popup_height: std::sync::atomic::AtomicU32,
+    #[cfg(target_os = "macos")]
+    popup_motion: desktop::PopupMotion,
     save_lock: Mutex<()>,
     #[cfg(target_os = "macos")]
     menu_clock: menu_clock::MenuClock,

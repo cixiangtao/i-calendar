@@ -1,9 +1,13 @@
 use crate::RuntimeState;
+use block2::RcBlock;
 use objc2_app_kit::{
     NSAnimatablePropertyContainer, NSAnimationContext, NSColor, NSWindow, NSWorkspace,
 };
 use objc2_quartz_core::CAMediaTimingFunction;
-use std::{sync::atomic::Ordering, time::Duration};
+use std::{
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
+    time::Duration,
+};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -12,6 +16,37 @@ use tauri::{
 
 const POPUP_CORNER_RADIUS: f64 = 20.0;
 const POPUP_ENTER_SECONDS: f64 = 0.28;
+const POPUP_EXIT_SECONDS: f64 = 0.18;
+
+#[derive(Default)]
+pub struct PopupMotion {
+    generation: AtomicU64,
+    closing: AtomicBool,
+}
+
+impl PopupMotion {
+    fn is_closing(&self) -> bool {
+        self.closing.load(Ordering::Relaxed)
+    }
+
+    // 动画状态只在主线程修改；事件处理器与失焦检查线程可读取。
+    fn begin_exit(&self) -> Option<u64> {
+        if self.closing.swap(true, Ordering::Relaxed) {
+            return None;
+        }
+        Some(self.generation.fetch_add(1, Ordering::Relaxed) + 1)
+    }
+
+    fn cancel_exit(&self) -> bool {
+        self.generation.fetch_add(1, Ordering::Relaxed);
+        self.closing.swap(false, Ordering::Relaxed)
+    }
+
+    fn finish_exit(&self, generation: u64) -> bool {
+        self.generation.load(Ordering::Relaxed) == generation
+            && self.closing.swap(false, Ordering::Relaxed)
+    }
+}
 
 struct PopupLayout {
     x: f64,
@@ -37,7 +72,7 @@ fn position_popup(
     frame.origin.y += current.y - layout.y + frame.size.height - layout.height;
     frame.size.width = layout.width;
     frame.size.height = layout.height;
-    native.setFrame_display(frame, true);
+    native.setFrame_display(frame, false);
     Ok(())
 }
 
@@ -46,20 +81,73 @@ fn stop_popup_motion(native: &NSWindow) {
     NSAnimationContext::beginGrouping();
     NSAnimationContext::currentContext().setDuration(0.0);
     native.animator().setFrame_display(native.frame(), false);
-    native.animator().setAlphaValue(1.0);
+    native.animator().setAlphaValue(native.alphaValue());
     NSAnimationContext::endGrouping();
 }
 
 pub fn hide_calendar(window: &tauri::WebviewWindow) -> tauri::Result<()> {
+    hide_calendar_if_current(window, None)
+}
+
+fn hide_calendar_if_current(
+    window: &tauri::WebviewWindow,
+    expected: Option<u64>,
+) -> tauri::Result<()> {
+    let layout = layout_popup(window.app_handle())?;
     let handle = window.clone();
     window.with_webview(move |webview| {
         // SAFETY: with_webview 在主线程执行，句柄在回调期间有效。
-        if let Some(native) = unsafe { webview.ns_window().cast::<NSWindow>().as_ref() } {
-            stop_popup_motion(native);
+        let Some(native) = (unsafe { webview.ns_window().cast::<NSWindow>().as_ref() }) else {
+            let _ = handle.hide();
+            return;
+        };
+        if !native.isVisible() {
+            return;
         }
-        if let Err(error) = handle.hide() {
-            eprintln!("无法收起日历：{error}");
+        let state = handle.app_handle().state::<RuntimeState>();
+        if expected.is_some_and(|generation| {
+            state.popup_motion.generation.load(Ordering::Relaxed) != generation
+        }) {
+            return;
         }
+        let Some(generation) = state.popup_motion.begin_exit() else {
+            return;
+        };
+        stop_popup_motion(native);
+        let mut target = native.frame();
+        target.origin.x = layout
+            .map(|layout| layout.x + layout.enter_distance)
+            .unwrap_or(target.origin.x + target.size.width + 24.0);
+        let reduced = NSWorkspace::sharedWorkspace().accessibilityDisplayShouldReduceMotion();
+        let finished_window = handle.clone();
+        let finished = RcBlock::new(move || {
+            let window = finished_window.clone();
+            let _ = finished_window.with_webview(move |webview| {
+                let state = window.app_handle().state::<RuntimeState>();
+                // 被重新打开或被新一轮收起取代的回调不得隐藏当前窗口。
+                if state.popup_motion.finish_exit(generation) {
+                    let _ = window.hide();
+                    // SAFETY: 完成回调仍通过 with_webview 回到原生主线程。
+                    if let Some(native) = unsafe { webview.ns_window().cast::<NSWindow>().as_ref() }
+                    {
+                        native.setAlphaValue(1.0);
+                    }
+                }
+            });
+        });
+        NSAnimationContext::beginGrouping();
+        let context = NSAnimationContext::currentContext();
+        context.setDuration(if reduced { 0.1 } else { POPUP_EXIT_SECONDS });
+        context.setTimingFunction(Some(&CAMediaTimingFunction::functionWithControlPoints(
+            0.4, 0.0, 1.0, 1.0,
+        )));
+        context.setCompletionHandler(Some(&finished));
+        if reduced {
+            native.animator().setAlphaValue(0.0);
+        } else {
+            native.animator().setFrame_display(target, true);
+        }
+        NSAnimationContext::endGrouping();
     })
 }
 
@@ -131,14 +219,27 @@ pub fn resize_popup(app: &tauri::AppHandle, height: f64) -> Result<(), String> {
     if previous == height.ceil() as u32 {
         return Ok(());
     }
+    if app.state::<RuntimeState>().popup_motion.is_closing() {
+        // 收起时只记住新高度，避免测量回调取消退场却留下未完成的关闭状态。
+        return Ok(());
+    }
     let layout = layout_popup(app).map_err(|error| error.to_string())?;
     if let (Some(layout), Some(window)) = (layout, app.get_webview_window("main")) {
         let handle = window.clone();
         window
             .with_webview(move |webview| {
+                if handle
+                    .app_handle()
+                    .state::<RuntimeState>()
+                    .popup_motion
+                    .is_closing()
+                {
+                    return;
+                }
                 // SAFETY: 主线程回调内原生窗口始终有效。
                 if let Some(native) = unsafe { webview.ns_window().cast::<NSWindow>().as_ref() } {
                     stop_popup_motion(native);
+                    native.setAlphaValue(1.0);
                     if let Err(error) = position_popup(&handle, native, &layout) {
                         eprintln!("无法调整悬浮窗：{error}");
                     }
@@ -213,6 +314,33 @@ pub async fn verify_popup_motion(app: &tauri::AppHandle) -> Result<(), String> {
     wait_for_motion_settle().await;
     let settled = motion_snapshot(&window).await?;
     hide_calendar(&window).map_err(|error| error.to_string())?;
+    let exit_start = motion_snapshot(&window).await?;
+    tauri::async_runtime::spawn_blocking(|| std::thread::sleep(Duration::from_millis(65)))
+        .await
+        .map_err(|error| error.to_string())?;
+    let exit_middle = motion_snapshot(&window).await?;
+    if !window.is_visible().unwrap_or(false) {
+        return Err("退场动画尚未结束就隐藏了窗口".into());
+    }
+    let height = app
+        .state::<RuntimeState>()
+        .popup_height
+        .load(Ordering::Relaxed) as f64;
+    resize_popup(app, height + 1.0)?;
+    resize_popup(app, height)?;
+    // 重复的收起请求不应重播退场或改变关闭回调。
+    hide_calendar(&window).map_err(|error| error.to_string())?;
+    wait_for_motion_settle().await;
+    let exit_end = motion_snapshot(&window).await?;
+    if window.is_visible().unwrap_or(true) || app.state::<RuntimeState>().popup_motion.is_closing()
+    {
+        return Err("退场完成后窗口没有真正隐藏或关闭状态未释放".into());
+    }
+    if !exit_start.2 && !(exit_start.0 + 1.0 < exit_middle.0 && exit_middle.0 + 1.0 < exit_end.0) {
+        return Err(format!(
+            "缺少向右退场中间帧：{exit_start:?} → {exit_middle:?} → {exit_end:?}"
+        ));
+    }
     show_calendar(app);
     let start = motion_snapshot(&window).await?;
     tauri::async_runtime::spawn_blocking(|| std::thread::sleep(Duration::from_millis(65)))
@@ -230,8 +358,18 @@ pub async fn verify_popup_motion(app: &tauri::AppHandle) -> Result<(), String> {
         ));
     }
     // 连续收起、打开，并在入场尚未结束时再次打断。
+    let stale_blur = app
+        .state::<RuntimeState>()
+        .popup_motion
+        .generation
+        .load(Ordering::Relaxed);
     hide_calendar(&window).map_err(|error| error.to_string())?;
+    tauri::async_runtime::spawn_blocking(|| std::thread::sleep(Duration::from_millis(65)))
+        .await
+        .map_err(|error| error.to_string())?;
     show_calendar(app);
+    // 模拟重开后才到达主线程的旧失焦请求，不能误关新窗口。
+    hide_calendar_if_current(&window, Some(stale_blur)).map_err(|error| error.to_string())?;
     hide_calendar(&window).map_err(|error| error.to_string())?;
     show_calendar(app);
     wait_for_motion_settle().await;
@@ -274,6 +412,7 @@ pub async fn verify_popup_motion(app: &tauri::AppHandle) -> Result<(), String> {
     }
     println!("PASS：原生右侧入场轨迹 {start:?} → {middle:?} → {end:?}；快速收起重开后停靠右上方");
     println!("PASS：设置高度与日历内容高度切换后保持右上方停靠");
+    println!("PASS：原生右侧退场轨迹 {exit_start:?} → {exit_middle:?} → {exit_end:?}；结束后隐藏、退场重开后保持显示");
     Ok(())
 }
 
@@ -353,7 +492,9 @@ fn layout_popup(app: &tauri::AppHandle) -> tauri::Result<Option<PopupLayout>> {
 pub fn show_calendar(app: &tauri::AppHandle) {
     app.state::<RuntimeState>().menu_clock.wake();
     if let Some(window) = app.get_webview_window("main") {
-        if window.is_visible().unwrap_or(false) {
+        if window.is_visible().unwrap_or(false)
+            && !app.state::<RuntimeState>().popup_motion.is_closing()
+        {
             let _ = window.set_focus();
             return;
         }
@@ -372,11 +513,16 @@ pub fn show_calendar(app: &tauri::AppHandle) {
                 let _ = handle.set_focus();
                 return;
             };
-            if native.isVisible() {
+            let was_visible = native.isVisible();
+            let state = handle.app_handle().state::<RuntimeState>();
+            let was_closing = state.popup_motion.cancel_exit();
+            if was_visible && !was_closing {
                 let _ = handle.set_focus();
                 return;
             }
             stop_popup_motion(native);
+            let interrupted_frame = native.frame();
+            let interrupted_alpha = native.alphaValue();
             let mut distance = 0.0;
             if let Some(layout) = layout {
                 if let Err(error) = position_popup(&handle, native, &layout) {
@@ -388,10 +534,17 @@ pub fn show_calendar(app: &tauri::AppHandle) {
             let target = native.frame();
             let reduced = NSWorkspace::sharedWorkspace().accessibilityDisplayShouldReduceMotion();
             if reduced {
-                native.setAlphaValue(0.0);
+                native.setAlphaValue(if was_visible { interrupted_alpha } else { 0.0 });
             } else {
-                let mut start = target;
-                start.origin.x += distance;
+                native.setAlphaValue(1.0);
+                let mut start = if was_visible {
+                    interrupted_frame
+                } else {
+                    target
+                };
+                if !was_visible {
+                    start.origin.x += distance;
+                }
                 native.setFrame_display(start, false);
             }
             let _ = handle.show();
@@ -462,7 +615,9 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
             {
                 let app = tray.app_handle();
                 if let Some(window) = app.get_webview_window("main") {
-                    if window.is_visible().unwrap_or(false) {
+                    if window.is_visible().unwrap_or(false)
+                        && !app.state::<RuntimeState>().popup_motion.is_closing()
+                    {
                         let _ = hide_calendar(&window);
                     } else {
                         show_calendar(app);
@@ -485,6 +640,11 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
             }
             WindowEvent::Focused(false) => {
                 let app = handle.clone();
+                let generation = app
+                    .state::<RuntimeState>()
+                    .popup_motion
+                    .generation
+                    .load(Ordering::Relaxed);
                 std::thread::spawn(move || {
                     std::thread::sleep(Duration::from_millis(180));
                     let busy = app
@@ -492,8 +652,16 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
                         .popup_busy
                         .load(Ordering::Relaxed);
                     if let Some(window) = app.get_webview_window("main") {
-                        if !busy && !window.is_focused().unwrap_or(false) {
-                            let _ = hide_calendar(&window);
+                        if !busy
+                            && !window.is_focused().unwrap_or(false)
+                            && app
+                                .state::<RuntimeState>()
+                                .popup_motion
+                                .generation
+                                .load(Ordering::Relaxed)
+                                == generation
+                        {
+                            let _ = hide_calendar_if_current(&window, Some(generation));
                         }
                     }
                 });
@@ -506,7 +674,21 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{fitted_height, popup_position};
+    use super::{fitted_height, popup_position, PopupMotion};
+    #[test]
+    fn stale_exit_completion_cannot_hide_reopened_or_newly_closing_popup() {
+        let motion = PopupMotion::default();
+        let first = motion.begin_exit().unwrap();
+        assert!(motion.begin_exit().is_none());
+        assert!(motion.cancel_exit());
+        assert!(!motion.finish_exit(first));
+        let second = motion.begin_exit().unwrap();
+        assert!(!motion.finish_exit(first));
+        assert!(motion.is_closing());
+        assert!(motion.finish_exit(second));
+        assert!(!motion.is_closing());
+        assert!(!motion.finish_exit(second));
+    }
     #[test]
     fn content_height_fits_monitor_work_area_at_each_scale() {
         assert_eq!(fitted_height(740.0, 1000.0, 1.0), 740.0);
