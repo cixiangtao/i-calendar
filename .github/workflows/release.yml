@@ -83,6 +83,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           ORIGINAL_RUN: ${{ github.event.inputs.artifact_run }}
           RELEASE_COMMIT: ${{ steps.context.outputs.commit }}
+          VERSION: ${{ steps.context.outputs.version }}
         run: |
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
@@ -97,9 +98,16 @@ jobs:
           const jobs = api(`${root}/jobs?per_page=100`).jobs;
           assert.ok(jobs.some((job) => job.name === '校验并构建 Mac 与官网' && job.conclusion === 'success'));
           const artifacts = api(`${root}/artifacts`).artifacts;
-          assert.ok(artifacts.some((item) => item.name === 'github-pages' && !item.expired));
-          console.log('原构建提交、工作流、检查结果与官网产物一致');
+          assert.ok(artifacts.some((item) => item.name === `release-${process.env.VERSION}` && !item.expired));
+          console.log('原构建提交、工作流、检查结果与签名产物一致');
           JS
+      - name: 载入当前发布工具与官网链接修正
+        if: ${{ github.event.inputs.artifact_run }}
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.workflow_sha }}
+          fetch-depth: 0
+          persist-credentials: false
       - name: 复用已检查的应用产物
         if: ${{ github.event.inputs.artifact_run }}
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
@@ -111,14 +119,27 @@ jobs:
       - name: 复核复用产物的校验值
         if: ${{ github.event.inputs.artifact_run }}
         run: cd outputs && shasum -a 256 -c SHA256SUMS.txt
-      - name: 复用官网归档
+      - name: 构建同版本的最新官网下载入口
         if: ${{ github.event.inputs.artifact_run }}
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: github-pages
-          path: work/pages-artifact
-          run-id: ${{ github.event.inputs.artifact_run }}
-          github-token: ${{ github.token }}
+        env:
+          VERSION: ${{ steps.context.outputs.version }}
+          RELEASE_COMMIT: ${{ steps.context.outputs.commit }}
+        run: |
+          node -e "require('node:assert/strict').equal(require('./package.json').version, process.env.VERSION)"
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { execFileSync } from 'node:child_process';
+          const diff = (...paths) => execFileSync('git', ['diff', '--name-only', process.env.RELEASE_COMMIT, 'HEAD', '--', ...paths], { encoding: 'utf8' }).trim();
+          assert.equal(diff('packages', 'release/config.json', 'package.json', 'pnpm-lock.yaml', 'apps/calendar/src-tauri', 'apps/calendar/src/platform.ts'), '', '恢复官网不能混入新的核心或平台变更');
+          const changes = execFileSync('git', ['diff', '--unified=0', process.env.RELEASE_COMMIT, 'HEAD', '--', 'apps/calendar/src/main.tsx'], { encoding: 'utf8' });
+          for (const line of changes.split('\n').filter((line) => /^[+-]/.test(line) && !/^[+-]{3}/.test(line)))
+            assert.ok(line.includes('href={`https://github.com/${releaseConfig.repository}/releases/download/v${appVersion}/'), '恢复官网仅允许修正下载链接');
+          JS
+          npm install --global corepack@0.35.0 --force
+          corepack enable
+          corepack install
+          pnpm install --frozen-lockfile
+          pnpm run build:web
       - name: 保存已检查的分发文件
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -132,18 +153,9 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: 保存官网产物
-        if: ${{ !github.event.inputs.artifact_run }}
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
           path: apps/calendar/dist
-      - name: 保存复用的官网归档
-        if: ${{ github.event.inputs.artifact_run }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: github-pages
-          path: work/pages-artifact/artifact.tar
-          if-no-files-found: error
-          retention-days: 1
 
   publish:
     name: 发布 GitHub Release 与更新源

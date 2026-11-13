@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
-import { selectRelease } from './github-release.mjs';
+import { preparePublication, selectRelease } from './github-release.mjs';
 import { releaseMetadata } from './release-context.mjs';
 
 // 本地只能准备和验证；真正的发布由唯一 Actions 工作流执行。
@@ -43,14 +43,7 @@ if (latest) {
   }
 }
 const folder = path.resolve(process.env.ASSET_DIRECTORY ?? 'release-assets');
-const payloads = [
-  `i日历-${version}-mac-arm64.zip`,
-  `i日历-${version}-mac-arm64.app.tar.gz`,
-  `i日历-${version}-mac-arm64.app.tar.gz.sig`,
-  'SHA256SUMS.txt',
-  // 更新清单始终最后上传；所有产物就绪后才公开整个 Release。
-  'latest.json',
-];
+const payloads = await preparePublication(folder, version, repository);
 const digest = async (file) =>
   createHash('sha256')
     .update(await readFile(file))
@@ -86,14 +79,30 @@ if (!release) {
 }
 assert.ok(release, '未找到已创建的草稿 Release');
 assert.equal(release.prerelease, false);
-for (const name of payloads) {
-  const file = path.join(folder, name);
+for (const { name, file, originalDigest } of payloads) {
   const expected = await digest(file);
-  const existing = release.assets.find((asset) => asset.name === name);
+  const existing =
+    release.assets.find((asset) => asset.name === name) ??
+    release.assets.find((asset) => asset.digest === `sha256:${expected}`);
   if (existing) {
-    if (existing.digest)
-      assert.equal(existing.digest, `sha256:${expected}`, `已存在产物不同：${name}`);
-    else {
+    if (existing.digest && existing.digest !== `sha256:${expected}`) {
+      // 首次公开前允许纠正自己生成的分发元数据，不改动已验签的二进制载荷。
+      assert.ok(release.draft && ['latest.json', 'SHA256SUMS.txt'].includes(name));
+      assert.equal(existing.digest, `sha256:${originalDigest}`, `草稿元数据来源不同：${name}`);
+      await gh('release', 'upload', tag, file, '--repo', repository, '--clobber');
+    } else if (existing.digest) {
+      if (existing.name !== name) {
+        assert.ok(release.draft, '禁止更改已公开的附件名称');
+        await gh(
+          'api',
+          '--method',
+          'PATCH',
+          `repos/${repository}/releases/assets/${existing.id}`,
+          '-f',
+          `name=${name}`,
+        );
+      }
+    } else {
       const temporary = await mkdtemp(path.join(os.tmpdir(), 'i-calendar-published-'));
       try {
         await gh(
@@ -115,7 +124,11 @@ for (const name of payloads) {
   } else await gh('release', 'upload', tag, file, '--repo', repository);
 }
 release = await api(`repos/${repository}/releases/${release.id}`);
-for (const name of payloads) assert.ok(release.assets.some((asset) => asset.name === name));
+for (const { name, file } of payloads) {
+  const asset = release.assets.find((item) => item.name === name);
+  assert.ok(asset, `附件名称不一致：${name}`);
+  if (asset.digest) assert.equal(asset.digest, `sha256:${await digest(file)}`);
+}
 await gh(
   'api',
   '--method',

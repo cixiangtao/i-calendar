@@ -65,7 +65,7 @@ async function start() {
               </p>
               <p>
                 <a
-                  href={`https://github.com/${releaseConfig.repository}/releases/download/v${appVersion}/${encodeURIComponent(`i日历-${appVersion}-mac-arm64.zip`)}`}
+                  href={`https://github.com/${releaseConfig.repository}/releases/download/v${appVersion}/i-calendar-${appVersion}-mac-arm64.zip`}
                 >
                   下载 Mac 版（Apple 芯片）
                 </a>{' '}
