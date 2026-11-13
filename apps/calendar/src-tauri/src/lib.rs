@@ -216,7 +216,7 @@ fn resize_popup(app: tauri::AppHandle, height: f64) -> Result<(), String> {
 fn close_calendar(app: tauri::AppHandle) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     if let Some(window) = app.get_webview_window("main") {
-        window.hide().map_err(|_| "无法收起日历")?;
+        desktop::hide_calendar(&window).map_err(|_| "无法收起日历")?;
     }
     Ok(())
 }
@@ -283,6 +283,7 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 app.exit(1);
                 return Err("菜单栏日历未显示".into());
             }
+            desktop::wait_for_motion_settle().await;
             desktop::verify_rounded_popup(&window).await?;
             desktop::verify_content_height(&app)?;
             window.hide().map_err(|_| "日历收起失败")?;
@@ -292,8 +293,14 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 app.exit(1);
                 return Err("日历重新打开失败".into());
             }
+            desktop::wait_for_motion_settle().await;
             desktop::verify_rounded_popup(&window).await?;
             desktop::verify_content_height(&app)?;
+            if let Err(error) = desktop::verify_popup_motion(&app).await {
+                eprintln!("悬浮窗动效验证失败：{error}");
+                app.exit(1);
+                return Err(error);
+            }
             println!("PASS：详情卡片完整展开，原生窗口按内容高度适配屏幕可用区域");
             println!("PASS：原生悬浮窗 20px 圆角、透明边角和系统阴影在收起重开后保持生效");
             println!("PASS：Tauri 原生窗口、WebView 前端、共享日历核心与 Rust 命令交互通过");
