@@ -12,6 +12,7 @@
   --ink: #303030;
   --secondary: #626262;
   --muted: #767676;
+  --outside-ink: #8d8d8d;
   --lunar-ink: #707070;
   --weekday-ink: #4b4b4b;
   --hint-ink: #707070;
@@ -45,6 +46,7 @@
   --ink: #f3f3f3;
   --secondary: #c4c4c4;
   --muted: #999999;
+  --outside-ink: #74777e;
   --lunar-ink: #b5b5b5;
   --weekday-ink: #d0d0d0;
   --hint-ink: #a8a8a8;
@@ -315,7 +317,7 @@ a:focus-visible {
 }
 .day-cell.outside-month .solar-day,
 .day-cell.outside-month .lunar-day {
-  color: var(--muted);
+  color: var(--outside-ink);
   font-weight: 400;
 }
 .day-cell.outside-month.rest-day .solar-day {

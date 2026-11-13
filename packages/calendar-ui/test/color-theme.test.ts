@@ -76,6 +76,9 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
         assert.notEqual(t['--control'], t['--control-hover']);
         assert.notEqual(t['--control-hover'], t['--control-active']);
         assert.ok(contrastRatio(t['--selected-ink'], t['--blue-soft']) >= 4.5);
+        assert.notEqual(t['--outside-ink'], t['--lunar-ink']);
+        for (const background of ['--surface', '--control', '--red-soft'] as const)
+          assert.ok(contrastRatio(t['--outside-ink'], t[background]) >= 3);
         for (const foreground of ['--muted', '--lunar-ink'] as const)
           for (const background of ['--control', '--red-soft'] as const)
             assert.ok(contrastRatio(t[foreground], t[background]) >= 4.5);
@@ -89,7 +92,8 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
               `--${role}-soft`,
             ] as const)
               assert.ok(
-                contrastRatio(t[foreground], t[background]) >= 4.5,
+                contrastRatio(t[foreground], t[background]) >=
+                  (foreground.startsWith('--outside-') ? 3 : 4.5),
                 `${preset.id}/${dark}/${accentColor}/${foreground}/${background}`,
               );
         const high = resolveColorTheme(preferences, dark, true).tokens;
@@ -100,11 +104,14 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
           '--weekday-ink',
           '--hint-ink',
           '--muted',
+          '--outside-ink',
           '--red',
           '--green',
           '--yellow',
           '--purple',
         ] as const)
           assert.ok(contrastRatio(high[foreground], high['--surface']) >= 7);
+        for (const role of ['red', 'green', 'yellow', 'purple'] as const)
+          assert.ok(contrastRatio(high[`--outside-${role}`], high['--surface']) >= 7);
       }
 });

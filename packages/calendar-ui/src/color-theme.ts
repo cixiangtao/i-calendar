@@ -101,6 +101,14 @@ export function resolveColorTheme(
     increasedContrast ? 7 : 4.5,
   );
   const minimum = increasedContrast ? 7 : 4.5;
+  // 月外日期是上下文提示，按用户要求单独退后；增加对比度模式恢复完整可读性。
+  const outsideMinimum = increasedContrast ? 7 : 3;
+  const outsideInk = readable(
+    mix(ink, surface, 0.65),
+    [surface, control, ...semanticSurfaces],
+    dark,
+    outsideMinimum,
+  );
   const lunar = readable(
     dark ? '#b5b5b5' : '#707070',
     [surface, control, ...semanticSurfaces],
@@ -116,10 +124,10 @@ export function resolveColorTheme(
       foreground,
       tint,
       outside: readable(
-        mix(foreground, muted, 0.35),
+        mix(foreground, surface, 0.55),
         [surface, ...semanticSurfaces, control, soft],
         dark,
-        minimum,
+        outsideMinimum,
       ),
     };
   };
@@ -137,6 +145,7 @@ export function resolveColorTheme(
       '--ink': ink,
       '--secondary': secondary,
       '--muted': muted,
+      '--outside-ink': outsideInk,
       '--lunar-ink': lunar,
       '--weekday-ink': weekday,
       '--hint-ink': hint,
