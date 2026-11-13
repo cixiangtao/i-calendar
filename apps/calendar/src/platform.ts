@@ -1,9 +1,39 @@
-import type { CalendarPlatform, SavedCalendarState } from '@i-calendar/ui';
-import { isTauri, invoke } from '@tauri-apps/api/core';
+import type {
+  AppRelease,
+  AppUpdateProgress,
+  AppUpdater,
+  CalendarPlatform,
+  SavedCalendarState,
+} from '@i-calendar/ui';
+import { Channel, isTauri, invoke } from '@tauri-apps/api/core';
 
 const STORAGE_KEY = 'i-calendar:state:v1';
 // 仅用于只读迁移；新数据始终写入当前名称，旧记录保留。
 const LEGACY_STORAGE_KEY = 'shiri-calendar:state:v1';
+
+function nativeAppUpdater(): AppUpdater {
+  return {
+    async check() {
+      const release = await invoke<{ version: string; notes: string | null } | null>(
+        'check_app_update',
+      );
+      return release
+        ? ({ version: release.version, notes: release.notes ?? undefined } satisfies AppRelease)
+        : null;
+    },
+    async install(version, onProgress, beforeInstall) {
+      const progress = new Channel<AppUpdateProgress>(onProgress);
+      await invoke('set_popup_busy', { busy: true });
+      try {
+        await invoke('download_app_update', { version, progress });
+        await beforeInstall();
+        await invoke('install_app_update', { version });
+      } finally {
+        await invoke('set_popup_busy', { busy: false }).catch(() => {});
+      }
+    },
+  };
+}
 
 /** 普通浏览器只使用公开数据、本地存储和浏览器系统能力。 */
 function browserPlatform(): CalendarPlatform {
@@ -72,6 +102,10 @@ export async function createPlatform(): Promise<{
 }> {
   if (!isTauri()) return { platform: browserPlatform(), smokeTest: false };
   const context = await invoke<{ kind: 'macos' | 'ios'; smokeTest: boolean }>('runtime_context');
+  const updatesEnabled =
+    context.kind === 'macos' &&
+    !context.smokeTest &&
+    (await invoke<boolean>('app_update_available').catch(() => false));
   return {
     smokeTest: context.smokeTest,
     platform: {
@@ -93,6 +127,7 @@ export async function createPlatform(): Promise<{
         await writeText(text);
       },
       setInteractionBusy: (busy) => invoke<void>('set_popup_busy', { busy }),
+      ...(updatesEnabled ? { appUpdater: nativeAppUpdater() } : {}),
       ...(context.kind === 'macos'
         ? {
             close: () => invoke<void>('close_calendar'),

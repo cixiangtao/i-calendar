@@ -18,6 +18,7 @@ import {
 
 import { version as appVersion } from '../../../package.json';
 import { AlmanacContent } from './Almanac.js';
+import { AppUpdateNotice, AppUpdateSection } from './AppUpdateSection.js';
 import { CalendarButton } from './CalendarButton.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import { colorThemes, resolveColorTheme } from './color-theme.js';
@@ -213,6 +214,21 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
         document.documentElement.style.removeProperty(name);
     };
   }, [dark, colors]);
+
+  useEffect(() => {
+    if (!state.ready || !state.preferences.automaticAppUpdates || !controller.platform.appUpdater)
+      return;
+    const check = () => {
+      void controller.appUpdates.check(true);
+    };
+    check();
+    const interval = window.setInterval(check, 60 * 60 * 1000);
+    window.addEventListener('focus', check);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', check);
+    };
+  }, [controller, state.ready, state.preferences.automaticAppUpdates]);
 
   useEffect(() => {
     if (focusAfterNavigation.current) {
@@ -584,6 +600,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 />
               </aside>
             ) : null}
+            <AppUpdateNotice controller={controller} />
             <footer className="app-footer tw-flex tw-items-center tw-justify-between">
               <div className="brand tw-flex tw-items-center">
                 <img
@@ -620,6 +637,10 @@ function Settings({
 }) {
   const file = useRef<HTMLInputElement>(null);
   const back = useRef<HTMLButtonElement>(null);
+  const appUpdate = useSyncExternalStore(
+    controller.appUpdates.subscribe,
+    controller.appUpdates.getSnapshot,
+  );
   useEffect(() => {
     back.current?.focus();
   }, []);
@@ -653,7 +674,7 @@ function Settings({
       </header>
       <Tabs
         className="settings-tabs"
-        defaultActiveKey="general"
+        defaultActiveKey={state.settingsTab}
         animated={false}
         destroyOnHidden={false}
         tabBarGutter={12}
@@ -859,6 +880,7 @@ function Settings({
                   <p>免费、无广告的公农历日历。</p>
                   {controller.platform.quit ? (
                     <CalendarButton
+                      disabled={['downloading', 'installing'].includes(appUpdate.phase)}
                       onClick={() => {
                         void controller.platform.quit?.();
                       }}
@@ -867,6 +889,12 @@ function Settings({
                     </CalendarButton>
                   ) : null}
                 </section>
+                {controller.platform.kind === 'macos' ? (
+                  <AppUpdateSection
+                    controller={controller}
+                    state={state}
+                  />
+                ) : null}
                 <section>
                   <h2>数据来源</h2>
                   <button

@@ -1,5 +1,6 @@
 import type { HolidayDataset } from '@i-calendar/core';
 
+import type { AppUpdater } from './app-update.js';
 import type { ColorThemeId } from './color-theme.js';
 import type { MenuClockPreferences } from './menu-clock.js';
 
@@ -13,6 +14,8 @@ export interface CalendarPreferences {
   /** Null 使用主题默认强调色；自定义值为 #RRGGBB。 */
   accentColor: string | null;
   menuClock: MenuClockPreferences;
+  /** 正式 Mac 构建后台检查应用版本；安装仍需用户确认。 */
+  automaticAppUpdates: boolean;
 }
 
 /** 持久化格式显式版本化，避免以后升级时误读缓存。 */
@@ -36,4 +39,6 @@ export interface CalendarPlatform {
   setPopupHeight?(height: number): Promise<void>;
   close?(): Promise<void>;
   quit?(): Promise<void>;
+  /** 只有已配置签名更新源的正式 Mac 构建提供此能力。 */
+  appUpdater?: AppUpdater;
 }

@@ -11,6 +11,7 @@ import {
 } from '@i-calendar/core';
 import { bundledHolidayDatasets } from '@i-calendar/core/data';
 
+import { AppUpdateController } from './app-update.js';
 import { isAccentColor, isColorTheme } from './color-theme.js';
 import { defaultMenuClock, parseMenuClock } from './menu-clock.js';
 import type { CalendarPlatform, CalendarPreferences, SavedCalendarState } from './platform.js';
@@ -27,6 +28,7 @@ export interface CalendarSnapshot {
   preferences: CalendarPreferences;
   years: number[];
   panel: 'calendar' | 'settings';
+  settingsTab: 'general' | 'about';
   updating: boolean;
   error: string | null;
   notice: string | null;
@@ -40,6 +42,7 @@ const defaults: CalendarPreferences = {
   colorTheme: 'clear',
   accentColor: null,
   menuClock: { ...defaultMenuClock },
+  automaticAppUpdates: true,
 };
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -62,10 +65,15 @@ export function parseSavedState(input: unknown): SavedCalendarState {
   const colorTheme = input.preferences.colorTheme ?? defaults.colorTheme;
   const accentColor = input.preferences.accentColor ?? null;
   const menuClock = parseMenuClock(input.preferences.menuClock);
+  const automaticAppUpdates =
+    input.preferences.automaticAppUpdates === undefined
+      ? defaults.automaticAppUpdates
+      : input.preferences.automaticAppUpdates;
   if (
     (weekStartsOn !== 1 && weekStartsOn !== 7) ||
     !['system', 'light', 'dark'].includes(String(appearance)) ||
     typeof showLunarDetails !== 'boolean' ||
+    typeof automaticAppUpdates !== 'boolean' ||
     !isColorTheme(colorTheme) ||
     (accentColor !== null && !isAccentColor(accentColor))
   )
@@ -87,6 +95,7 @@ export function parseSavedState(input: unknown): SavedCalendarState {
       colorTheme,
       accentColor,
       menuClock,
+      automaticAppUpdates,
     },
     datasets,
     updatedAt: input.updatedAt as string | undefined,
@@ -107,11 +116,21 @@ export class CalendarController {
   private saves: Promise<void> = Promise.resolve();
   private updateAbort?: AbortController;
   private disposed = false;
+  private saveFailed = false;
+  readonly appUpdates: AppUpdateController;
 
   constructor(
     readonly platform: CalendarPlatform,
     private now: () => Date = () => new Date(),
   ) {
+    this.appUpdates = new AppUpdateController(platform.appUpdater, now, async () => {
+      let pending: Promise<void>;
+      do {
+        pending = this.saves;
+        await pending;
+      } while (pending !== this.saves);
+      if (this.saveFailed) throw new Error('设置尚未保存');
+    });
     const today = dateForInstant(now());
     const selected = this.engine.getDay(today);
     this.snapshot = {
@@ -125,6 +144,7 @@ export class CalendarController {
       preferences: { ...defaults, menuClock: { ...defaultMenuClock } },
       years: this.holidays.years,
       panel: 'calendar',
+      settingsTab: 'general',
       updating: false,
       error: null,
       notice: null,
@@ -238,8 +258,8 @@ export class CalendarController {
     this.moveSelection((end ? 6 : 0) - offset);
   }
 
-  showSettings(show = true) {
-    this.patch({ panel: show ? 'settings' : 'calendar' });
+  showSettings(show = true, settingsTab: 'general' | 'about' = 'general') {
+    this.patch({ panel: show ? 'settings' : 'calendar', settingsTab });
   }
   dismissError() {
     this.patch({ error: null, notice: null });
@@ -252,6 +272,7 @@ export class CalendarController {
       (next.weekStartsOn !== 1 && next.weekStartsOn !== 7) ||
       !['system', 'light', 'dark'].includes(next.appearance) ||
       typeof next.showLunarDetails !== 'boolean' ||
+      typeof next.automaticAppUpdates !== 'boolean' ||
       !isColorTheme(next.colorTheme) ||
       (next.accentColor !== null && !isAccentColor(next.accentColor))
     )
@@ -277,8 +298,12 @@ export class CalendarController {
   private persist() {
     const state = this.serialized();
     this.saves = this.saves
-      .then(() => this.platform.save(state))
+      .then(async () => {
+        await this.platform.save(state);
+        this.saveFailed = false;
+      })
       .catch(() => {
+        this.saveFailed = true;
         this.patch({ error: '本地保存失败，本次操作仍在内存中。请检查存储空间或浏览器设置。' });
       });
     return this.saves;
@@ -371,6 +396,7 @@ export class CalendarController {
   }
   dispose() {
     this.disposed = true;
+    this.appUpdates.dispose();
     this.updateAbort?.abort();
     this.listeners.clear();
   }

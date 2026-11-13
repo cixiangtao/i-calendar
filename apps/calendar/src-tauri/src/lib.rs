@@ -1,4 +1,6 @@
 #[cfg(target_os = "macos")]
+mod app_update;
+#[cfg(target_os = "macos")]
 mod desktop;
 #[cfg(target_os = "macos")]
 mod menu_clock;
@@ -30,6 +32,56 @@ fn runtime_context() -> Value {
         "kind": if cfg!(target_os = "macos") { "macos" } else { "ios" },
         "smokeTest": std::env::args().any(|argument| argument == "--smoke-test")
     })
+}
+
+#[tauri::command]
+fn app_update_available() -> bool {
+    #[cfg(target_os = "macos")]
+    return app_update::available();
+    #[cfg(not(target_os = "macos"))]
+    false
+}
+
+#[tauri::command]
+async fn check_app_update(app: tauri::AppHandle) -> Result<Option<Value>, String> {
+    #[cfg(target_os = "macos")]
+    return app_update::check(app).await.and_then(|release| {
+        release
+            .map(serde_json::to_value)
+            .transpose()
+            .map_err(|_| "应用更新信息无效".into())
+    });
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = app;
+        Ok(None)
+    }
+}
+
+#[tauri::command]
+async fn download_app_update(
+    app: tauri::AppHandle,
+    version: String,
+    progress: tauri::ipc::Channel<Value>,
+) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    return app_update::download(app, version, progress).await;
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (app, version, progress);
+        Err("此平台不支持应用内更新".into())
+    }
+}
+
+#[tauri::command]
+async fn install_app_update(app: tauri::AppHandle, version: String) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    return app_update::install(app, version).await;
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (app, version);
+        Err("此平台不支持应用内更新".into())
+    }
 }
 
 #[tauri::command]
@@ -149,7 +201,8 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
     {
         desktop::show_calendar(&app);
         if std::env::args().any(|argument| argument == "--smoke-test") {
-            if report.get("renderedCells").and_then(Value::as_u64) != Some(42)
+            if report.get("appUpdaterAvailable").and_then(Value::as_bool) != Some(false)
+                || report.get("renderedCells").and_then(Value::as_u64) != Some(42)
                 || report.get("detailScrollable").and_then(Value::as_bool) != Some(false)
                 || report.get("cells").and_then(Value::as_u64) != Some(42)
                 || report.get("lunar").and_then(Value::as_str) != Some("初一")
@@ -196,6 +249,10 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init());
     #[cfg(target_os = "macos")]
+    let builder = builder
+        .manage(app_update::AppUpdates::default())
+        .plugin(tauri_plugin_updater::Builder::new().build());
+    #[cfg(target_os = "macos")]
     let builder = if std::env::args().any(|argument| argument == "--smoke-test") {
         // 冒烟模式已跳过持久化读写，允许与开发实例并行验证打包产物。
         builder
@@ -207,6 +264,10 @@ pub fn run() {
     let application = builder
         .invoke_handler(tauri::generate_handler![
             runtime_context,
+            app_update_available,
+            check_app_update,
+            download_app_update,
+            install_app_update,
             load_state,
             save_state,
             fetch_holiday_year,
