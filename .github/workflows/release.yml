@@ -1,0 +1,125 @@
+name: 正式发布
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 要恢复发布的正式版本标签
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: i-calendar-release
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  build:
+    name: 校验并构建 Mac 与官网
+    runs-on: macos-15
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.context.outputs.version }}
+      commit: ${{ steps.context.outputs.commit }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: 校验发布身份与配置
+        id: context
+        run: node scripts/release-context.mjs
+      - name: 准备锁定工具链
+        run: |
+          test "$(uname -m)" = arm64
+          npm install --global corepack@0.35.0 --force
+          corepack enable
+          corepack install
+          rustup toolchain install 1.99.1 --profile minimal
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check
+      - name: 构建并验证签名更新包
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: pnpm run build:mac:update
+      - run: pnpm run check:mac
+      - name: 生成已验签的更新清单与校验文件
+        env:
+          VERSION: ${{ steps.context.outputs.version }}
+        run: |
+          pnpm run release:manifest \
+            --arm64 "outputs/i日历-${VERSION}-mac-arm64.app.tar.gz" \
+            --arm64-url "https://github.com/cixiangtao/i-calendar/releases/download/${RELEASE_TAG}/i日历-${VERSION}-mac-arm64.app.tar.gz" \
+            --notes "docs/releases/${VERSION}.md"
+          cd outputs
+          shasum -a 256 "i日历-${VERSION}-mac-arm64.zip" "i日历-${VERSION}-mac-arm64.app.tar.gz" "i日历-${VERSION}-mac-arm64.app.tar.gz.sig" latest.json > SHA256SUMS.txt
+      - name: 保存已检查的分发文件
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: release-${{ steps.context.outputs.version }}
+          path: |
+            outputs/*.zip
+            outputs/*.app.tar.gz
+            outputs/*.sig
+            outputs/latest.json
+            outputs/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+      - name: 保存官网产物
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: apps/calendar/dist
+
+  publish:
+    name: 发布 GitHub Release 与更新源
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.build.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-${{ needs.build.outputs.version }}
+          path: release-assets
+      - name: 校验文件并公开正式版本
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ needs.build.outputs.commit }}
+        run: node scripts/publish-release.mjs
+
+  website:
+    name: 部署官网
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署已检查的官网产物
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
