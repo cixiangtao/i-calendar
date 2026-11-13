@@ -8,7 +8,12 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@i-calendar/core": "workspace:*"
+    "@i-calendar/core": "workspace:*",
+    "@radix-ui/react-context-menu": "2.4.1",
+    "@radix-ui/react-radio-group": "1.5.1",
+    "@radix-ui/react-select": "2.4.1",
+    "@radix-ui/react-switch": "1.4.1",
+    "@radix-ui/react-tabs": "1.2.1"
   },
   "peerDependencies": {
     "antd": "^6.7.0",
