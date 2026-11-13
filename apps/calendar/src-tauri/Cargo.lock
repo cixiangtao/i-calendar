@@ -1741,6 +1741,7 @@ dependencies = [
 name = "i-calendar"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "chrono",
  "objc2",
  "objc2-app-kit",

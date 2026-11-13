@@ -20,6 +20,7 @@
     "build:icons": "node scripts/build-icons.mjs",
     "build:ios": "node scripts/tauri.mjs ios build",
     "build:mac": "node scripts/package-tauri-mac.mjs",
+    "build:mac:update": "node scripts/package-tauri-mac.mjs --updater",
     "build:web": "node scripts/license-notices.mjs --web && vite build --config apps/calendar/vite.config.ts",
     "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm test && pnpm run build",
     "check:mac": "node scripts/check-native.mjs --app",
@@ -36,8 +37,9 @@
     "lint": "oxlint --deny-warnings .",
     "lint:fix": "oxlint --fix .",
     "preview:web": "vite preview --config apps/calendar/vite.config.ts --host 127.0.0.1",
+    "release:manifest": "node scripts/create-update-manifest.mjs",
     "tauri": "node scripts/tauri.mjs",
-    "test": "tsx --test packages/calendar-core/test/*.test.ts packages/calendar-ui/test/*.test.ts",
+    "test": "tsx --test packages/calendar-core/test/*.test.ts packages/calendar-ui/test/*.test.ts && node --test scripts/update-release.test.mjs",
     "typecheck": "tsc --noEmit && pnpm --filter @i-calendar/core run typecheck"
   },
   "dependencies": {

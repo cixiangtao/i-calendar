@@ -7,7 +7,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const run = promisify(execFile);
 const native = path.join(root, 'apps/calendar/src-tauri');
 try {
-  const { stdout, stderr } = await run('cargo', ['test', '--locked', '--lib'], {
+  const { stdout, stderr } = await run('cargo', ['test', '--locked', '--lib', '--examples'], {
     cwd: native,
     maxBuffer: 2_000_000,
   });
