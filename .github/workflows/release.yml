@@ -9,9 +9,14 @@ on:
         description: 要恢复发布的正式版本标签
         required: true
         type: string
+      artifact_run:
+        description: 复用已成功构建的原工作流运行编号，留空则重新构建
+        required: false
+        type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: i-calendar-release
@@ -42,6 +47,7 @@ jobs:
         id: context
         run: node scripts/release-context.mjs
       - name: 准备锁定工具链
+        if: ${{ !github.event.inputs.artifact_run }}
         run: |
           test "$(uname -m)" = arm64
           npm install --global corepack@0.35.0 --force
@@ -49,14 +55,19 @@ jobs:
           corepack install
           rustup toolchain install 1.99.1 --profile minimal
       - run: pnpm install --frozen-lockfile
+        if: ${{ !github.event.inputs.artifact_run }}
       - run: pnpm run check
+        if: ${{ !github.event.inputs.artifact_run }}
       - name: 构建并验证签名更新包
+        if: ${{ !github.event.inputs.artifact_run }}
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm run build:mac:update
       - run: pnpm run check:mac
+        if: ${{ !github.event.inputs.artifact_run }}
       - name: 生成已验签的更新清单与校验文件
+        if: ${{ !github.event.inputs.artifact_run }}
         env:
           VERSION: ${{ steps.context.outputs.version }}
         run: |
@@ -66,6 +77,48 @@ jobs:
             --notes "docs/releases/${VERSION}.md"
           cd outputs
           shasum -a 256 "i日历-${VERSION}-mac-arm64.zip" "i日历-${VERSION}-mac-arm64.app.tar.gz" "i日历-${VERSION}-mac-arm64.app.tar.gz.sig" latest.json > SHA256SUMS.txt
+      - name: 校验可复用构建来源
+        if: ${{ github.event.inputs.artifact_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ORIGINAL_RUN: ${{ github.event.inputs.artifact_run }}
+          RELEASE_COMMIT: ${{ steps.context.outputs.commit }}
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { execFileSync } from 'node:child_process';
+          assert.match(process.env.ORIGINAL_RUN, /^\d+$/);
+          const api = (path) => JSON.parse(execFileSync('gh', ['api', path], { encoding: 'utf8' }));
+          const root = `repos/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.ORIGINAL_RUN}`;
+          const run = api(root);
+          assert.equal(run.head_sha, process.env.RELEASE_COMMIT);
+          assert.equal(run.path, '.github/workflows/release.yml');
+          assert.equal(run.status, 'completed');
+          const jobs = api(`${root}/jobs?per_page=100`).jobs;
+          assert.ok(jobs.some((job) => job.name === '校验并构建 Mac 与官网' && job.conclusion === 'success'));
+          const artifacts = api(`${root}/artifacts`).artifacts;
+          assert.ok(artifacts.some((item) => item.name === 'github-pages' && !item.expired));
+          console.log('原构建提交、工作流、检查结果与官网产物一致');
+          JS
+      - name: 复用已检查的应用产物
+        if: ${{ github.event.inputs.artifact_run }}
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-${{ steps.context.outputs.version }}
+          path: outputs
+          run-id: ${{ github.event.inputs.artifact_run }}
+          github-token: ${{ github.token }}
+      - name: 复核复用产物的校验值
+        if: ${{ github.event.inputs.artifact_run }}
+        run: cd outputs && shasum -a 256 -c SHA256SUMS.txt
+      - name: 复用官网归档
+        if: ${{ github.event.inputs.artifact_run }}
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: github-pages
+          path: work/pages-artifact
+          run-id: ${{ github.event.inputs.artifact_run }}
+          github-token: ${{ github.token }}
       - name: 保存已检查的分发文件
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -79,9 +132,18 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: 保存官网产物
+        if: ${{ !github.event.inputs.artifact_run }}
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
           path: apps/calendar/dist
+      - name: 保存复用的官网归档
+        if: ${{ github.event.inputs.artifact_run }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: github-pages
+          path: work/pages-artifact/artifact.tar
+          if-no-files-found: error
+          retention-days: 1
 
   publish:
     name: 发布 GitHub Release 与更新源
@@ -92,7 +154,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ needs.build.outputs.commit }}
+          ref: ${{ github.workflow_sha }}
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:

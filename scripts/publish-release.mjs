@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
+import { selectRelease } from './github-release.mjs';
 import { releaseMetadata } from './release-context.mjs';
 
 // 本地只能准备和验证；真正的发布由唯一 Actions 工作流执行。
@@ -54,7 +55,12 @@ const digest = async (file) =>
   createHash('sha256')
     .update(await readFile(file))
     .digest('hex');
-let release = await lookup(`repos/${repository}/releases/tags/${tag}`);
+let release = selectRelease(
+  JSON.parse(
+    await gh('api', '--paginate', '--slurp', `repos/${repository}/releases?per_page=100`),
+  ).flat(),
+  tag,
+);
 if (!release) {
   await gh(
     'release',
@@ -71,8 +77,14 @@ if (!release) {
     '--notes-file',
     `docs/releases/${version}.md`,
   );
-  release = await api(`repos/${repository}/releases/tags/${tag}`);
+  release = selectRelease(
+    JSON.parse(
+      await gh('api', '--paginate', '--slurp', `repos/${repository}/releases?per_page=100`),
+    ).flat(),
+    tag,
+  );
 }
+assert.ok(release, '未找到已创建的草稿 Release');
 assert.equal(release.prerelease, false);
 for (const name of payloads) {
   const file = path.join(folder, name);
@@ -102,7 +114,7 @@ for (const name of payloads) {
     }
   } else await gh('release', 'upload', tag, file, '--repo', repository);
 }
-release = await api(`repos/${repository}/releases/tags/${tag}`);
+release = await api(`repos/${repository}/releases/${release.id}`);
 for (const name of payloads) assert.ok(release.assets.some((asset) => asset.name === name));
 await gh(
   'api',
