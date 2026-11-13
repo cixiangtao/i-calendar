@@ -109,13 +109,13 @@ function Feedback({
   if (!state.error && !state.notice) return null;
   return (
     <div
-      className={`feedback ${state.error ? 'feedback-error' : ''}`}
+      className={`feedback tw-flex tw-items-center tw-gap-[5px] tw-pt-2.5 tw-text-[length:11px] tw-leading-[1.7] tw-text-green tw-overflow-anywhere [&>span]:tw-flex-1 ${state.error ? 'feedback-error tw-text-red' : ''}`}
       role={state.error ? 'alert' : 'status'}
     >
       <span>{state.error ?? state.notice}</span>
       <CalendarButton
         appearance="icon"
-        className="icon-button"
+        className="icon-button app:tw-inline-flex app:tw-h-7 app:tw-w-7 app:tw-shrink-0 app:tw-items-center app:tw-justify-center app:tw-rounded-[var(--form-radius)] app:tw-p-[5px] app:tw-text-secondary coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
         aria-label="关闭提示"
         onClick={() => controller.dismissError()}
         icon={<Icon name="close" />}
@@ -298,7 +298,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   return (
     <article
       ref={container}
-      className="calendar-app"
+      className="calendar-app tw-grid tw-w-[min(400px,_100%)] tw-min-w-0 tw-max-w-full tw-gap-3 tw-text-[length:13px] tw-text-ink mac:tw-max-h-[100vh] mac:tw-w-full mac:tw-content-start mac:tw-gap-2 mac:tw-overflow-y-auto mac:tw-p-2 web:desktop:tw-w-[min(960px,_100%)] web:desktop:tw-grid-cols-[minmax(0,_1fr)_280px] web:desktop:tw-gap-4"
       data-panel={state.panel}
       data-show-lunar-details={state.preferences.showLunarDetails}
       aria-label="i日历"
@@ -313,31 +313,31 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       ) : (
         <>
           <section
-            className="month-panel"
+            className="month-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:desktop:tw-p-6 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
             aria-label="月历"
           >
-            <div className="month-toolbar">
+            <div className="month-toolbar tw-mb-3 tw-flex tw-items-center tw-justify-between tw-gap-2 tw-text-[length:13px] tw-font-medium tiny:coarse:tw-gap-0 [&_svg]:tw-h-[13px] [&_svg]:tw-w-[13px]">
               <h1
                 className="sr-only"
                 id="month-title"
               >
                 {state.year}年{state.monthNumber}月
               </h1>
-              <div className="month-heading">
+              <div className="month-heading tw-flex tw-min-w-0 tw-items-center tw-gap-1 tiny:coarse:tw-gap-0">
                 <CalendarSelect
-                  className="year-control"
+                  className="year-control tw-w-[78px]"
                   label="年份"
                   value={state.year}
                   options={years}
                   onChange={(year) => controller.jump(year, state.monthNumber)}
                 />
                 <nav
-                  className="month-controls"
+                  className="month-controls tw-flex tw-shrink-0 tw-items-center tw-gap-1 coarse:tw-gap-0.5 tiny:coarse:tw-gap-0"
                   aria-label="切换月份"
                 >
                   <CalendarButton
                     appearance="toolbar"
-                    className="tool-button"
+                    className="tool-button app:tw-relative app:tw-h-7 app:tw-w-7 app:tw-min-w-7 app:tw-shrink-0 app:tw-rounded-[8px] app:tw-border-0 app:tw-bg-transparent app:tw-p-0 app:tw-text-[length:13px] app:tw-font-medium app:tw-leading-[20px] app:tw-text-ink app:tw-shadow-none coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
                     aria-label="上个月"
                     title="上个月（PageUp）"
                     disabled={state.year === 1901 && state.monthNumber === 1}
@@ -350,7 +350,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                     onClick={() => controller.shiftMonth(-1)}
                   />
                   <CalendarSelect
-                    className="month-control"
+                    className="month-control tw-w-[62px]"
                     label="月份"
                     value={state.monthNumber}
                     options={months}
@@ -358,7 +358,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   />
                   <CalendarButton
                     appearance="toolbar"
-                    className="tool-button"
+                    className="tool-button app:tw-relative app:tw-h-7 app:tw-w-7 app:tw-min-w-7 app:tw-shrink-0 app:tw-rounded-[8px] app:tw-border-0 app:tw-bg-transparent app:tw-p-0 app:tw-text-[length:13px] app:tw-font-medium app:tw-leading-[20px] app:tw-text-ink app:tw-shadow-none coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
                     aria-label="下个月"
                     title="下个月（PageDown）"
                     disabled={state.year === 2100 && state.monthNumber === 12}
@@ -374,7 +374,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
               </div>
               <CalendarButton
                 appearance="accent"
-                className="today-button"
+                className="today-button app:tw-relative app:tw-h-7 app:tw-w-11 app:tw-min-w-11 app:tw-shrink-0 app:tw-whitespace-nowrap app:tw-rounded-[8px] app:tw-border-0 app:tw-bg-transparent app:tw-p-0 app:tw-text-[length:13px] app:tw-font-medium app:tw-leading-[20px] app:tw-text-action app:tw-shadow-none coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
                 onClick={() => controller.goToday()}
                 title="回到今天（T）"
               >
@@ -390,7 +390,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
               ref={grid}
             >
               <div
-                className="week-row"
+                className="week-row tw-mb-2 tw-grid tw-grid-cols-[repeat(7,_minmax(0,_1fr))] tw-gap-[5px] mac:tw-mb-1.5 web:desktop:tw-mb-3.5 web:desktop:tw-gap-2 tiny:coarse:tw-gap-[3px] [&>span]:tw-text-center [&>span]:tw-text-[length:12px] [&>span]:tw-font-medium [&>span]:tw-leading-[22px] [&>span]:tw-text-[var(--weekday-ink)] [&_.weekend-heading]:tw-text-red"
                 role="row"
               >
                 {displayedWeekdays.map((day) => (
@@ -405,7 +405,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
               </div>
               {Array.from({ length: 6 }, (_, row) => (
                 <div
-                  className="date-row"
+                  className="date-row tw-grid tw-grid-cols-[repeat(7,_minmax(0,_1fr))] tw-gap-[5px] web:desktop:tw-gap-2 tiny:coarse:tw-gap-[3px] [&+.date-row]:tw-mt-[5px] mac:[&+.date-row]:tw-mt-0.5 web:desktop:[&+.date-row]:tw-mt-2 [&>[role='gridcell']]:tw-min-w-0"
                   role="row"
                   key={row}
                 >
@@ -419,7 +419,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         <button
                           type="button"
                           className={[
-                            'day-cell',
+                            'day-cell tw-w-full tw-h-[46px] tw-relative tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-0.5 tw-py-[3px] tw-px-0 tw-border-0 tw-rounded-[12px] tw-bg-transparent tw-text-ink [&_.term-label]:tw-text-green [&_.festival-label]:tw-text-[var(--purple)] web:desktop:tw-h-[clamp(44px,_6.4vh,_60px)] mac:tw-h-10 mac:tw-py-0.5 mac:tw-px-0 mac:tw-rounded-[10px] mac:tw-gap-px coarse:tw-h-12 web:desktop:short:tw-gap-px web:desktop:short:tw-py-0.5 web:desktop:short:tw-px-0',
                             day.month !== state.monthNumber ? 'outside-month' : '',
                             state.selected.date === day.date ? 'selected' : '',
                             state.today === day.date ? 'is-today' : '',
@@ -440,16 +440,18 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                           onClick={() => controller.selectDate(day.date)}
                           onKeyDown={moveInGrid}
                         >
-                          <span className="solar-day">{day.day}</span>
+                          <span className="solar-day tw-text-[length:19px] tw-font-semibold tw-tabular-nums tw-leading-[22px] tw-tracking-[-0.025em] mac:tw-text-[length:18px] mac:tw-leading-[21px] web:desktop:tw-text-[length:22px] web:desktop:tw-leading-[27px] tiny:coarse:tw-text-[length:18px] web:desktop:short:tw-text-[length:19px] web:desktop:short:tw-leading-[23px]">
+                            {day.day}
+                          </span>
                           <span
-                            className={`lunar-day ${day.festivals.length ? 'festival-label' : day.solarTerm ? 'term-label' : ''}`}
+                            className={`lunar-day tw-max-w-full tw-overflow-hidden tw-text-ellipsis tw-whitespace-nowrap tw-text-[length:11px] tw-leading-[14px] tw-text-[var(--lunar-ink)] web:desktop:tw-text-[length:12px] web:desktop:tw-leading-[17px] web:desktop:short:tw-shrink-0 web:desktop:short:tw-text-[length:11px] web:desktop:short:tw-leading-[14px] ${day.festivals.length ? 'festival-label' : day.solarTerm ? 'term-label' : ''}`}
                           >
                             {detailLabel(day)}
                           </span>
                           {day.schedule.kind === 'holiday' ||
                           day.schedule.kind === 'makeup-workday' ? (
                             <span
-                              className={`day-mark ${day.schedule.kind === 'makeup-workday' ? 'makeup' : ''}`}
+                              className={`day-mark tw-absolute -tw-top-0.5 tw-right-px tw-rounded-[4px] tw-bg-red tw-px-0.5 tw-py-px tw-text-[length:11px] tw-font-semibold tw-leading-[12px] tw-text-surface ${day.schedule.kind === 'makeup-workday' ? 'makeup' : ''}`}
                               aria-hidden="true"
                             >
                               {day.schedule.kind === 'holiday' ? '休' : '班'}
@@ -461,7 +463,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                       <span
                         key={`empty-${index}`}
                         role="gridcell"
-                        className="empty-day"
+                        className="empty-day tw-h-[46px] tw-w-full mac:tw-h-10 mac:tw-gap-px mac:tw-rounded-[10px] mac:tw-px-0 mac:tw-py-0.5 web:desktop:tw-h-[clamp(44px,_6.4vh,_60px)] coarse:tw-h-12"
                         aria-label="日期范围之外"
                       />
                     ),
@@ -470,7 +472,9 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
               ))}
             </div>
             {state.month.coverage === 'unavailable' ? (
-              <p className="missing-schedule-note">本年调休未收录</p>
+              <p className="missing-schedule-note tw-mx-0 tw-mb-0 tw-mt-[11px] tw-text-[length:11px] tw-leading-[18px] tw-text-yellow mac:tw-mt-2 web:desktop:tw-mt-[17px]">
+                本年调休未收录
+              </p>
             ) : null}
             {!state.preferences.showLunarDetails ? (
               <Feedback
@@ -481,7 +485,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
           </section>
           {state.preferences.showLunarDetails ? (
             <aside
-              className="detail-panel"
+              className="detail-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-px-[18px] tw-py-3 mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:desktop:tw-flex web:desktop:tw-flex-col compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-3 web:desktop:[&>*]:tw-shrink-0"
               aria-label="日期详情"
             >
               <CalendarContextMenu
@@ -507,25 +511,27 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 ]}
               >
                 <section
-                  className="date-summary"
+                  className="date-summary tw-relative tw-grid tw-min-h-[58px] tw-grid-cols-[50px_minmax(0,_1fr)] tw-items-center tw-gap-[4px_12px] web:desktop:tw-flex web:desktop:tw-flex-col web:desktop:tw-items-center web:desktop:tw-gap-2 web:desktop:tw-px-0 web:desktop:tw-pb-3 web:desktop:tw-pt-2 web:desktop:tw-text-center compact:tw-gap-2 coarse:tw-flex-wrap compact:coarse:tw-grid-cols-[44px_minmax(0,_1fr)] compact:coarse:tw-gap-[4px_8px]"
                   aria-label="所选日期"
                 >
                   <div
-                    className="date-leaf"
+                    className="date-leaf tw-relative tw-col-[1] tw-row-[1] tw-grid tw-h-[58px] tw-w-[50px] tw-shrink-0 tw-place-items-center tw-rounded-[13px] tw-bg-[var(--leaf)] tw-text-[#fff] web:desktop:tw-h-[94px] web:desktop:tw-w-[84px] web:desktop:tw-rounded-[19px] compact:tw-h-[54px] compact:tw-w-11 [&>span]:tw-pt-[5px] [&>span]:tw-text-[length:28px] [&>span]:tw-font-medium [&>span]:tw-tabular-nums [&>span]:tw-leading-[32px] web:desktop:[&>span]:tw-text-[length:46px] web:desktop:[&>span]:tw-leading-[54px]"
                     aria-hidden="true"
                   >
                     <span key={state.selected.date}>{state.selected.day}</span>
                   </div>
-                  <div className="date-detail">
-                    <div className="date-heading">
+                  <div className="date-detail tw-col-[2] tw-row-[1] tw-min-w-0 tw-flex-1 [&_h2>span:last-child]:tw-ml-1 [&_h2]:tw-m-0 [&_h2]:tw-whitespace-nowrap [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[18px] [&_h2]:tw-text-ink web:desktop:[&_h2]:tw-text-[length:14px] web:desktop:[&_h2]:tw-leading-[22px] compact:[&_h2]:tw-text-[length:12px] [&_p]:tw-m-0 [&_p]:tw-text-[length:11px] [&_p]:tw-leading-[17px] [&_p]:tw-text-secondary web:desktop:[&_p]:tw-text-[length:12px] web:desktop:[&_p]:tw-leading-[21px] compact:[&_p]:tw-text-[length:11px]">
+                    <div className="date-heading tw-mb-1 tw-flex tw-flex-wrap tw-items-center tw-gap-[4px_8px] web:desktop:tw-justify-center">
                       <h2>
-                        <span className="detail-year">{state.selected.year}年</span>
+                        <span className="detail-year tw-hidden web:desktop:tw-inline">
+                          {state.selected.year}年
+                        </span>
                         {state.selected.month}月{state.selected.day}日{' '}
                         <span>周{weekdays[state.selected.weekday - 1]}</span>
                       </h2>
                       {state.selected.solarTerm ? (
                         <span
-                          className="date-event date-event-term"
+                          className="date-event date-event-term tw-text-[length:11px] tw-font-medium tw-leading-[18px] tw-text-green tw-overflow-anywhere"
                           aria-label={`节气：${state.selected.solarTerm}`}
                         >
                           {state.selected.solarTerm}
@@ -534,25 +540,25 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                       {state.selected.festivals.map((festival) => (
                         <span
                           key={festival}
-                          className="date-event date-event-festival"
+                          className="date-event date-event-festival tw-text-[length:11px] tw-font-medium tw-leading-[18px] tw-text-[var(--purple)] tw-overflow-anywhere"
                           aria-label={`节日：${festival}`}
                         >
                           {festival}
                         </span>
                       ))}
                       <strong
-                        className={`schedule-badge schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
+                        className={`schedule-badge tw-whitespace-nowrap tw-rounded-[6px] tw-bg-green-soft tw-px-1.5 tw-py-px tw-text-[length:11px] tw-font-medium tw-leading-[18px] tw-text-green schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
                       >
                         {scheduleLabel(state.selected)}
                       </strong>
                     </div>
-                    <div className="lunar-summary">
+                    <div className="lunar-summary tw-flex tw-flex-wrap tw-items-baseline tw-gap-[0_8px] tw-text-[length:11px] tw-leading-[17px] tw-text-secondary web:desktop:tw-justify-center web:desktop:tw-text-[length:12px] web:desktop:tw-leading-[21px] [&>p]:tw-whitespace-nowrap [&>p]:tw-text-[var(--lunar-ink)]">
                       <p>
                         农历{state.selected.lunar.monthName}
                         {state.selected.lunar.dayName}
                       </p>
                       <dl
-                        className="almanac-pillars"
+                        className="almanac-pillars tw-m-0 tw-flex tw-flex-wrap tw-gap-[0_6px] [&>div]:tw-flex [&>div]:tw-items-baseline [&>div]:tw-gap-1.5 [&_dd]:tw-m-0 [&_dd]:tw-whitespace-nowrap [&_dd]:tw-font-normal [&_dd]:tw-text-ink"
                         aria-label="年月日干支"
                       >
                         {(
@@ -572,7 +578,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         ))}
                       </dl>
                     </div>
-                    <span className="date-traits">
+                    <span className="date-traits tw-flex tw-flex-wrap tw-gap-[2px_8px] tw-text-[length:11px] tw-leading-[18px] tw-text-secondary web:desktop:tw-justify-center [&>span]:tw-whitespace-nowrap [&_b]:tw-font-medium [&_b]:tw-text-ink">
                       <span>
                         生肖 <b>{state.selected.lunar.zodiac}</b>
                       </span>
@@ -583,7 +589,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   </div>
                 </section>
               </CalendarContextMenu>
-              <div className="almanac-inline">
+              <div className="almanac-inline tw-mt-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-line web:desktop:tw-mt-0 web:desktop:tw-block web:desktop:tw-border-0 web:desktop:tw-border-t web:desktop:tw-border-solid web:desktop:tw-border-line web:desktop:tw-p-0">
                 <AlmanacContent almanac={state.almanac} />
               </div>
               <Feedback
@@ -593,8 +599,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
             </aside>
           ) : null}
           <AppUpdateNotice controller={controller} />
-          <footer className="app-footer tw-flex tw-items-center tw-justify-between">
-            <div className="brand tw-flex tw-items-center">
+          <footer className="app-footer tw-col-[1_/_-1] tw-flex tw-min-h-7 tw-items-center tw-justify-between tw-px-3 tw-py-0">
+            <div className="brand tw-flex tw-items-center tw-gap-[7px] tw-text-[length:13px] tw-font-semibold tw-tracking-[0.02em] web:desktop:tw-text-[length:14px] [&_img]:tw-block [&_img]:tw-h-[19px] [&_img]:tw-w-[19px]">
               <img
                 src={new URL('./assets/logo.svg', import.meta.url).href}
                 width="19"
@@ -606,7 +612,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
             <CalendarButton
               ref={gear}
               appearance="icon"
-              className="icon-button"
+              className="icon-button app:tw-inline-flex app:tw-h-7 app:tw-w-7 app:tw-shrink-0 app:tw-items-center app:tw-justify-center app:tw-rounded-[var(--form-radius)] app:tw-p-[5px] app:tw-text-secondary coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
               aria-label="设置与调休数据"
               title="设置与调休数据"
               onClick={() => controller.showSettings()}
@@ -649,10 +655,10 @@ function Settings({
   };
   return (
     <section
-      className="settings-panel"
+      className="settings-panel tw-flex tw-h-[min(640px,_calc(100svh_-_64px))] tw-min-h-0 tw-min-w-0 tw-flex-col tw-overflow-hidden tw-rounded-[22px] tw-bg-surface tw-p-5 mac:tw-h-full mac:tw-min-h-0 mac:tw-overflow-hidden mac:tw-rounded-[18px] mac:tw-p-3 compact:tw-h-[calc(100svh_-_24px)] mac:compact:tw-h-full"
       aria-labelledby="settings-title"
     >
-      <header className="settings-header">
+      <header className="settings-header tw-mb-3.5 tw-flex tw-min-h-[30px] tw-items-center tw-justify-between [&>.calendar-button]:tw-pl-0 [&>.calendar-button]:tw-text-action [&_h1]:tw-m-0 [&_h1]:tw-text-[length:15px] [&_h1]:tw-font-semibold">
         <CalendarButton
           ref={back}
           appearance="text"
@@ -671,13 +677,13 @@ function Settings({
             key: 'general',
             label: '常规',
             children: (
-              <div className="settings-scroll">
+              <div className="settings-scroll tw-h-full tw-min-h-0 tw-overflow-y-auto tw-overscroll-contain tw-px-0.5 tw-py-0 [&>section:first-child]:tw-pt-2 [&>section:last-child]:tw-border-0 [&>section]:tw-border-0 [&>section]:tw-border-b [&>section]:tw-border-solid [&>section]:tw-border-line [&>section]:tw-px-0 [&>section]:tw-py-[18px] [&_.clock-format-error]:tw-mx-0 [&_.clock-format-error]:tw-mb-2 [&_.clock-format-error]:tw-mt-0 [&_.clock-format-error]:tw-block [&_.clock-format-error]:tw-text-[length:12px] [&_.clock-format-error]:tw-leading-[1.8] [&_.clock-format-error]:tw-text-red [&_.clock-help]:tw-text-[length:11px] [&_.setting-hint]:tw-text-[length:11px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-[13px] [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[20px] [&_p]:tw-mx-0 [&_p]:tw-mb-2 [&_p]:tw-mt-0 [&_p]:tw-text-[length:12px] [&_p]:tw-leading-[1.8] [&_p]:tw-text-[var(--hint-ink)]">
                 {controller.platform.kind === 'macos' ? (
                   <LaunchAtLoginSettings controller={controller.launchAtLogin} />
                 ) : null}
                 <section>
                   <h2>日历显示</h2>
-                  <div className="setting-label">
+                  <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">
                     <label htmlFor="show-lunar-details">显示农历详情</label>
                     <CalendarSwitch
                       id="show-lunar-details"
@@ -691,7 +697,7 @@ function Settings({
                   <p id="lunar-details-hint">
                     显示日期、农历干支与黄历详情；月历中的农历不受影响。
                   </p>
-                  <div className="setting-label">
+                  <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">
                     <span>每周开始于</span>
                     <CalendarSegmented
                       aria-label="每周开始于"
@@ -705,7 +711,7 @@ function Settings({
                       }}
                     />
                   </div>
-                  <div className="setting-label">
+                  <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">
                     <span>外观</span>
                     <CalendarSegmented
                       aria-label="外观"
@@ -726,7 +732,7 @@ function Settings({
                 <section>
                   <h2>配色</h2>
                   <div
-                    className="palette-choices"
+                    className="palette-choices tw-mx-0 tw-mb-4 tw-mt-3 tw-grid tw-grid-cols-[repeat(3,_minmax(0,_1fr))] tw-gap-2"
                     role="group"
                     aria-label="主题预设"
                   >
@@ -734,7 +740,7 @@ function Settings({
                       <CalendarButton
                         key={preset.id}
                         appearance="choice"
-                        className="palette-choice"
+                        className="palette-choice app:tw-flex app:tw-h-auto app:tw-min-h-[66px] app:tw-flex-col app:tw-gap-[7px] app:tw-px-2.5 app:tw-py-2 app:tw-text-[length:12px] app:tw-leading-[18px]"
                         aria-pressed={state.preferences.colorTheme === preset.id}
                         onClick={() => {
                           void controller.setPreferences({
@@ -744,7 +750,7 @@ function Settings({
                         }}
                       >
                         <span
-                          className="palette-swatch"
+                          className="palette-swatch tw-flex tw-h-5 tw-w-full tw-min-w-10 tw-items-center tw-justify-center tw-rounded-[5px] [&>i]:tw-h-[7px] [&>i]:tw-w-[22px] [&>i]:tw-rounded-[3px]"
                           style={{ background: preset.canvas }}
                           aria-hidden="true"
                         >
@@ -754,7 +760,7 @@ function Settings({
                       </CalendarButton>
                     ))}
                   </div>
-                  <div className="accent-setting">
+                  <div className="accent-setting tw-flex tw-flex-wrap tw-items-center tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] tw-leading-[var(--form-line-height)] coarse:tw-min-h-11 coarse:tw-items-center [&_label]:tw-mr-auto">
                     <label htmlFor="accent-color">强调色</label>
                     <CalendarColorInput
                       id="accent-color"
@@ -769,7 +775,7 @@ function Settings({
                       onBlur={() => interact(false)}
                     />
 
-                    <span className="accent-value">
+                    <span className="accent-value tw-tabular-nums tw-text-secondary">
                       {(
                         state.preferences.accentColor ??
                         colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
@@ -798,7 +804,7 @@ function Settings({
                   key: 'menu-bar',
                   label: '菜单栏',
                   children: (
-                    <div className="settings-scroll">
+                    <div className="settings-scroll tw-h-full tw-min-h-0 tw-overflow-y-auto tw-overscroll-contain tw-px-0.5 tw-py-0 [&>section:first-child]:tw-pt-2 [&>section:last-child]:tw-border-0 [&>section]:tw-border-0 [&>section]:tw-border-b [&>section]:tw-border-solid [&>section]:tw-border-line [&>section]:tw-px-0 [&>section]:tw-py-[18px] [&_.clock-format-error]:tw-mx-0 [&_.clock-format-error]:tw-mb-2 [&_.clock-format-error]:tw-mt-0 [&_.clock-format-error]:tw-block [&_.clock-format-error]:tw-text-[length:12px] [&_.clock-format-error]:tw-leading-[1.8] [&_.clock-format-error]:tw-text-red [&_.clock-help]:tw-text-[length:11px] [&_.setting-hint]:tw-text-[length:11px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-[13px] [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[20px] [&_p]:tw-mx-0 [&_p]:tw-mb-2 [&_p]:tw-mt-0 [&_p]:tw-text-[length:12px] [&_p]:tw-leading-[1.8] [&_p]:tw-text-[var(--hint-ink)]">
                       <MenuClockSettings
                         settings={state.preferences.menuClock}
                         onChange={(menuClock) => {
@@ -814,14 +820,14 @@ function Settings({
             key: 'data',
             label: '数据',
             children: (
-              <div className="settings-scroll">
+              <div className="settings-scroll tw-h-full tw-min-h-0 tw-overflow-y-auto tw-overscroll-contain tw-px-0.5 tw-py-0 [&>section:first-child]:tw-pt-2 [&>section:last-child]:tw-border-0 [&>section]:tw-border-0 [&>section]:tw-border-b [&>section]:tw-border-solid [&>section]:tw-border-line [&>section]:tw-px-0 [&>section]:tw-py-[18px] [&_.clock-format-error]:tw-mx-0 [&_.clock-format-error]:tw-mb-2 [&_.clock-format-error]:tw-mt-0 [&_.clock-format-error]:tw-block [&_.clock-format-error]:tw-text-[length:12px] [&_.clock-format-error]:tw-leading-[1.8] [&_.clock-format-error]:tw-text-red [&_.clock-help]:tw-text-[length:11px] [&_.setting-hint]:tw-text-[length:11px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-[13px] [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[20px] [&_p]:tw-mx-0 [&_p]:tw-mb-2 [&_p]:tw-mt-0 [&_p]:tw-text-[length:12px] [&_p]:tw-leading-[1.8] [&_p]:tw-text-[var(--hint-ink)]">
                 <section>
                   <h2>放假与调休</h2>
                   <p>已收录：{state.years.join('、')}年</p>
                   <p>
                     农历、节气和已收录的调休均可离线查询。放假安排根据全国统一通知整理，不包含个人排班及地方假期。
                   </p>
-                  <div className="data-actions">
+                  <div className="data-actions tw-mx-0 tw-mb-2.5 tw-mt-3.5 tw-flex tw-gap-[var(--form-gap)] coarse:tw-min-h-11 coarse:tw-items-center">
                     <CalendarButton
                       loading={state.updating}
                       disabled={!state.ready}
@@ -859,7 +865,7 @@ function Settings({
             key: 'about',
             label: '关于',
             children: (
-              <div className="settings-scroll">
+              <div className="settings-scroll tw-h-full tw-min-h-0 tw-overflow-y-auto tw-overscroll-contain tw-px-0.5 tw-py-0 [&>section:first-child]:tw-pt-2 [&>section:last-child]:tw-border-0 [&>section]:tw-border-0 [&>section]:tw-border-b [&>section]:tw-border-solid [&>section]:tw-border-line [&>section]:tw-px-0 [&>section]:tw-py-[18px] [&_.clock-format-error]:tw-mx-0 [&_.clock-format-error]:tw-mb-2 [&_.clock-format-error]:tw-mt-0 [&_.clock-format-error]:tw-block [&_.clock-format-error]:tw-text-[length:12px] [&_.clock-format-error]:tw-leading-[1.8] [&_.clock-format-error]:tw-text-red [&_.clock-help]:tw-text-[length:11px] [&_.setting-hint]:tw-text-[length:11px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-[13px] [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[20px] [&_p]:tw-mx-0 [&_p]:tw-mb-2 [&_p]:tw-mt-0 [&_p]:tw-text-[length:12px] [&_p]:tw-leading-[1.8] [&_p]:tw-text-[var(--hint-ink)]">
                 <section>
                   <h2>i日历</h2>
                   <p>版本 {appVersion}</p>
@@ -885,7 +891,7 @@ function Settings({
                   <h2>数据来源</h2>
                   <button
                     type="button"
-                    className="source-link"
+                    className="source-link tw-mb-3 tw-flex tw-items-center tw-gap-[7px] tw-border-0 tw-bg-transparent tw-p-0 tw-text-left tw-text-[length:12px] tw-leading-[19px] tw-text-action focus-visible:tw-outline focus-visible:tw-outline-1 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-secondary coarse:tw-min-h-11"
                     onClick={() => {
                       void controller.openSource('https://github.com/NateScarlet/holiday-cn');
                     }}
@@ -899,7 +905,7 @@ function Settings({
                   </button>
                   <button
                     type="button"
-                    className="source-link"
+                    className="source-link tw-mb-3 tw-flex tw-items-center tw-gap-[7px] tw-border-0 tw-bg-transparent tw-p-0 tw-text-left tw-text-[length:12px] tw-leading-[19px] tw-text-action focus-visible:tw-outline focus-visible:tw-outline-1 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-secondary coarse:tw-min-h-11"
                     onClick={() => {
                       void controller.openSource('https://github.com/6tail/lunar-typescript');
                     }}
@@ -914,7 +920,7 @@ function Settings({
                   {state.selected.schedule.sources.map((source, index) => (
                     <button
                       type="button"
-                      className="source-link"
+                      className="source-link tw-mb-3 tw-flex tw-items-center tw-gap-[7px] tw-border-0 tw-bg-transparent tw-p-0 tw-text-left tw-text-[length:12px] tw-leading-[19px] tw-text-action focus-visible:tw-outline focus-visible:tw-outline-1 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-secondary coarse:tw-min-h-11"
                       key={source}
                       onClick={() => {
                         void controller.openSource(source);

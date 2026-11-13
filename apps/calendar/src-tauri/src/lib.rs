@@ -243,6 +243,18 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                     .and_then(Value::as_bool)
                     != Some(false)
                 || report.get("renderedCells").and_then(Value::as_u64) != Some(42)
+                || report
+                    .pointer("/controlGeometry/year")
+                    .and_then(Value::as_u64)
+                    != Some(28)
+                || report
+                    .pointer("/controlGeometry/previous")
+                    .and_then(Value::as_u64)
+                    != Some(28)
+                || report
+                    .pointer("/controlGeometry/day")
+                    .and_then(Value::as_u64)
+                    != Some(40)
                 || report.get("detailScrollable").and_then(Value::as_bool) != Some(false)
                 || report.get("cells").and_then(Value::as_u64) != Some(42)
                 || report.get("lunar").and_then(Value::as_str) != Some("初一")

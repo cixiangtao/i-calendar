@@ -43,7 +43,7 @@ export function MenuClockSettings({
       aria-labelledby="menu-clock-title"
     >
       <h2 id="menu-clock-title">菜单栏显示</h2>
-      <div className="setting-label">
+      <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">
         <label htmlFor="menu-clock-icon">显示图标</label>
         <CalendarSwitch
           id="menu-clock-icon"
@@ -53,7 +53,7 @@ export function MenuClockSettings({
           onChange={(showIcon) => onChange({ ...settings, showIcon })}
         />
       </div>
-      <div className="setting-label">
+      <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">
         <label htmlFor="menu-clock-enabled">显示菜单栏时间</label>
         <CalendarSwitch
           id="menu-clock-enabled"
@@ -63,11 +63,11 @@ export function MenuClockSettings({
           onChange={(enabled) => onChange({ ...settings, enabled })}
         />
       </div>
-      <div className="setting-label">
+      <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">
         <label htmlFor="menu-clock-format">展示格式</label>
         <CalendarSelect
           id="menu-clock-format"
-          className="clock-format-select"
+          className="clock-format-select tw-w-[188px] tw-max-w-[65%]"
           label="展示格式"
           value={mode}
           options={formatOptions}
@@ -83,7 +83,7 @@ export function MenuClockSettings({
       </div>
       {mode === 'custom' ? (
         <form
-          className="clock-format-form"
+          className="clock-format-form tw-mb-2 tw-flex tw-gap-[var(--form-gap)] coarse:tw-min-h-11 coarse:tw-items-center [&_.calendar-button]:tw-shrink-0 [&_.calendar-input-field]:tw-min-w-0 [&_.calendar-input-field]:tw-tabular-nums"
           onSubmit={(event) => {
             event.preventDefault();
             if (!error) onChange({ ...settings, format: draft });
@@ -131,7 +131,7 @@ export function MenuClockSettings({
           </output>
         </>
       ) : null}
-      <div className="clock-preview-row">
+      <div className="clock-preview-row tw-mx-0 tw-my-2 tw-flex tw-flex-wrap tw-items-baseline tw-justify-between tw-gap-[6px_12px] tw-rounded-[8px] tw-bg-control tw-px-2.5 tw-py-[9px] tw-text-[length:11px] tw-leading-[20px] tw-text-secondary [&_output]:tw-text-[length:12px] [&_output]:tw-tabular-nums [&_output]:tw-text-ink [&_output]:tw-overflow-anywhere">
         <span>{settings.enabled ? '时间格式预览' : '时间格式预览（时间已关闭）'}</span>
         <output
           aria-label="菜单栏时间预览"

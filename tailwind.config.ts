@@ -14,7 +14,9 @@ export default {
   // 保留既有页面基线和原生控件默认语义，避免迁移时引入全局重置。
   corePlugins: { preflight: false },
   plugins: [
-    plugin(({ addVariant }) => {
+    plugin(({ addVariant, addUtilities }) => {
+      addVariant('app', '[class~="calendar-app"] &');
+      addUtilities({ '.overflow-anywhere': { overflowWrap: 'anywhere' } });
       addVariant('mac', "body[data-platform='macos'] &");
       addVariant('ios', "body[data-platform='ios'] &");
       addVariant('web', "body[data-platform='web'] &");

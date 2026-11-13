@@ -19,7 +19,7 @@ export function LaunchAtLoginSettings({ controller }: { controller: LaunchAtLogi
   return (
     <section>
       <h2>启动</h2>
-      <div className="setting-label">
+      <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">
         <label htmlFor="launch-at-login">开机自启</label>
         <CalendarSwitch
           id="launch-at-login"

@@ -14,7 +14,7 @@ class AppBoundary extends Component<{ children: ReactNode }, { failed: boolean }
   }
   render() {
     return this.state.failed ? (
-      <main className="boot-message">
+      <main className="boot-message tw-p-6 tw-text-[length:13px] tw-text-secondary">
         <h1>日历暂时无法显示</h1>
         <p>本地数据会保留，请重新打开日历。</p>
         <button
@@ -44,12 +44,12 @@ async function start() {
     root.render(
       <StrictMode>
         <AppBoundary>
-          <main className="calendar-stage">
+          <main className="calendar-stage tw-grid tw-min-h-[100svh] tw-grid-cols-[minmax(0,_1fr)] tw-items-start tw-justify-items-center tw-px-6 tw-py-8 mac:tw-block mac:tw-min-h-[100vh] mac:tw-p-0 ios:tw-pb-[max(12px,env(safe-area-inset-bottom))] ios:tw-pl-[max(10px,env(safe-area-inset-left))] ios:tw-pr-[max(10px,env(safe-area-inset-right))] ios:tw-pt-[max(12px,env(safe-area-inset-top))] compact:tw-items-start compact:tw-p-3">
             <CalendarApp controller={controller} />
           </main>
           {platform.kind === 'web' ? (
             <section
-              className="web-info"
+              className="web-info tw-mx-auto tw-my-0 tw-max-w-[880px] tw-px-6 tw-pb-[72px] tw-pt-12 tw-text-[length:13px] tw-leading-[1.9] tw-text-[var(--hint-ink)] [&_a]:tw-text-action [&_a]:tw-underline-offset-[4px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-2.5 [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:18px] [&_h2]:tw-font-semibold [&_h2]:tw-text-ink [&_p]:tw-mx-0 [&_p]:tw-mb-3 [&_p]:tw-mt-0"
               aria-label="关于i日历"
             >
               <h2>查日子，打开就好。</h2>
@@ -85,6 +85,19 @@ async function start() {
     const report = {
       appUpdaterAvailable: !!platform.appUpdater,
       launchAtLoginAvailable: !!platform.launchAtLogin,
+      controlGeometry: {
+        year: Math.round(
+          document.querySelector('[role="combobox"][aria-label="年份"]')?.getBoundingClientRect()
+            .height ?? 0,
+        ),
+        previous: Math.round(
+          document.querySelector('button[aria-label="上个月"]')?.getBoundingClientRect().height ??
+            0,
+        ),
+        day: Math.round(
+          document.querySelector('button[data-date]')?.getBoundingClientRect().height ?? 0,
+        ),
+      },
       renderedCells: document.querySelectorAll('[role="gridcell"]').length,
       detailScrollable: (() => {
         const detail = document.querySelector<HTMLElement>('.detail-panel');
