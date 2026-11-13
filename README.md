@@ -80,6 +80,7 @@ pnpm run build:ios
 pnpm run lint           # oxlint：问题和警告均须处理
 pnpm run format         # oxfmt：格式化所有支持的项目文件
 pnpm run format:check   # 只检查格式，不写文件
+pnpm run check:dev      # 开发服务运行时检查主题色、字体与平台样式是否生成
 pnpm run check          # lint、格式、类型检查、45 项测试及 ESM/网页构建
 pnpm run check:native   # Rust 测试：存储、旧数据迁移、多屏定位、菜单栏时钟
 pnpm run build:mac      # 构建 Mac 应用、校验签名并生成 ZIP
