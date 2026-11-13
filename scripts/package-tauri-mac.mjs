@@ -85,5 +85,5 @@ if (withUpdater) {
   console.log(`已验签的更新包：${output}\n更新签名：${output}.sig`);
 }
 console.log(
-  `Mac 应用：${app}\n本地压缩包：${archive}\n当前为本地临时签名，正式分发仍需开发者签名与公证。`,
+  `Mac 应用：${app}\n本地压缩包：${archive}\n当前使用本地签名，未通过 Apple 公证；发布时须明确说明安装与验证方式。`,
 );

@@ -5,6 +5,7 @@ import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
 import { version as appVersion } from '../../../package.json';
+import releaseConfig from '../../../release/config.json';
 import { createPlatform } from './platform.js';
 
 class AppBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -57,15 +58,21 @@ async function start() {
                 i日历提供公农历、节气和中国大陆放假调休。日历计算在本地完成，免费、无广告，无需登录。
               </p>
               <p>
-                Mac、iOS 与网页版使用相同的日历核心和界面组件。当前为 {appVersion}
-                开发预览，正式官网与应用下载将在 1.0 发布时同步提供。
+                当前版本 {appVersion}。Mac 与网页版共用日历核心和界面组件，iOS 版本将在后续提供。
               </p>
               <p>
                 放假与补班根据全国统一安排整理，个人排班以所在单位为准。数据来源可在日历设置中查看。
               </p>
               <p>
-                <a href="./third-party-licenses.txt">第三方组件与许可证</a>
+                <a
+                  href={`https://github.com/${releaseConfig.repository}/releases/download/v${appVersion}/${encodeURIComponent(`i日历-${appVersion}-mac-arm64.zip`)}`}
+                >
+                  下载 Mac 版（Apple 芯片）
+                </a>{' '}
+                · <a href={`https://github.com/${releaseConfig.repository}`}>源代码</a> ·{' '}
+                <a href="./third-party-licenses.txt">许可声明</a>
               </p>
+              <p>Mac 版采用本地签名，尚未通过 Apple 公证；首次安装说明见版本发布页。</p>
             </section>
           ) : null}
         </AppBoundary>

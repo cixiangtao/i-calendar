@@ -1,7 +1,7 @@
 {
   "name": "i-calendar",
   "displayName": "i日历",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "i日历：免费无广告的菜单栏日历，提供公农历、节气与放假调休，Mac、iOS 与 Web 共享核心和界面",
   "keywords": [
@@ -13,7 +13,15 @@
     "节气",
     "调休"
   ],
+  "homepage": "https://cixiangtao.github.io/i-calendar/",
+  "bugs": {
+    "url": "https://github.com/cixiangtao/i-calendar/issues"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cixiangtao/i-calendar.git"
+  },
   "type": "module",
   "scripts": {
     "build": "pnpm run build:core && pnpm run build:web",
@@ -41,7 +49,7 @@
     "preview:web": "vite preview --config apps/calendar/vite.config.ts --host 127.0.0.1",
     "release:manifest": "node scripts/create-update-manifest.mjs",
     "tauri": "node scripts/tauri.mjs",
-    "test": "tsx --test packages/calendar-core/test/*.test.ts packages/calendar-ui/test/*.test.ts && node --test scripts/update-release.test.mjs",
+    "test": "tsx --test packages/calendar-core/test/*.test.ts packages/calendar-ui/test/*.test.ts && node --test scripts/*.test.mjs",
     "typecheck": "tsc --noEmit && pnpm --filter @i-calendar/core run typecheck"
   },
   "dependencies": {
