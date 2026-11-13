@@ -24,7 +24,7 @@ export function AlmanacContent({ almanac }: { almanac: DayAlmanac }) {
           <p>{almanac.ji.join('、') || '资料未提供'}</p>
         </div>
       </div>
-      <dl className="almanac-directions tw-mx-0 tw-mb-0 tw-mt-3 tw-grid tw-grid-cols-[repeat(2,_minmax(0,_1fr))] tw-gap-[6px_12px] tw-border-0 tw-border-t tw-border-solid tw-border-line tw-px-0 tw-pb-0 tw-pt-3 tw-text-[length:12px] tw-leading-[20px] [&>div]:tw-flex [&>div]:tw-min-w-0 [&>div]:tw-items-baseline [&>div]:tw-gap-2 [&_.almanac-chong]:tw-col-[1_/_-1] [&_dd]:tw-m-0 [&_dd]:tw-overflow-anywhere [&_dt]:tw-shrink-0 [&_dt]:tw-text-secondary">
+      <dl className="almanac-directions tw-mx-0 tw-mb-0 tw-mt-3 tw-grid tw-grid-cols-[repeat(3,_minmax(0,_1fr))] tw-gap-[6px_12px] tw-border-0 tw-border-t tw-border-solid tw-border-line tw-px-0 tw-pb-0 tw-pt-3 tw-text-[length:12px] tw-leading-[20px] [&>div]:tw-flex [&>div]:tw-min-w-0 [&>div]:tw-items-baseline [&>div]:tw-gap-2 [&_.almanac-chong]:tw-col-[1_/_-1] [&_dd]:tw-m-0 [&_dd]:tw-overflow-anywhere [&_dt]:tw-shrink-0 [&_dt]:tw-text-secondary">
         <div className="almanac-chong">
           <dt>冲煞</dt>
           <dd>
