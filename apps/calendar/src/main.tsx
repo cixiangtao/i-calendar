@@ -1,4 +1,4 @@
-import { CalendarApp, CalendarController } from '@i-calendar/ui';
+import { bindPageLifecycle, CalendarApp, CalendarController } from '@i-calendar/ui';
 import { invoke } from '@tauri-apps/api/core';
 import { Component, StrictMode, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
@@ -72,7 +72,7 @@ async function start() {
       </StrictMode>,
     ),
   );
-  window.addEventListener('pagehide', () => controller.dispose(), { once: true });
+  bindPageLifecycle(controller, window);
   if (platform.kind !== 'web') {
     const { listen } = await import('@tauri-apps/api/event');
     await listen('calendar:settings', () => controller.showSettings());
