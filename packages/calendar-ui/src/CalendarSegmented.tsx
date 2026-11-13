@@ -43,7 +43,7 @@ export function CalendarSegmented<Value extends string | number>({
           value={optionKey(option.value)}
           disabled={option.disabled}
           className={
-            "tw-relative tw-min-h-6 tw-min-w-0 tw-flex-1 tw-whitespace-nowrap tw-rounded-md tw-border-0 tw-bg-transparent tw-px-2 tw-py-0 tw-font-sans tw-text-[13px] tw-font-normal tw-leading-6 tw-text-secondary tw-outline-none tw-transition-colors tw-duration-[var(--motion-feedback)] tw-ease-[var(--motion-ease)] enabled:active:tw-bg-control-active disabled:tw-opacity-50 data-[state=checked]:tw-text-ink coarse:before:tw-absolute coarse:before:tw-inset-x-0 coarse:before:tw-top-1/2 coarse:before:tw-h-11 coarse:before:-tw-translate-y-1/2 coarse:before:tw-content-[''] enabled:fine:hover:tw-bg-control-hover enabled:fine:hover:tw-text-ink " +
+            "tw-relative tw-min-h-6 tw-min-w-0 tw-flex-1 tw-select-none tw-whitespace-nowrap tw-rounded-md tw-border-0 tw-bg-transparent tw-px-2 tw-py-0 tw-font-sans tw-text-[13px] tw-font-normal tw-leading-6 tw-text-secondary tw-outline-none tw-transition-colors tw-duration-[var(--motion-feedback)] tw-ease-[var(--motion-ease)] disabled:tw-opacity-50 data-[state=checked]:tw-text-ink data-[state=checked]:tw-transition-[color] data-[state=unchecked]:enabled:active:tw-bg-control-active coarse:before:tw-absolute coarse:before:tw-inset-x-0 coarse:before:tw-top-1/2 coarse:before:tw-h-11 coarse:before:-tw-translate-y-1/2 coarse:before:tw-content-[''] data-[state=unchecked]:enabled:fine:hover:tw-bg-control-hover data-[state=unchecked]:enabled:fine:hover:tw-text-ink " +
             controlFocus
           }
         >
