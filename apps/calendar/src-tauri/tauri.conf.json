@@ -41,6 +41,7 @@
       "minimumSystemVersion": "16.0"
     },
     "resources": {
+      "../../../LICENSE": "LICENSE",
       "../../../THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md",
       "../../../work/第三方许可证.txt": "第三方许可证.txt"
     }

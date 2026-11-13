@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const sections = [
-  'i日历第三方组件许可证\n本文件由锁定依赖及其随附许可证生成，包含 Rust 构建依赖。\n',
+  'i日历及第三方组件许可证\n本项目采用 MIT 许可证；第三方组件保留各自许可证。\n',
+  await readFile(path.join(root, 'LICENSE'), 'utf8'),
+  '\n以下由锁定依赖及其随附许可证生成，原生版本另包含 Rust 构建依赖。\n',
 ];
 // pnpm 的隔离依赖位于虚拟存储中，必须遍历依赖树，不能扫描根 node_modules。
 const pnpmExecutable =

@@ -13,6 +13,7 @@
     "节气",
     "调休"
   ],
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "pnpm run build:core && pnpm run build:web",

@@ -144,7 +144,7 @@ pnpm run data:fetch 2028  # 只暂存到 work/holiday-staging，不替换发布�
 
 维护者核对官方通知、跨年日期、放假及补班后，再更新 `packages/calendar-core/src/data/`、数据入口和对应测试。日期按北京时间计算，范围不包含个人排班和地方假期。
 
-项目介绍、用户文案、版本与提交描述使用中文，每个验证后的逻辑修改立即提交。协作规则见 [AGENTS.md](AGENTS.md)。第三方来源见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；构建会在应用和网页中附带依赖许可证。项目自身的正式开源许可证将在 1.0 发布前确定。
+项目介绍、用户文案、版本与提交描述使用中文，每个验证后的逻辑修改立即提交。协作规则见 [AGENTS.md](AGENTS.md)。项目自身采用 [MIT 许可证](LICENSE)；第三方来源见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，构建会在应用和网页中附带项目主许可证及依赖许可证。
 
 ## 黄历数据
 
