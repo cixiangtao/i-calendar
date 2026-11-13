@@ -3,6 +3,8 @@ mod app_update;
 #[cfg(target_os = "macos")]
 mod desktop;
 #[cfg(target_os = "macos")]
+mod launch_at_login;
+#[cfg(target_os = "macos")]
 mod menu_clock;
 mod storage;
 
@@ -40,6 +42,36 @@ fn app_update_available() -> bool {
     return app_update::available();
     #[cfg(not(target_os = "macos"))]
     false
+}
+
+#[tauri::command]
+fn launch_at_login_available() -> bool {
+    #[cfg(target_os = "macos")]
+    return launch_at_login::available();
+    #[cfg(not(target_os = "macos"))]
+    false
+}
+
+#[tauri::command]
+fn get_launch_at_login(app: tauri::AppHandle) -> Result<bool, String> {
+    #[cfg(target_os = "macos")]
+    return launch_at_login::get(&app);
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = app;
+        Err("此平台不支持开机自启".into())
+    }
+}
+
+#[tauri::command]
+fn set_launch_at_login(app: tauri::AppHandle, enabled: bool) -> Result<bool, String> {
+    #[cfg(target_os = "macos")]
+    return launch_at_login::set(&app, enabled);
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (app, enabled);
+        Err("此平台不支持开机自启".into())
+    }
 }
 
 #[tauri::command]
@@ -199,9 +231,17 @@ fn quit_calendar(app: tauri::AppHandle) {
 async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
-        desktop::show_calendar(&app);
+        let arguments: Vec<_> = std::env::args().collect();
+        let background = launch_at_login::background_start(arguments.iter().map(String::as_str));
+        if !background {
+            desktop::show_calendar(&app);
+        }
         if std::env::args().any(|argument| argument == "--smoke-test") {
             if report.get("appUpdaterAvailable").and_then(Value::as_bool) != Some(false)
+                || report
+                    .get("launchAtLoginAvailable")
+                    .and_then(Value::as_bool)
+                    != Some(false)
                 || report.get("renderedCells").and_then(Value::as_u64) != Some(42)
                 || report.get("detailScrollable").and_then(Value::as_bool) != Some(false)
                 || report.get("cells").and_then(Value::as_u64) != Some(42)
@@ -218,6 +258,15 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 return Err("前端验证失败".into());
             }
             let window = app.get_webview_window("main").ok_or("主界面不存在")?;
+            if background {
+                if window.is_visible().unwrap_or(true) {
+                    app.exit(1);
+                    return Err("开机自启不应自动展开日历".into());
+                }
+                // 隔离启动验证完成后再打开，继续复用真实窗口生命周期冒烟。
+                println!("PASS：开机自启模式保持面板隐藏且菜单栏已初始化");
+                desktop::show_calendar(&app);
+            }
             if !window.is_visible().unwrap_or(false) {
                 app.exit(1);
                 return Err("菜单栏日历未显示".into());
@@ -251,20 +300,42 @@ pub fn run() {
     #[cfg(target_os = "macos")]
     let builder = builder
         .manage(app_update::AppUpdates::default())
+        .plugin(
+            tauri_plugin_autostart::Builder::new()
+                .macos_launcher(tauri_plugin_autostart::MacosLauncher::LaunchAgent)
+                .app_name("local.icalendar.app")
+                .args([launch_at_login::ARGUMENT])
+                .build(),
+        )
         .plugin(tauri_plugin_updater::Builder::new().build());
     #[cfg(target_os = "macos")]
     let builder = if std::env::args().any(|argument| argument == "--smoke-test") {
         // 冒烟模式已跳过持久化读写，允许与开发实例并行验证打包产物。
         builder
     } else {
-        builder.plugin(tauri_plugin_single_instance::init(|app, _, _| {
-            desktop::show_calendar(app)
+        builder.plugin(tauri_plugin_single_instance::init(|app, arguments, _| {
+            if !launch_at_login::background_start(arguments.iter().map(String::as_str)) {
+                desktop::show_calendar(app);
+            }
         }))
+    };
+    let context = tauri::generate_context!();
+    #[cfg(target_os = "macos")]
+    let context = {
+        let mut context = context;
+        for window in &mut context.config_mut().app.windows {
+            // 避免登录启动时先闪现面板；普通启动由 frontend_ready 显示。
+            window.visible = false;
+        }
+        context
     };
     let application = builder
         .invoke_handler(tauri::generate_handler![
             runtime_context,
             app_update_available,
+            launch_at_login_available,
+            get_launch_at_login,
+            set_launch_at_login,
             check_app_update,
             download_app_update,
             install_app_update,
@@ -290,7 +361,7 @@ pub fn run() {
             }
             Ok(())
         })
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("i日历初始化失败");
     application.run(|app, event| {
         #[cfg(target_os = "macos")]

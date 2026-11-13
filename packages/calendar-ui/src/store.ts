@@ -13,6 +13,7 @@ import { bundledHolidayDatasets } from '@i-calendar/core/data';
 
 import { AppUpdateController } from './app-update.js';
 import { isAccentColor, isColorTheme } from './color-theme.js';
+import { LaunchAtLoginController } from './launch-at-login.js';
 import { defaultMenuClock, parseMenuClock } from './menu-clock.js';
 import type { CalendarPlatform, CalendarPreferences, SavedCalendarState } from './platform.js';
 
@@ -118,11 +119,13 @@ export class CalendarController {
   private disposed = false;
   private saveFailed = false;
   readonly appUpdates: AppUpdateController;
+  readonly launchAtLogin: LaunchAtLoginController;
 
   constructor(
     readonly platform: CalendarPlatform,
     private now: () => Date = () => new Date(),
   ) {
+    this.launchAtLogin = new LaunchAtLoginController(platform.launchAtLogin);
     this.appUpdates = new AppUpdateController(platform.appUpdater, now, async () => {
       let pending: Promise<void>;
       do {
@@ -397,6 +400,7 @@ export class CalendarController {
   dispose() {
     this.disposed = true;
     this.appUpdates.dispose();
+    this.launchAtLogin.dispose();
     this.updateAbort?.abort();
     this.listeners.clear();
   }

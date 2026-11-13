@@ -23,6 +23,7 @@ import { CalendarButton } from './CalendarButton.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import { colorThemes, resolveColorTheme } from './color-theme.js';
 import { createFormTheme, formControlVariables } from './form-theme.js';
+import { LaunchAtLoginSettings } from './LaunchAtLoginSettings.js';
 import { MenuClockSettings } from './MenuClockSettings.js';
 import type { CalendarPreferences } from './platform.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
@@ -686,6 +687,9 @@ function Settings({
             label: '常规',
             children: (
               <div className="settings-scroll">
+                {controller.platform.kind === 'macos' ? (
+                  <LaunchAtLoginSettings controller={controller.launchAtLogin} />
+                ) : null}
                 <section>
                   <h2>日历显示</h2>
                   <div className="setting-label">

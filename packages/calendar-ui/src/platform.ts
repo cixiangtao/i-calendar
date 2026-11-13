@@ -2,6 +2,7 @@ import type { HolidayDataset } from '@i-calendar/core';
 
 import type { AppUpdater } from './app-update.js';
 import type { ColorThemeId } from './color-theme.js';
+import type { LaunchAtLogin } from './launch-at-login.js';
 import type { MenuClockPreferences } from './menu-clock.js';
 
 /** 三端使用相同数据格式；存储、网络和窗口操作由宿主实现。 */
@@ -41,4 +42,6 @@ export interface CalendarPlatform {
   quit?(): Promise<void>;
   /** 只有已配置签名更新源的正式 Mac 构建提供此能力。 */
   appUpdater?: AppUpdater;
+  /** 仅实际 Mac 应用提供，系统注册状态不随导入导出的日历偏好迁移。 */
+  launchAtLogin?: LaunchAtLogin;
 }

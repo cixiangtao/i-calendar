@@ -106,6 +106,10 @@ export async function createPlatform(): Promise<{
     context.kind === 'macos' &&
     !context.smokeTest &&
     (await invoke<boolean>('app_update_available').catch(() => false));
+  const launchAtLoginAvailable =
+    context.kind === 'macos' &&
+    !context.smokeTest &&
+    (await invoke<boolean>('launch_at_login_available').catch(() => false));
   return {
     smokeTest: context.smokeTest,
     platform: {
@@ -128,6 +132,14 @@ export async function createPlatform(): Promise<{
       },
       setInteractionBusy: (busy) => invoke<void>('set_popup_busy', { busy }),
       ...(updatesEnabled ? { appUpdater: nativeAppUpdater() } : {}),
+      ...(launchAtLoginAvailable
+        ? {
+            launchAtLogin: {
+              get: () => invoke<boolean>('get_launch_at_login'),
+              set: (enabled: boolean) => invoke<boolean>('set_launch_at_login', { enabled }),
+            },
+          }
+        : {}),
       ...(context.kind === 'macos'
         ? {
             close: () => invoke<void>('close_calendar'),

@@ -84,6 +84,7 @@ async function start() {
     // 原生冒烟测试经真实 WebView 调用共享核心，再把结果传回 Rust。
     const report = {
       appUpdaterAvailable: !!platform.appUpdater,
+      launchAtLoginAvailable: !!platform.launchAtLogin,
       renderedCells: document.querySelectorAll('[role="gridcell"]').length,
       detailScrollable: (() => {
         const detail = document.querySelector<HTMLElement>('.detail-panel');
