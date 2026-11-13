@@ -1,5 +1,5 @@
 import * as Tabs from '@radix-ui/react-tabs';
-import { useState, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
 import { cn, controlFocus } from './ui-utils.js';
 
@@ -12,6 +12,31 @@ export interface CalendarTabsProps {
 export function CalendarTabs({ defaultValue, items, className }: CalendarTabsProps) {
   const [value, setValue] = useState(defaultValue);
   const [visited, setVisited] = useState(() => new Set([defaultValue]));
+  const listRef = useRef<HTMLDivElement>(null);
+  const [indicatorLeft, setIndicatorLeft] = useState<number>();
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const tabs = list.querySelectorAll<HTMLElement>('[role="tab"]');
+    const active = tabs[items.findIndex((item) => item.key === value)];
+    const update = () => {
+      const activeRect = active?.getBoundingClientRect();
+      setIndicatorLeft(
+        activeRect
+          ? activeRect.left -
+              list.getBoundingClientRect().left +
+              list.scrollLeft +
+              (activeRect.width - 20) / 2
+          : undefined,
+      );
+    };
+    update();
+    // 标签数量、字重或容器宽度变化后，仍让同一条下划线对齐当前文字中心。
+    const observer = new ResizeObserver(update);
+    observer.observe(list);
+    for (const tab of tabs) observer.observe(tab);
+    return () => observer.disconnect();
+  }, [value, items]);
   return (
     <Tabs.Root
       value={value}
@@ -25,21 +50,29 @@ export function CalendarTabs({ defaultValue, items, className }: CalendarTabsPro
       )}
     >
       <Tabs.List
+        ref={listRef}
         aria-label="设置分类"
-        className="tw-mb-2 tw-flex tw-shrink-0 tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-line"
+        className="tw-relative tw-mb-2 tw-flex tw-shrink-0 tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-line"
       >
         {items.map((item) => (
           <Tabs.Trigger
             key={item.key}
             value={item.key}
             className={cn(
-              "tw-relative tw-inline-flex tw-min-h-[34px] tw-min-w-11 tw-items-center tw-justify-center tw-rounded-[3px] tw-border-0 tw-bg-transparent tw-px-0.5 tw-py-1.5 tw-font-sans tw-text-[13px] tw-font-normal tw-leading-5 tw-text-secondary tw-outline-none tw-transition-colors tw-duration-[var(--motion-feedback)] tw-ease-[var(--motion-ease)] after:tw-absolute after:-tw-bottom-px after:tw-left-1/2 after:tw-h-0.5 after:tw-w-5 after:-tw-translate-x-1/2 after:tw-scale-x-50 after:tw-rounded-[2px] after:tw-opacity-0 after:tw-transition-[opacity,transform] after:tw-duration-[var(--motion-state)] after:tw-ease-[var(--motion-ease)] after:tw-content-[''] data-[state=active]:tw-font-semibold data-[state=active]:tw-text-ink data-[state=active]:after:tw-scale-x-100 data-[state=active]:after:tw-bg-ink data-[state=active]:after:tw-opacity-100 coarse:tw-min-h-11 fine:hover:tw-text-ink",
+              'tw-relative tw-inline-flex tw-min-h-[34px] tw-min-w-11 tw-select-none tw-items-center tw-justify-center tw-rounded-[3px] tw-border-0 tw-bg-transparent tw-px-0.5 tw-py-1.5 tw-font-sans tw-text-[13px] tw-font-normal tw-leading-5 tw-text-secondary tw-outline-none tw-transition-colors tw-duration-[var(--motion-feedback)] tw-ease-[var(--motion-ease)] data-[state=active]:tw-font-semibold data-[state=active]:tw-text-ink coarse:tw-min-h-11 data-[state=inactive]:fine:hover:tw-text-ink',
               controlFocus,
             )}
           >
             {item.label}
           </Tabs.Trigger>
         ))}
+        {indicatorLeft !== undefined ? (
+          <span
+            aria-hidden="true"
+            className="calendar-tab-indicator tw-pointer-events-none tw-absolute -tw-bottom-px tw-left-0 tw-h-0.5 tw-w-5 tw-rounded-[2px] tw-bg-ink tw-transition-transform tw-duration-[var(--motion-state)] tw-ease-[var(--motion-ease)]"
+            style={{ transform: `translateX(${indicatorLeft}px)` }}
+          />
+        ) : null}
       </Tabs.List>
       {items.map((item) =>
         visited.has(item.key) ? (
