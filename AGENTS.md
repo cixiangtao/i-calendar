@@ -36,7 +36,7 @@
 - 基础交互使用 Radix Primitives，并封装为共享 UI 的 `CalendarButton`、`CalendarSelect`、`CalendarSwitch`、`CalendarInput`、`CalendarSegmented`、`CalendarTabs` 和 `CalendarContextMenu` 等组件；业务视图不直接依赖底层库，不重新引入 Ant Design。普通布局、间距、排版、状态和响应式使用带 `tw-` 前缀的 Tailwind；全局 CSS 仅保留主题变量、少量复合状态、伪元素、动画和系统偏好规则。
 - 同一组件跨端优先使用统一视觉样式，响应式主要调整结构。月份工具栏统一字号、图标、底色和圆角；触控仅扩大透明点击区域，不另行放大可见控件。
 - 品牌 Logo 以小写 `i` 与日历纸为原型，彩色源为共享 UI 的 `assets/logo.svg`，固定品牌蓝 `#3269d9`；菜单栏用透明底单色模板。图标修改后执行 `pnpm run build:icons`，不分别手改各平台位图。
-- 配色规则位于共享 UI 的 `color-theme.ts`，不放入日历核心。默认采用五色语义，用户可切换主题并自定义操作强调色；红绿黄紫语义保持稳定，文字和强调色须验证浅深色下的对比度，旧设置保持兼容。
+- 配色规则位于共享 UI 的 `color-theme.ts`，不放入日历核心。默认采用五色语义，用户可切换主题并自定义操作强调色；高级模式允许按浅深色覆盖全部界面颜色，未覆盖项跟随主题，品牌图标保持原色。高级色值只接受白名单中的完整 RGB 值，原样应用并提示对比度，编辑与恢复入口须保持可读；旧设置保持兼容。
 
 ## 版本与 GitHub 发布
 
