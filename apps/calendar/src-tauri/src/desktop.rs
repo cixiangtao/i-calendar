@@ -11,7 +11,7 @@ use std::{
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Emitter, Manager, WindowEvent,
+    Emitter, Listener, Manager, WindowEvent,
 };
 
 const POPUP_CORNER_RADIUS: f64 = 20.0;
@@ -89,6 +89,14 @@ pub fn hide_calendar(window: &tauri::WebviewWindow) -> tauri::Result<()> {
     hide_calendar_if_current(window, None)
 }
 
+fn notify_calendar_closed(window: &tauri::WebviewWindow) {
+    let app = window.app_handle().clone();
+    // with_webview 持有运行时 WebView 锁；通知在回调释放后从工作线程派发，避免重入死锁。
+    tauri::async_runtime::spawn_blocking(move || {
+        let _ = app.emit("calendar:closed", ());
+    });
+}
+
 fn hide_calendar_if_current(
     window: &tauri::WebviewWindow,
     expected: Option<u64>,
@@ -98,7 +106,9 @@ fn hide_calendar_if_current(
     window.with_webview(move |webview| {
         // SAFETY: with_webview 在主线程执行，句柄在回调期间有效。
         let Some(native) = (unsafe { webview.ns_window().cast::<NSWindow>().as_ref() }) else {
-            let _ = handle.hide();
+            if handle.hide().is_ok() {
+                notify_calendar_closed(&handle);
+            }
             return;
         };
         if !native.isVisible() {
@@ -126,7 +136,9 @@ fn hide_calendar_if_current(
                 let state = window.app_handle().state::<RuntimeState>();
                 // 被重新打开或被新一轮收起取代的回调不得隐藏当前窗口。
                 if state.popup_motion.finish_exit(generation) {
-                    let _ = window.hide();
+                    if window.hide().is_ok() {
+                        notify_calendar_closed(&window);
+                    }
                     // SAFETY: 完成回调仍通过 with_webview 回到原生主线程。
                     if let Some(native) = unsafe { webview.ns_window().cast::<NSWindow>().as_ref() }
                     {
@@ -433,6 +445,60 @@ pub async fn wait_for_motion_settle() {
         std::thread::sleep(Duration::from_millis(360));
     })
     .await;
+}
+
+/// 隔离冒烟通过真实前端事件读取已渲染页面，覆盖隐藏 WebView 的状态恢复。
+async fn frontend_snapshot(app: &tauri::AppHandle) -> Result<serde_json::Value, String> {
+    let (sender, receiver) = std::sync::mpsc::sync_channel(1);
+    let listener = app.once("calendar:smoke-state", move |event| {
+        let _ = sender.send(serde_json::from_str::<serde_json::Value>(event.payload()));
+    });
+    app.emit("calendar:smoke-state-request", ())
+        .map_err(|error| error.to_string())?;
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        receiver
+            .recv_timeout(Duration::from_secs(3))
+            .map_err(|_| "读取前端页面状态超时".to_string())?
+            .map_err(|error| error.to_string())
+    })
+    .await
+    .map_err(|error| error.to_string())?;
+    app.unlisten(listener);
+    result
+}
+
+pub async fn verify_popup_reset(app: &tauri::AppHandle) -> Result<(), String> {
+    let window = app.get_webview_window("main").ok_or("主界面不存在")?;
+    app.emit("calendar:settings", ())
+        .map_err(|error| error.to_string())?;
+    let before = frontend_snapshot(app).await?;
+    if before["panel"] != "settings" {
+        return Err("未进入真实设置页面".into());
+    }
+    hide_calendar(&window).map_err(|error| error.to_string())?;
+    show_calendar(app);
+    wait_for_motion_settle().await;
+    if frontend_snapshot(app).await?["panel"] != "settings" {
+        return Err("被打断的退场不应重置设置页面".into());
+    }
+    hide_calendar(&window).map_err(|error| error.to_string())?;
+    wait_for_motion_settle().await;
+    let after = frontend_snapshot(app).await?;
+    if window.is_visible().unwrap_or(true)
+        || after["panel"] != "calendar"
+        || after["selectedDate"] != before["selectedDate"]
+        || after["preferences"] != before["preferences"]
+    {
+        return Err(format!("关闭后未恢复日历或改变了选择及偏好：{after}"));
+    }
+    show_calendar(app);
+    wait_for_motion_settle().await;
+    if frontend_snapshot(app).await?["panel"] != "calendar" {
+        return Err("收起重开后没有显示日历页面".into());
+    }
+    verify_content_height(app)?;
+    println!("PASS：设置页退场打断保留原页，关闭后恢复日历，重开页面及高度正确且保留日期与偏好");
+    Ok(())
 }
 
 fn layout_popup(app: &tauri::AppHandle) -> tauri::Result<Option<PopupLayout>> {

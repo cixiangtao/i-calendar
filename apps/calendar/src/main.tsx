@@ -81,12 +81,30 @@ async function start() {
   );
   bindPageLifecycle(controller, window);
   if (platform.kind !== 'web') {
-    const { listen } = await import('@tauri-apps/api/event');
-    await listen('calendar:settings', () => controller.showSettings());
+    const { emit, listen } = await import('@tauri-apps/api/event');
+    await listen('calendar:settings', () => flushSync(() => controller.showSettings()));
     if (platform.kind === 'macos') {
+      await listen('calendar:closed', () => {
+        flushSync(() => controller.showSettings(false));
+        // 隐藏时 requestAnimationFrame 可能暂停，立即提交日历高度供下次入场使用。
+        const content = document.querySelector<HTMLElement>('.calendar-app');
+        if (content)
+          void platform.setPopupHeight?.(content.scrollHeight).catch((error: unknown) => {
+            console.error('收起后恢复日历高度失败', error);
+          });
+      });
       // 首次显示前同步测量；隐藏的原生窗口可能暂停动画帧。
       const content = document.querySelector<HTMLElement>('.calendar-app');
       if (content) await platform.setPopupHeight?.(content.scrollHeight);
+    }
+    if (smokeTest) {
+      await listen('calendar:smoke-state-request', () => {
+        void emit('calendar:smoke-state', {
+          panel: document.querySelector('.calendar-app')?.getAttribute('data-panel'),
+          selectedDate: controller.getSnapshot().selected.date,
+          preferences: controller.getSnapshot().preferences,
+        });
+      });
     }
     // 原生冒烟测试经真实 WebView 调用共享核心，再把结果传回 Rust。
     const report = {

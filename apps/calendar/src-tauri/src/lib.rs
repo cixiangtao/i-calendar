@@ -303,6 +303,11 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 app.exit(1);
                 return Err(error);
             }
+            if let Err(error) = desktop::verify_popup_reset(&app).await {
+                eprintln!("悬浮窗页面恢复验证失败：{error}");
+                app.exit(1);
+                return Err(error);
+            }
             println!("PASS：详情卡片完整展开，原生窗口按内容高度适配屏幕可用区域");
             println!("PASS：原生悬浮窗 20px 圆角、透明边角和系统阴影在收起重开后保持生效");
             println!("PASS：Tauri 原生窗口、WebView 前端、共享日历核心与 Rust 命令交互通过");
