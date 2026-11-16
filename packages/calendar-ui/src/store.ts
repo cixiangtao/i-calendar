@@ -12,7 +12,7 @@ import {
 import { bundledHolidayDatasets } from '@i-calendar/core/data';
 
 import { AppUpdateController } from './app-update.js';
-import { isAccentColor, isColorTheme } from './color-theme.js';
+import { isAccentColor, isColorTheme, parseCustomColors } from './color-theme.js';
 import { LaunchAtLoginController } from './launch-at-login.js';
 import { defaultMenuClock, parseMenuClock } from './menu-clock.js';
 import type { CalendarPlatform, CalendarPreferences, SavedCalendarState } from './platform.js';
@@ -42,6 +42,7 @@ const defaults: CalendarPreferences = {
   showLunarDetails: true,
   colorTheme: 'clear',
   accentColor: null,
+  customColors: parseCustomColors(undefined),
   menuClock: { ...defaultMenuClock },
   automaticAppUpdates: true,
 };
@@ -65,6 +66,7 @@ export function parseSavedState(input: unknown): SavedCalendarState {
       : input.preferences.showLunarDetails;
   const colorTheme = input.preferences.colorTheme ?? defaults.colorTheme;
   const accentColor = input.preferences.accentColor ?? null;
+  const customColors = parseCustomColors(input.preferences.customColors);
   const menuClock = parseMenuClock(input.preferences.menuClock);
   const automaticAppUpdates =
     input.preferences.automaticAppUpdates === undefined
@@ -95,6 +97,7 @@ export function parseSavedState(input: unknown): SavedCalendarState {
       showLunarDetails,
       colorTheme,
       accentColor,
+      customColors,
       menuClock,
       automaticAppUpdates,
     },
@@ -144,7 +147,11 @@ export class CalendarController {
       selected,
       almanac: this.engine.getAlmanac(selected.date),
       month: this.engine.getMonth(selected.year, selected.month),
-      preferences: { ...defaults, menuClock: { ...defaultMenuClock } },
+      preferences: {
+        ...defaults,
+        menuClock: { ...defaultMenuClock },
+        customColors: parseCustomColors(undefined),
+      },
       years: this.holidays.years,
       panel: 'calendar',
       settingsTab: 'general',
@@ -271,6 +278,7 @@ export class CalendarController {
   setPreferences(preferences: Partial<CalendarPreferences>) {
     const next = { ...this.snapshot.preferences, ...preferences };
     next.menuClock = parseMenuClock(next.menuClock);
+    next.customColors = parseCustomColors(next.customColors);
     if (
       (next.weekStartsOn !== 1 && next.weekStartsOn !== 7) ||
       !['system', 'light', 'dark'].includes(next.appearance) ||
@@ -291,6 +299,7 @@ export class CalendarController {
       preferences: {
         ...this.snapshot.preferences,
         menuClock: { ...this.snapshot.preferences.menuClock },
+        customColors: parseCustomColors(this.snapshot.preferences.customColors),
       },
       datasets: this.holidays.export(),
       updatedAt: this.snapshot.updatedAt,

@@ -11,6 +11,7 @@ import {
 } from 'react';
 
 import { version as appVersion } from '../../../package.json';
+import { AdvancedColorSettings } from './AdvancedColorSettings.js';
 import { AlmanacContent } from './Almanac.js';
 import { AppUpdateNotice, AppUpdateSection } from './AppUpdateSection.js';
 import { CalendarButton } from './CalendarButton.js';
@@ -309,6 +310,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
         <Settings
           controller={controller}
           state={state}
+          dark={dark}
+          increasedContrast={increasedContrast}
         />
       ) : (
         <>
@@ -515,7 +518,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   aria-label="所选日期"
                 >
                   <div
-                    className="date-leaf tw-relative tw-col-[1] tw-row-[1] tw-grid tw-h-[58px] tw-w-[50px] tw-shrink-0 tw-place-items-center tw-rounded-[13px] tw-bg-[var(--leaf)] tw-text-[#fff] web:desktop:tw-h-[94px] web:desktop:tw-w-[84px] web:desktop:tw-rounded-[19px] compact:tw-h-[54px] compact:tw-w-11 [&>span]:tw-pt-[5px] [&>span]:tw-text-[length:28px] [&>span]:tw-font-medium [&>span]:tw-tabular-nums [&>span]:tw-leading-[32px] web:desktop:[&>span]:tw-text-[length:46px] web:desktop:[&>span]:tw-leading-[54px]"
+                    className="date-leaf tw-relative tw-col-[1] tw-row-[1] tw-grid tw-h-[58px] tw-w-[50px] tw-shrink-0 tw-place-items-center tw-rounded-[13px] tw-bg-[var(--leaf)] tw-text-[var(--leaf-ink)] web:desktop:tw-h-[94px] web:desktop:tw-w-[84px] web:desktop:tw-rounded-[19px] compact:tw-h-[54px] compact:tw-w-11 [&>span]:tw-pt-[5px] [&>span]:tw-text-[length:28px] [&>span]:tw-font-medium [&>span]:tw-tabular-nums [&>span]:tw-leading-[32px] web:desktop:[&>span]:tw-text-[length:46px] web:desktop:[&>span]:tw-leading-[54px]"
                     aria-hidden="true"
                   >
                     <span key={state.selected.date}>{state.selected.day}</span>
@@ -628,9 +631,13 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
 function Settings({
   controller,
   state,
+  dark,
+  increasedContrast,
 }: {
   controller: CalendarController;
   state: CalendarSnapshot;
+  dark: boolean;
+  increasedContrast: boolean;
 }) {
   const file = useRef<HTMLInputElement>(null);
   const back = useRef<HTMLButtonElement>(null);
@@ -794,6 +801,12 @@ function Settings({
                   <p>
                     强调色用于选中日期和操作，自动适配明暗外观。切换预设会恢复该主题的默认强调色。
                   </p>
+                  <AdvancedColorSettings
+                    controller={controller}
+                    preferences={state.preferences}
+                    dark={dark}
+                    increasedContrast={increasedContrast}
+                  />
                 </section>
               </div>
             ),

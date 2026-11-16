@@ -37,7 +37,7 @@ export function CalendarSwitch({
         className,
       )}
     >
-      <Switch.Thumb className="tw-pointer-events-none tw-relative tw-ml-0.5 tw-flex tw-h-4 tw-w-4 tw-items-center tw-justify-center tw-rounded-full tw-bg-white tw-text-action tw-transition-transform tw-duration-[var(--motion-state)] tw-ease-[var(--motion-ease)] data-[state=checked]:tw-translate-x-4">
+      <Switch.Thumb className="tw-pointer-events-none tw-relative tw-ml-0.5 tw-flex tw-h-4 tw-w-4 tw-items-center tw-justify-center tw-rounded-full tw-bg-[var(--switch-thumb)] tw-text-action tw-transition-transform tw-duration-[var(--motion-state)] tw-ease-[var(--motion-ease)] data-[state=checked]:tw-translate-x-4">
         {loading ? <Spinner /> : null}
       </Switch.Thumb>
     </Switch.Root>

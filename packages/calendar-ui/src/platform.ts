@@ -1,7 +1,7 @@
 import type { HolidayDataset } from '@i-calendar/core';
 
 import type { AppUpdater } from './app-update.js';
-import type { ColorThemeId } from './color-theme.js';
+import type { ColorThemeId, CustomColors } from './color-theme.js';
 import type { LaunchAtLogin } from './launch-at-login.js';
 import type { MenuClockPreferences } from './menu-clock.js';
 
@@ -14,6 +14,8 @@ export interface CalendarPreferences {
   colorTheme: ColorThemeId;
   /** Null 使用主题默认强调色；自定义值为 #RRGGBB。 */
   accentColor: string | null;
+  /** 高级配色按浅深色分别覆盖界面色值，关闭时保留选色。 */
+  customColors: CustomColors;
   menuClock: MenuClockPreferences;
   /** 正式 Mac 构建后台检查应用版本；安装仍需用户确认。 */
   automaticAppUpdates: boolean;

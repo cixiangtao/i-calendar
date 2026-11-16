@@ -18,6 +18,8 @@
   --hint-ink: #707070;
   --selected-ink: #303030;
   --leaf: #3269d9;
+  --leaf-ink: #ffffff;
+  --switch-thumb: #ffffff;
   --line: #eceef3;
   --control: #f0f1f5;
   --control-hover: #e3e4e8;
@@ -196,7 +198,7 @@ a:focus-visible {
   top: 7px;
   width: 4px;
   height: 4px;
-  background: #fff;
+  background: var(--leaf-ink);
   border-radius: 50%;
 }
 .date-leaf::before {

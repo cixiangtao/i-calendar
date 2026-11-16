@@ -21,6 +21,40 @@ function fixture(overrides: Partial<CalendarPlatform> = {}) {
   return { controller: new CalendarController(platform, () => instant), saves };
 }
 
+test('高级配色保存重载并保留两套外观，关闭不丢色，非法写入不污染状态', async () => {
+  const { controller, saves } = fixture();
+  await controller.initialize();
+  const before = controller.getSnapshot();
+  assert.deepEqual(before.preferences.customColors, { enabled: false, light: {}, dark: {} });
+  const customColors = {
+    enabled: true,
+    light: { '--surface': '#fff8ee' },
+    dark: { '--ink': '#e0e0e0' },
+  };
+  await controller.setPreferences({ customColors });
+  customColors.light['--surface'] = '#000000';
+  assert.equal(controller.getSnapshot().preferences.customColors.light['--surface'], '#fff8ee');
+  const restored = fixture({ load: async () => saves.at(-1) }).controller;
+  await restored.initialize();
+  const savedColors = restored.getSnapshot().preferences.customColors;
+  assert.equal(savedColors.light['--surface'], '#fff8ee');
+  assert.equal(savedColors.dark['--ink'], '#e0e0e0');
+  await restored.setPreferences({ customColors: { ...savedColors, enabled: false } });
+  await restored.setPreferences({ colorTheme: 'paper', accentColor: '#123456' });
+  assert.deepEqual(restored.getSnapshot().preferences.customColors, {
+    ...savedColors,
+    enabled: false,
+  });
+  const valid = restored.getSnapshot();
+  assert.throws(
+    () => restored.setPreferences({ customColors: { ...savedColors, light: { '--ink': 'red' } } }),
+    /高级配色设置无效/,
+  );
+  assert.equal(restored.getSnapshot(), valid);
+  assert.deepEqual(controller.getSnapshot().selected, before.selected);
+  assert.deepEqual(controller.getSnapshot().almanac, before.almanac);
+});
+
 test('农历详情旧设置默认开启，显式布尔值保留，非法值拒绝载入', () => {
   const legacy = {
     schemaVersion: 1,
