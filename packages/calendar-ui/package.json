@@ -1,6 +1,6 @@
 {
   "name": "@i-calendar/ui",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "description": "i日历在 Mac、iOS 和官网共用的日历界面与应用状态",
   "license": "MIT",
