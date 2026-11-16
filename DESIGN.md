@@ -5,15 +5,15 @@ colors:
   canvas: '#f1f2f6'
   surface: '#ffffff'
   ink: '#303030'
-  secondary: '#626262'
+  secondary: '#616161'
   muted: '#6e6e6e'
-  line: '#e4e7ed'
+  line: '#e0e0e0'
   control: '#f4f5f8'
-  control-hover: '#e8e9ec'
-  control-active: '#e0e1e4'
+  control-hover: '#e5e6e9'
+  control-active: '#dcdddf'
   hover: '#f7f8fa'
   brand-blue: '#3269d9'
-  blue: '#2d5fc3'
+  blue: '#2c5cbf'
   blue-soft: '#eff3fc'
   red: '#d71a38'
   red-soft: '#fdeff1'
@@ -26,12 +26,12 @@ colors:
   canvas-dark: '#171b23'
   surface-dark: '#222630'
   ink-dark: '#f3f3f3'
-  secondary-dark: '#c8c8c8'
-  muted-dark: '#aaaaaa'
-  line-dark: '#3a3e48'
-  control-dark: '#303642'
-  control-hover-dark: '#444954'
-  control-active-dark: '#4f545e'
+  secondary-dark: '#c7c8c9'
+  muted-dark: '#a8aaad'
+  line-dark: '#4a4d55'
+  control-dark: '#2f333c'
+  control-hover-dark: '#444750'
+  control-active-dark: '#50545b'
   hover-dark: '#2d313a'
   blue-dark: '#b3c8f1'
   blue-soft-dark: '#242f48'
@@ -46,21 +46,21 @@ colors:
   leaf-blue: '#3269d9'
   leaf-ink: '#ffffff'
   lunar-ink: '#6e6e6e'
-  lunar-ink-dark: '#b5b5b5'
-  weekday-ink: '#4b4b4b'
-  weekday-ink-dark: '#d0d0d0'
-  hint-ink: '#707070'
-  hint-ink-dark: '#a8a8a8'
+  lunar-ink-dark: '#a9aaae'
+  weekday-ink: '#4f4f4f'
+  weekday-ink-dark: '#d4d4d6'
+  hint-ink: '#6e6e6e'
+  hint-ink-dark: '#9fa1a5'
   selected-ink: '#303030'
   selected-ink-dark: '#f3f3f3'
-  outside-red: '#bb7882'
-  outside-red-dark: '#a58089'
-  outside-green: '#699482'
-  outside-green-dark: '#6d9284'
-  outside-purple: '#9884ac'
-  outside-purple-dark: '#9186a4'
-  outside-ink: '#8b8b8b'
-  outside-ink-dark: '#878a8e'
+  outside-red: '#c9979f'
+  outside-red-dark: '#876c75'
+  outside-green: '#8aab9e'
+  outside-green-dark: '#5d7971'
+  outside-purple: '#ae9fbd'
+  outside-purple-dark: '#787189'
+  outside-ink: '#a5a5a5'
+  outside-ink-dark: '#71747a'
 typography:
   headline:
     fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif'
@@ -179,7 +179,7 @@ Mac 保留随手展开的紧凑上下布局；宽屏网页让月历与日期详�
 
 ## Colors
 
-Frontmatter 记录清爽白默认运行时色值；完整规则以共享 UI 的 `color-theme.ts` 为准，CSS 首帧提供回退值。`-dark` 为深色外观，不是悬停色。柔和底色降低大面积彩色的压迫感，正文与次级文字使用中性灰层级。
+Frontmatter 记录清爽白默认运行时色值；完整规则以共享 UI 的 `color-theme.ts` 为准，CSS 首帧回退值由相同派生器在构建时生成；下方快照只用于设计参考，不是另一份主题输入。`-dark` 为深色外观，不是悬停色。柔和底色降低大面积彩色的压迫感，正文与次级文字使用中性灰层级。
 
 ### Primary
 
@@ -300,7 +300,7 @@ Mac 应用图标保留（80/1024）的外边距；菜单栏源为 `apps/calendar
 
 动效保持短促克制：开关与分段选择底块用 200ms 缓出移动，分段 hover / active 底色只作用于未选中项，避免覆盖选中底块；下拉和右键菜单以 160ms 从展开原点轻微缩放淡入、100ms 淡出，退场时不可点击；下拉箭头随展开状态旋转。设置标签内容用 160ms 淡入，共用一条 20px 下划线以 200ms 平滑移动并适配标签尺寸变化，重复点击不闪烁；标签禁止选中文字，保留键盘焦点提示。控件不弹跳、不按压缩放，减少动态偏好沿用 0.01ms 的即时状态切换。动效参数集中在共享 UI 的 `--motion-*` 变量，不影响日历核心或原生窗口尺寸。
 
-独立圆角面板，顶部返回入口使用强调色文字，分区用灰线与间距。周起始日和外观使用灰底 Segmented、由 `CalendarSegmented` 保留原有选项层次；数据更新与 JSON 导入使用统一的中性底色按钮。反馈区成功绿、错误红，更新中显示加载，失败保留原数据。配色区提供三套预设按钮、系统颜色选择器与恢复默认操作。预设选择同时重置强调色，明暗外观独立设置。高级配色默认折叠，分六组编辑 37 个颜色角色，使用现有色块、文本输入、分段与开关组件；浅深色分别保存，提供实际颜色预览、对比度提示、逐项/当前外观/全部恢复。高级编辑区使用当前基础主题色，保持恢复入口可读；预览与其他界面使用自定义颜色，品牌图标保持原色。
+独立圆角面板，顶部返回入口使用强调色文字，分区用灰线与间距。周起始日和外观使用灰底 Segmented、由 `CalendarSegmented` 保留原有选项层次；数据更新与 JSON 导入使用统一的中性底色按钮。反馈区成功绿、错误红，更新中显示加载，失败保留原数据。配色区提供三套预设按钮、系统颜色选择器与恢复默认操作。预设选择同时重置强调色，明暗外观独立设置。高级配色默认折叠，分背景、文字与操作、语义主色三组编辑 8 个主色，使用现有色块、文本输入、分段与开关组件；浅深色分别保存，提供实际颜色预览、对比度提示、逐项/当前外观/全部恢复。高级编辑区使用当前基础主题色，保持恢复入口可读；预览与其他界面使用自定义颜色，品牌图标保持原色。
 
 Mac 的“菜单栏”标签包含“菜单栏显示”分区：“显示图标”和“显示菜单栏时间”两个开关、紧凑格式选择器、自定义输入与“应用格式”按钮，均沿用当前主题文字和控件色。图标与有效时间文字至少保留一项，最后一个可见入口对应的开关保持禁用，并显示简短原因；隐藏图标时空白格式不能应用。时间格式预览使用灰底单行容器及等宽数字，过长时自然换行；秒级变化不触发读屏播报。非法格式显示红色反馈并禁用应用按钮。Web 与 iOS 不显示此标签；输入时 Esc 仍可返回日历并恢复设置按钮焦点。
 
@@ -318,7 +318,7 @@ Mac 的“菜单栏”标签包含“菜单栏显示”分区：“显示图标�
 
 ## 主题与文字层级
 
-主要文字采用中性炭灰，星期、详情标签、农历、说明和月外日期使用独立中性色角色；月外主要通过灰色与较轻字重降低层级。当前月和详情的普通文字目标为 4.5:1；常规模式的月外上下文文字按用户要求单独淡化，下限为 2.2:1，休班角标及选中态不淡化。系统增加对比度偏好下相关文字目标提升至 7:1。背景提供清爽白、暖纸色、雾灰蓝三套预设，浅深色分别定义，默认红绿黄紫语义保持稳定。高级模式允许原样覆盖所有界面颜色角色，低对比度提示不阻止保存；未覆盖项继续使用主题派生值，关闭高级模式保留选色。极端强调色保存原始值，按背景派生可读文字与叶片底色。详见[配色与文字层级](docs/配色与文字层级.md)。
+主要文字采用中性炭灰，星期、详情标签、农历、说明和月外日期使用独立中性色角色；月外主要通过灰色与较轻字重降低层级。当前月和详情的普通文字目标为 4.5:1；常规模式的月外上下文文字按用户要求单独淡化，下限为 2.2:1，休班角标及选中态不淡化。系统增加对比度偏好下相关文字目标提升至 7:1。背景提供清爽白、暖纸色、雾灰蓝三套预设，浅深色分别定义，默认红绿黄紫语义保持稳定。高级模式只提供八个主色，其他颜色统一派生，文字按背景校正；无法同时满足的背景对比要求以提示呈现，关闭高级模式保留选色。内置主题、未来主题包与首帧 CSS 共用同一版本化派生规则，详见[主题模型](docs/主题模型.md)。极端强调色保存原始值，按背景派生可读文字与叶片底色。详见[配色与文字层级](docs/配色与文字层级.md)。
 
 ## Do's and Don'ts
 
