@@ -55,6 +55,32 @@ test('高级配色保存重载并保留两套外观，关闭不丢色，非法�
   assert.deepEqual(controller.getSnapshot().almanac, before.almanac);
 });
 
+test('载入1.0.3完整配色后保留主色，后续保存不再写入旧派生色', async () => {
+  const preferences = fixture().controller.getSnapshot().preferences;
+  const { controller, saves } = fixture({
+    load: async () => ({
+      schemaVersion: 1,
+      datasets: [],
+      preferences: {
+        ...preferences,
+        customColors: {
+          enabled: true,
+          light: { '--ink': '#453833', '--secondary': '#123456' },
+          dark: { '--red': '#f98798', '--control-active': '#123456' },
+        },
+      },
+    }),
+  });
+  await controller.initialize();
+  assert.equal(saves.length, 0);
+  await controller.setPreferences({ appearance: 'dark' });
+  assert.deepEqual(saves.at(-1)?.preferences.customColors, {
+    enabled: true,
+    light: { '--ink': '#453833' },
+    dark: { '--red': '#f98798' },
+  });
+});
+
 test('农历详情旧设置默认开启，显式布尔值保留，非法值拒绝载入', () => {
   const legacy = {
     schemaVersion: 1,

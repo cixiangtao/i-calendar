@@ -2,42 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@calendar-theme-defaults;
+
 :root {
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --canvas: #f1f2f6;
-  --surface: #ffffff;
-  --ink: #303030;
-  --secondary: #626262;
-  --muted: #767676;
-  --outside-ink: #a5a5a5;
-  --lunar-ink: #707070;
-  --weekday-ink: #4b4b4b;
-  --hint-ink: #707070;
-  --selected-ink: #303030;
-  --leaf: #3269d9;
-  --leaf-ink: #ffffff;
-  --switch-thumb: #ffffff;
-  --line: #eceef3;
-  --control: #f0f1f5;
-  --control-hover: #e3e4e8;
-  --control-active: #dcdde0;
-  --hover: #f5f6fa;
-  --blue: #3269d9;
-  --blue-soft: #edf3ff;
-  --red: #d21936;
-  --outside-red: #c9979f;
-  --red-soft: #fff0f2;
-  --green: #00834c;
-  --outside-green: #8aab9e;
-  --green-soft: #eaf7ef;
-  --yellow: #956300;
-  --yellow-soft: #fff5d8;
-  --purple: #8b4fc5;
-  --outside-purple: #ae9fbd;
-  --purple-soft: #f4edfc;
   --accent: var(--blue);
   --motion-feedback: 140ms;
   --motion-state: 200ms;
@@ -47,36 +18,7 @@
   color: var(--ink);
   background: var(--canvas);
 }
-:root[data-theme='dark'] {
-  --canvas: #191b22;
-  --surface: #24262f;
-  --ink: #f3f3f3;
-  --secondary: #c4c4c4;
-  --muted: #999999;
-  --outside-ink: #71747a;
-  --lunar-ink: #b5b5b5;
-  --weekday-ink: #d0d0d0;
-  --hint-ink: #a8a8a8;
-  --selected-ink: #f3f3f3;
-  --line: #363946;
-  --control: #30333e;
-  --control-hover: #444750;
-  --control-active: #50535c;
-  --hover: #2c2f3a;
-  --blue: #93b5ff;
-  --blue-soft: #2c3955;
-  --red: #ff8d9b;
-  --outside-red: #876c75;
-  --red-soft: #452c37;
-  --green: #72d6a1;
-  --outside-green: #5d7971;
-  --green-soft: #263d36;
-  --yellow: #ebc568;
-  --yellow-soft: #423b29;
-  --purple: #c6a0ed;
-  --outside-purple: #787189;
-  --purple-soft: #3b304b;
-}
+
 * {
   box-sizing: border-box;
 }
@@ -254,18 +196,7 @@ body[data-platform='macos'] {
 body[data-platform='macos'] .calendar-app[data-panel='settings'] {
   height: 100vh;
 }
-@media (prefers-contrast: more) {
-  :root {
-    --secondary: #424956;
-    --muted: #505866;
-    --line: #a1a8b5;
-  }
-  :root[data-theme='dark'] {
-    --secondary: #d8dce7;
-    --muted: #c2c8d7;
-    --line: #737b8e;
-  }
-}
+
 [data-calendar-popup] {
   transform-origin: var(
     --radix-select-content-transform-origin,

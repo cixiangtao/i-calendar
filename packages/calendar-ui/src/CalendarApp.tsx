@@ -1,6 +1,7 @@
 import type { CalendarDay } from '@i-calendar/core';
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useMemo,
@@ -203,7 +204,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
     };
   }, [controller]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
     const variables = { ...colors.tokens, ...formControlVariables };

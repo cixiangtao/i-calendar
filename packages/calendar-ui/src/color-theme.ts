@@ -1,22 +1,24 @@
-/** 配色只作用于共享界面；历法与休班事实不受用户主题设置影响。 */
-export type ColorThemeId = 'clear' | 'paper' | 'mist';
+import { builtInThemes, isThemeColor, type ThemePalette } from './theme-package.js';
 
-export const colorThemes = [
-  { id: 'clear', name: '清爽白', accent: '#3269d9', canvas: '#f1f2f6', surface: '#ffffff' },
-  { id: 'paper', name: '暖纸色', accent: '#90622b', canvas: '#f2eee6', surface: '#fffdf8' },
-  { id: 'mist', name: '雾灰蓝', accent: '#3c7286', canvas: '#eaf0f3', surface: '#f9fcfd' },
-] as const;
+/** 配色仅影响共享界面，不改变历法与休班事实。 */
+export type ColorThemeId = (typeof builtInThemes)[number]['id'];
 
-/** 只接受完整 RGB 十六进制值，防止持久化设置注入任意 CSS。 */
-export function isAccentColor(value: unknown): value is string {
-  return typeof value === 'string' && /^#[\da-f]{6}$/i.test(value);
-}
+/** 预设缩略图从主题包的浅色主色读取，不单独定义第二份配色。 */
+export const colorThemes = builtInThemes.map((theme) => ({
+  id: theme.id,
+  name: theme.name,
+  accent: theme.palettes.light.accent,
+  canvas: theme.palettes.light.canvas,
+  surface: theme.palettes.light.surface,
+}));
+
+export const isAccentColor = isThemeColor;
 
 export function isColorTheme(value: unknown): value is ColorThemeId {
   return colorThemes.some((item) => item.id === value);
 }
 
-/** 可编辑的界面色值清单；标识与 CSS 变量共用，禁止导入未列出的样式属性。 */
+/** 内部渲染色值清单，同时用于校验旧版完整配色与标注对比度问题。 */
 export const colorTokenGroups = [
   {
     label: '背景与分隔',
@@ -88,7 +90,38 @@ export const colorTokenGroups = [
 ] as const;
 
 export type ColorToken = (typeof colorTokenGroups)[number]['items'][number]['key'];
-export type ColorOverrides = Partial<Record<ColorToken, string>>;
+/** 用户仅编辑主色，内部渲染颜色由 resolveColorTheme 统一派生。 */
+export const primaryColorGroups = [
+  {
+    label: '背景',
+    items: [
+      { key: '--canvas', label: '页面背景' },
+      { key: '--surface', label: '卡片背景' },
+    ],
+  },
+  {
+    label: '文字与操作',
+    items: [
+      { key: '--ink', label: '主要文字' },
+      { key: '--blue', label: '操作强调色' },
+    ],
+  },
+  {
+    label: '语义主色',
+    items: [
+      { key: '--red', label: '休假与警告' },
+      { key: '--green', label: '节气与工作日' },
+      { key: '--yellow', label: '补班与提醒' },
+      { key: '--purple', label: '节日' },
+    ],
+  },
+] as const;
+export type PrimaryColor = (typeof primaryColorGroups)[number]['items'][number]['key'];
+export type ColorOverrides = Partial<Record<PrimaryColor, string>>;
+const primaryKeys = new Set<string>(
+  primaryColorGroups.flatMap((group) => group.items.map((item) => item.key)),
+);
+
 export interface CustomColors {
   enabled: boolean;
   light: ColorOverrides;
@@ -98,7 +131,7 @@ export interface CustomColors {
 const isColorRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-/** 旧偏好默认不启用高级配色；返回副本，避免外部对象修改已保存的设置。 */
+/** 兼容旧版完整配色并只保留主色；返回副本，后续保存不再写入派生色。 */
 export function parseCustomColors(input: unknown): CustomColors {
   if (input === undefined) return { enabled: false, light: {}, dark: {} };
   if (
@@ -117,7 +150,9 @@ export function parseCustomColors(input: unknown): CustomColors {
     )
       throw new Error('高级配色设置无效');
     return Object.fromEntries(
-      Object.entries(value).map(([key, color]) => [key, (color as string).toLowerCase()]),
+      Object.entries(value)
+        .filter(([key]) => primaryKeys.has(key))
+        .map(([key, color]) => [key, (color as string).toLowerCase()]),
     );
   };
   return { enabled: input.enabled, light: parse(input.light), dark: parse(input.dark) };
@@ -154,15 +189,26 @@ export function contrastRatio(first: string, second: string) {
 }
 
 function readable(color: string, backgrounds: string[], dark: boolean, minimum = 4.5) {
-  for (let step = 0; step <= 100; step++) {
-    const candidate = mix(color, dark ? '#ffffff' : '#000000', step / 100);
-    if (backgrounds.every((background) => contrastRatio(candidate, background) >= minimum))
-      return candidate;
+  let best = color;
+  let bestRatio = 0;
+  for (const target of dark ? ['#ffffff', '#000000'] : ['#000000', '#ffffff']) {
+    for (let step = 0; step <= 100; step++) {
+      const candidate = mix(color, target, step / 100);
+      const ratio = Math.min(
+        ...backgrounds.map((background) => contrastRatio(candidate, background)),
+      );
+      if (ratio >= minimum) return candidate;
+      if (ratio > bestRatio) {
+        best = candidate;
+        bestRatio = ratio;
+      }
+    }
   }
-  return dark ? '#ffffff' : '#000000';
+  // 两种背景的对比要求可能互斥；保留最可读的折中值并由预览提示。
+  return best;
 }
 
-/** 为每套主题分别生成浅深色中性色和可读强调色，不改变用户保存的原始选色。 */
+/** 从内置主题与兼容偏好中选取主色，再统一生成所有渲染色值。 */
 export function resolveColorTheme(
   preferences: {
     colorTheme: ColorThemeId;
@@ -172,43 +218,90 @@ export function resolveColorTheme(
   dark: boolean,
   increasedContrast = false,
 ) {
-  const preset = colorThemes.find((item) => item.id === preferences.colorTheme) ?? colorThemes[0];
-  const accent = preferences.accentColor ?? preset.accent;
-  const warm = preset.id === 'paper';
-  const surface = dark ? (warm ? '#292621' : '#222630') : preset.surface;
-  const canvas = dark ? (warm ? '#1e1c19' : '#171b23') : preset.canvas;
-  const control = dark ? (warm ? '#36312b' : '#303642') : mix(surface, canvas, 0.8);
-  const hover = dark ? mix(surface, '#ffffff', 0.05) : mix(surface, canvas, 0.55);
-  const soft = mix(surface, accent, dark ? 0.14 : 0.08);
-  const ink = dark ? '#f3f3f3' : '#303030';
-  const controlHover = mix(control, ink, dark ? 0.1 : 0.06);
-  const controlActive = mix(control, ink, dark ? 0.16 : 0.1);
-  // 节日与休班配色也由主题生成，覆盖三种预设、选中底色和增加对比度模式。
-  const semanticBases = {
-    red: dark ? '#ff8d9b' : '#e51c3c',
-    green: dark ? '#72d6a1' : '#00894f',
-    yellow: dark ? '#edc56b' : '#946200',
-    purple: dark ? '#c6a0ed' : '#8b4fc5',
+  const theme =
+    builtInThemes.find((item) => item.id === preferences.colorTheme) ?? builtInThemes[0];
+  const palette: ThemePalette = {
+    ...theme.palettes[dark ? 'dark' : 'light'],
+    accent: preferences.accentColor ?? theme.palettes[dark ? 'dark' : 'light'].accent,
   };
+  const custom = preferences.customColors;
+  if (custom?.enabled) {
+    const overrides = custom[dark ? 'dark' : 'light'];
+    for (const [token, key] of Object.entries(primaryPaletteKeys)) {
+      const value = overrides[token as PrimaryColor];
+      if (value !== undefined) palette[key] = value;
+    }
+  }
+  return { accent: palette.accent, tokens: deriveColorTokens(palette, increasedContrast) };
+}
+
+/** 为编辑器返回八个未经对比度修正的主色，不暴露生成后的内部变量。 */
+export function resolvePrimaryPalette(
+  preferences: { colorTheme: ColorThemeId; accentColor: string | null },
+  dark: boolean,
+): Record<PrimaryColor, string> {
+  const theme =
+    builtInThemes.find((item) => item.id === preferences.colorTheme) ?? builtInThemes[0];
+  const palette = theme.palettes[dark ? 'dark' : 'light'];
+  return Object.fromEntries(
+    Object.entries(primaryPaletteKeys).map(([token, key]) => [
+      token,
+      key === 'accent' ? (preferences.accentColor ?? palette.accent) : palette[key],
+    ]),
+  ) as Record<PrimaryColor, string>;
+}
+
+/** 偏好存储兼容 CSS 角色名；主题包与生成器只使用独立于渲染技术的主色名称。 */
+const primaryPaletteKeys = {
+  '--canvas': 'canvas',
+  '--surface': 'surface',
+  '--ink': 'ink',
+  '--blue': 'accent',
+  '--red': 'red',
+  '--green': 'green',
+  '--yellow': 'yellow',
+  '--purple': 'purple',
+} as const satisfies Record<PrimaryColor, keyof ThemePalette>;
+
+/** 派生规则 v1：输入仅为八个主色，主题包不需要提供任何交互或文字层级颜色。 */
+export function deriveColorTokens(palette: ThemePalette, increasedContrast = false) {
+  const { canvas, surface, ink, accent, ...semanticBases } = palette;
+  const paletteDark = contrastRatio('#ffffff', surface) > contrastRatio('#000000', surface);
+  const neutralTarget = paletteDark ? '#ffffff' : '#000000';
+  const nearbyCanvas = contrastRatio(surface, canvas) < 1.5;
+  const control = paletteDark
+    ? mix(surface, neutralTarget, 0.06)
+    : nearbyCanvas
+      ? mix(surface, canvas, 0.8)
+      : mix(surface, neutralTarget, 0.04);
+  const hover = paletteDark
+    ? mix(surface, neutralTarget, 0.05)
+    : nearbyCanvas
+      ? mix(surface, canvas, 0.55)
+      : mix(surface, neutralTarget, 0.025);
+  const soft = mix(surface, accent, paletteDark ? 0.14 : 0.08);
+  const controlHover = mix(control, neutralTarget, paletteDark ? 0.1 : 0.06);
+  const controlActive = mix(control, neutralTarget, paletteDark ? 0.16 : 0.1);
+  const textSeed = (amount: number) => mix(ink, surface, amount);
   const semanticSurfaces = Object.values(semanticBases).map((base) =>
-    mix(surface, base, dark ? 0.16 : 0.07),
+    mix(surface, base, paletteDark ? 0.16 : 0.07),
   );
   const secondary = readable(
-    dark ? '#c4c4c4' : '#626262',
+    textSeed(0.26),
     [surface, control, controlHover, controlActive],
-    dark,
+    paletteDark,
     increasedContrast ? 7 : 4.5,
   );
   const muted = readable(
-    dark ? '#999999' : '#767676',
+    textSeed(0.45),
     [surface, control, hover, ...semanticSurfaces],
-    dark,
+    paletteDark,
     increasedContrast ? 7 : 4.5,
   );
   const action = readable(
     accent,
     [surface, soft, control, hover, controlHover, controlActive],
-    dark,
+    paletteDark,
     increasedContrast ? 7 : 4.5,
   );
   const minimum = increasedContrast ? 7 : 4.5;
@@ -217,27 +310,32 @@ export function resolveColorTheme(
   const outsideInk = readable(
     mix(ink, surface, 0.74),
     [surface, control, ...semanticSurfaces],
-    dark,
+    paletteDark,
     outsideMinimum,
   );
   const lunar = readable(
-    dark ? '#b5b5b5' : '#707070',
+    textSeed(0.4),
     [surface, control, ...semanticSurfaces],
-    dark,
+    paletteDark,
     minimum,
   );
-  const hint = readable(dark ? '#a8a8a8' : '#707070', [surface, canvas, control], dark, minimum);
-  const weekday = readable(dark ? '#d0d0d0' : '#4b4b4b', [surface], dark, minimum);
+  const hint = readable(textSeed(0.4), [surface, canvas, control], paletteDark, minimum);
+  const weekday = readable(textSeed(0.15), [surface], paletteDark, minimum);
   const semanticColor = (base: string) => {
-    const tint = mix(surface, base, dark ? 0.16 : 0.07);
-    const foreground = readable(base, [surface, ...semanticSurfaces, control, soft], dark, minimum);
+    const tint = mix(surface, base, paletteDark ? 0.16 : 0.07);
+    const foreground = readable(
+      base,
+      [surface, ...semanticSurfaces, control, soft],
+      paletteDark,
+      minimum,
+    );
     return {
       foreground,
       tint,
       outside: readable(
         mix(foreground, surface, 0.68),
         [surface, ...semanticSurfaces, control, soft],
-        dark,
+        paletteDark,
         outsideMinimum,
       ),
     };
@@ -254,7 +352,7 @@ export function resolveColorTheme(
     '--ink': readable(
       ink,
       [surface, control, controlHover, controlActive, ...semanticSurfaces],
-      dark,
+      paletteDark,
       minimum,
     ),
     '--secondary': secondary,
@@ -263,8 +361,8 @@ export function resolveColorTheme(
     '--lunar-ink': lunar,
     '--weekday-ink': weekday,
     '--hint-ink': hint,
-    '--selected-ink': readable(ink, [soft], dark, minimum),
-    '--line': increasedContrast ? (dark ? '#737b8e' : '#a1a8b5') : dark ? '#3a3e48' : '#e4e7ed',
+    '--selected-ink': readable(ink, [soft], paletteDark, minimum),
+    '--line': mix(surface, neutralTarget, increasedContrast ? 0.5 : paletteDark ? 0.18 : 0.12),
     '--control': control,
     '--control-hover': controlHover,
     '--control-active': controlActive,
@@ -292,14 +390,10 @@ export function resolveColorTheme(
     '--purple-soft': purple.tint,
     '--outside-purple': purple.outside,
   } satisfies Record<ColorToken, string>;
-  const custom = preferences.customColors;
-  return {
-    accent,
-    tokens: { ...tokens, ...(custom?.enabled ? custom[dark ? 'dark' : 'light'] : {}) },
-  };
+  return tokens;
 }
 
-/** 检查实际覆盖后的常见前景/背景组合；高级颜色原样应用，提示不阻止保存。 */
+/** 检查派生颜色的常用组合；无法同时满足的背景对比要求在预览中提示。 */
 export function colorContrastIssues(tokens: Record<ColorToken, string>, increasedContrast = false) {
   const minimum = increasedContrast ? 7 : 4.5;
   const pairs: { foreground: ColorToken; backgrounds: ColorToken[]; minimum: number }[] = [

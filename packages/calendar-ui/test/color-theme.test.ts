@@ -5,6 +5,7 @@ import {
   colorThemes,
   colorContrastIssues,
   colorTokenGroups,
+  primaryColorGroups,
   contrastRatio,
   isAccentColor,
   parseCustomColors,
@@ -55,69 +56,106 @@ test('高级配色仅接受受支持的颜色角色，旧偏好默认关闭且�
     assert.throws(() => parseCustomColors(input), /高级配色设置无效/);
 });
 
-test('高级配色覆盖全部界面颜色，浅深色独立，关闭后完整恢复基础主题', () => {
-  const preferences = { colorTheme: 'clear' as const, accentColor: '#3269d9' };
+test('只编辑八个主色，派生色随主色更新，浅深色隔离且停用后恢复基础主题', () => {
+  const preferences = { colorTheme: 'clear' as const, accentColor: null };
   const baseline = resolveColorTheme(preferences, false).tokens;
-  const keys = colorTokenGroups.flatMap((group) => group.items.map((item) => item.key));
-  assert.deepEqual(new Set(keys), new Set(Object.keys(baseline)));
-  assert.equal(keys.length, new Set(keys).size);
+  const keys = primaryColorGroups.flatMap((group) => group.items.map((item) => item.key));
+  assert.equal(keys.length, 8);
+  assert.equal(new Set(keys).size, 8);
+  assert.deepEqual(
+    new Set(colorTokenGroups.flatMap((group) => group.items.map((item) => item.key))),
+    new Set(Object.keys(baseline)),
+  );
   const custom = parseCustomColors({
     enabled: true,
-    light: Object.fromEntries(keys.map((key) => [key, '#abcdef'])),
-    dark: Object.fromEntries(keys.map((key) => [key, '#123456'])),
+    light: {
+      '--canvas': '#f8eade',
+      '--surface': '#fff6ee',
+      '--ink': '#5d283f',
+      '--blue': '#8948a3',
+      '--red': '#a33545',
+    },
+    dark: { '--surface': '#18262a', '--ink': '#d9ece8', '--blue': '#4fba96' },
   });
-  for (const increasedContrast of [false, true]) {
-    assert.ok(
-      Object.values(
-        resolveColorTheme({ ...preferences, customColors: custom }, false, increasedContrast)
-          .tokens,
-      ).every((color) => color === '#abcdef'),
-    );
-    assert.ok(
-      Object.values(
-        resolveColorTheme({ ...preferences, customColors: custom }, true, increasedContrast).tokens,
-      ).every((color) => color === '#123456'),
-    );
-  }
+  const light = resolveColorTheme({ ...preferences, customColors: custom }, false).tokens;
+  const dark = resolveColorTheme({ ...preferences, customColors: custom }, true).tokens;
+  assert.equal(light['--surface'], '#fff6ee');
+  assert.equal(dark['--surface'], '#18262a');
+  for (const token of [
+    '--control',
+    '--control-hover',
+    '--control-active',
+    '--line',
+    '--secondary',
+    '--lunar-ink',
+    '--outside-ink',
+    '--blue-soft',
+    '--leaf',
+    '--red-soft',
+    '--outside-red',
+  ] as const)
+    assert.notEqual(light[token], baseline[token], token);
+  assert.notEqual(light['--control'], light['--control-hover']);
+  assert.notEqual(light['--control-hover'], light['--control-active']);
+  assert.deepEqual(colorContrastIssues(light), []);
+  assert.deepEqual(colorContrastIssues(dark), []);
   assert.deepEqual(
     resolveColorTheme({ ...preferences, customColors: { ...custom, enabled: false } }, false)
       .tokens,
     baseline,
   );
-  const partial = resolveColorTheme(
-    {
-      ...preferences,
-      customColors: parseCustomColors({ enabled: true, light: { '--red': '#123456' }, dark: {} }),
-    },
-    false,
-  ).tokens;
-  assert.deepEqual(partial, { ...baseline, '--red': '#123456' });
 });
 
-test('高级对比度提示检查覆盖后的真实色值，不改写选色或阻止保存', () => {
-  const customColors = parseCustomColors({
+test('旧版完整配色保留主色，派生色不再覆盖生成结果或写入新设置', () => {
+  const restored = parseCustomColors({
     enabled: true,
     light: {
-      '--ink': '#ffffff',
-      '--surface': '#ffffff',
-      '--switch-thumb': '#000000',
-      '--leaf': '#000000',
+      '--ink': '#453833',
+      '--red': '#b52d44',
+      '--control-hover': '#abcdef',
+      '--secondary': '#123456',
+      '--leaf-ink': '#000000',
     },
-    dark: {},
+    dark: { '--surface': '#18262a', '--outside-red': '#998877' },
+  });
+  assert.deepEqual(restored, {
+    enabled: true,
+    light: { '--ink': '#453833', '--red': '#b52d44' },
+    dark: { '--surface': '#18262a' },
   });
   const tokens = resolveColorTheme(
+    { colorTheme: 'clear', accentColor: null, customColors: restored },
+    false,
+  ).tokens;
+  assert.notEqual(tokens['--control-hover'], '#abcdef');
+  assert.notEqual(tokens['--secondary'], '#123456');
+  assert.equal(tokens['--leaf-ink'], '#ffffff');
+  assert.throws(
+    () => parseCustomColors({ ...restored, light: { '--secondary': 'var(--ink)' } }),
+    /高级配色设置无效/,
+  );
+});
+
+test('主色原值保留，生成器修正不可读文字并提示无法同时满足的背景对比', () => {
+  const customColors = parseCustomColors({
+    enabled: true,
+    light: { '--ink': '#ffffff', '--surface': '#ffffff', '--canvas': '#000000' },
+    dark: {},
+  });
+  const normal = resolveColorTheme(
     { colorTheme: 'clear', accentColor: null, customColors },
     false,
   ).tokens;
-  const issues = colorContrastIssues(tokens);
-  assert.equal(issues.find((item) => item.token === '--ink')?.ratio, 1);
-  assert.equal(issues.find((item) => item.token === '--switch-thumb')?.minimum, 3);
-  assert.equal(
-    colorContrastIssues(tokens, true).find((item) => item.token === '--ink')?.minimum,
-    7,
-  );
-  assert.equal(tokens['--ink'], '#ffffff');
+  assert.ok(contrastRatio(normal['--ink'], normal['--surface']) >= 4.5);
+  assert.notEqual(normal['--ink'], '#ffffff');
   assert.equal(customColors.light['--ink'], '#ffffff');
+  const high = resolveColorTheme(
+    { colorTheme: 'clear', accentColor: null, customColors },
+    false,
+    true,
+  ).tokens;
+  const issue = colorContrastIssues(high, true).find((item) => item.token === '--hint-ink');
+  assert.ok(issue && issue.minimum === 7 && issue.ratio < 7);
 });
 
 test('基础主题的配色预览没有低对比度误报', () => {

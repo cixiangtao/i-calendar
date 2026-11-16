@@ -5,6 +5,7 @@ import autoprefixer from 'autoprefixer';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 
+import { calendarThemeDefaults } from '../../scripts/theme-css.js';
 import calendarTailwind from '../../tailwind.config.ts';
 
 const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
@@ -17,6 +18,7 @@ export default defineConfig({
   css: {
     postcss: {
       plugins: [
+        calendarThemeDefaults(),
         // 静态导入让 Vite 跟踪配置变更并重启，避免长驻开发服务沿用旧的主题与变体。
         // 使用绝对内容路径，保证从仓库根目录或 Tauri 应用目录启动时扫描结果相同。
         tailwindcss({

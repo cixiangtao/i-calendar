@@ -7,10 +7,11 @@ import { CalendarSegmented } from './CalendarSegmented.js';
 import { CalendarSwitch } from './CalendarSwitch.js';
 import {
   colorContrastIssues,
-  colorTokenGroups,
+  primaryColorGroups,
   isAccentColor,
   resolveColorTheme,
-  type ColorToken,
+  resolvePrimaryPalette,
+  type PrimaryColor,
 } from './color-theme.js';
 import type { CalendarPreferences } from './platform.js';
 import type { CalendarController } from './store.js';
@@ -24,7 +25,7 @@ function ColorRow({
   onRestore,
   onInteraction,
 }: {
-  token: ColorToken;
+  token: PrimaryColor;
   label: string;
   value: string;
   customized: boolean;
@@ -139,13 +140,9 @@ export function AdvancedColorSettings({
     mode === 'dark',
     increasedContrast,
   ).tokens;
-  const fallback = resolveColorTheme(
-    { ...preferences, customColors: undefined },
-    mode === 'dark',
-    increasedContrast,
-  ).tokens;
+  const fallback = resolvePrimaryPalette(preferences, mode === 'dark');
   const issues = colorContrastIssues(preview, increasedContrast);
-  const update = (token: ColorToken, value?: string) => {
+  const update = (token: PrimaryColor, value?: string) => {
     const next = { ...overrides };
     if (value === undefined) delete next[token];
     else next[token] = value;
@@ -181,7 +178,7 @@ export function AdvancedColorSettings({
             }}
           />
         </div>
-        <p>浅色与深色分别保存，未修改的颜色跟随主题。关闭后保留选色。</p>
+        <p>只需设置 8 个主色，其余颜色自动生成。浅深色分别保存，关闭后保留选色。</p>
         <CalendarSegmented
           aria-label="编辑配色外观"
           value={mode}
@@ -232,10 +229,10 @@ export function AdvancedColorSettings({
             当前预览的常用文字与控件对比度通过检查。
           </output>
         )}
-        {colorTokenGroups.map((group, index) => (
+        {primaryColorGroups.map((group) => (
           <details
             key={group.label}
-            open={index === 0}
+            open
             className="tw-border-0 tw-border-t tw-border-solid tw-border-line tw-py-2"
           >
             <summary className="tw-cursor-pointer tw-py-1 tw-text-[12px] tw-font-medium focus-visible:tw-outline focus-visible:tw-outline-1 focus-visible:tw-outline-secondary">
@@ -282,7 +279,7 @@ export function AdvancedColorSettings({
           <span className="tw-text-[11px] tw-text-secondary">已自定义 {count} 项</span>
         </div>
         <p className="tw-pt-2">
-          高级颜色按原值应用。编辑区保持基础配色，方便随时恢复；品牌图标保持原色。
+          悬停、按下、浅底与文字层级自动生成，文字会按背景校正对比度。编辑区与品牌图标保持基础配色。
         </p>
       </div>
     </details>
