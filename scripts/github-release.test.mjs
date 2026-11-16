@@ -5,7 +5,35 @@ import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 
-import { preparePublication, selectRelease } from './github-release.mjs';
+import { createDraftRelease, preparePublication, selectRelease } from './github-release.mjs';
+
+test('新草稿直接采用创建响应，中文多行说明原样传递，响应身份异常时拒绝继续', async () => {
+  const metadata = {
+    tag: 'v1.0.4',
+    commit: 'a'.repeat(40),
+    version: '1.0.4',
+    notes: '# 版本说明\n\n八主色与主题包\n',
+  };
+  const response = { id: 42, tag_name: 'v1.0.4', draft: true, prerelease: false, assets: [] };
+  const created = await createDraftRelease(async (body) => {
+    assert.equal(body.tag_name, metadata.tag);
+    assert.equal(body.target_commitish, metadata.commit);
+    assert.equal(body.body, metadata.notes);
+    assert.equal(body.draft, true);
+    assert.equal(body.prerelease, false);
+    assert.equal(body.generate_release_notes, false);
+    return response;
+  }, metadata);
+  assert.equal(created, response);
+  for (const invalid of [
+    { ...response, id: 0 },
+    { ...response, tag_name: 'v1.0.3' },
+    { ...response, draft: false },
+    { ...response, prerelease: true },
+    { ...response, assets: null },
+  ])
+    await assert.rejects(createDraftRelease(async () => invalid, metadata));
+});
 
 test('Release 查询保留同标签草稿，其他版本的已发布记录不影响选择', () => {
   const draft = { id: 1, tag_name: 'v1.0.0', draft: true };

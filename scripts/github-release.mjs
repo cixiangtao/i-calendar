@@ -12,6 +12,27 @@ export function selectRelease(releases, tag) {
   return matches[0] ?? null;
 }
 
+/** 使用创建接口返回的草稿身份，避免依赖刚创建后可能尚未更新的列表查询。 */
+export async function createDraftRelease(create, { tag, commit, version, notes }) {
+  assert.equal(tag, `v${version}`);
+  assert.match(commit, /^[a-f0-9]{40}$/);
+  const release = await create({
+    tag_name: tag,
+    target_commitish: commit,
+    name: `i日历 ${version}`,
+    body: notes,
+    draft: true,
+    prerelease: false,
+    generate_release_notes: false,
+  });
+  assert.ok(Number.isSafeInteger(release.id) && release.id > 0, '创建响应缺少有效 Release 编号');
+  assert.equal(release.tag_name, tag, '创建响应与发布标签不一致');
+  assert.equal(release.draft, true, '安装包齐全前只允许创建草稿');
+  assert.equal(release.prerelease, false);
+  assert.ok(Array.isArray(release.assets), '创建响应缺少附件列表');
+  return release;
+}
+
 /** GitHub 会规范化中文附件名；分发时只改外部名称与清单地址，保持签名载荷字节不变。 */
 export async function preparePublication(folder, version, repository) {
   const target = path.join(folder, 'publication');

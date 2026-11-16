@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
-import { preparePublication, selectRelease } from './github-release.mjs';
+import { createDraftRelease, preparePublication, selectRelease } from './github-release.mjs';
 import { releaseMetadata } from './release-context.mjs';
 
 // 本地只能准备和验证；真正的发布由唯一 Actions 工作流执行。
@@ -55,27 +55,21 @@ let release = selectRelease(
   tag,
 );
 if (!release) {
-  await gh(
-    'release',
-    'create',
-    tag,
-    '--repo',
-    repository,
-    '--verify-tag',
-    '--target',
-    commit,
-    '--draft',
-    '--title',
-    `i日历 ${version}`,
-    '--notes-file',
-    `docs/releases/${version}.md`,
-  );
-  release = selectRelease(
-    JSON.parse(
-      await gh('api', '--paginate', '--slurp', `repos/${repository}/releases?per_page=100`),
-    ).flat(),
-    tag,
-  );
+  const temporary = await mkdtemp(path.join(os.tmpdir(), 'i-calendar-draft-'));
+  try {
+    release = await createDraftRelease(
+      async (body) => {
+        const request = path.join(temporary, 'release.json');
+        await writeFile(request, JSON.stringify(body));
+        return JSON.parse(
+          await gh('api', '--method', 'POST', `repos/${repository}/releases`, '--input', request),
+        );
+      },
+      { tag, commit, version, notes: await readFile(`docs/releases/${version}.md`, 'utf8') },
+    );
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
+  }
 }
 assert.ok(release, '未找到已创建的草稿 Release');
 assert.equal(release.prerelease, false);
