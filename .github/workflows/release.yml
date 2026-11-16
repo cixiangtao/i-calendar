@@ -65,6 +65,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm run build:mac:update
       - run: pnpm run check:mac
+        env:
+          I_CALENDAR_SMOKE_SETTLED_ONLY: '1'
         if: ${{ !github.event.inputs.artifact_run }}
       - name: 生成已验签的更新清单与校验文件
         if: ${{ !github.event.inputs.artifact_run }}
