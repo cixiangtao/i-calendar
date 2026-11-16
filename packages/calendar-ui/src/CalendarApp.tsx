@@ -870,16 +870,6 @@ function Settings({
                   <h2>i日历</h2>
                   <p>版本 {appVersion}</p>
                   <p>免费、无广告的公农历日历。</p>
-                  {controller.platform.quit ? (
-                    <CalendarButton
-                      disabled={['downloading', 'installing'].includes(appUpdate.phase)}
-                      onClick={() => {
-                        void controller.platform.quit?.();
-                      }}
-                    >
-                      退出i日历
-                    </CalendarButton>
-                  ) : null}
                 </section>
                 {controller.platform.kind === 'macos' ? (
                   <AppUpdateSection
@@ -978,6 +968,19 @@ function Settings({
         controller={controller}
         state={state}
       />
+      {controller.platform.quit ? (
+        <footer className="settings-actions tw-mt-3 tw-flex tw-shrink-0 tw-justify-end tw-border-0 tw-border-t tw-border-solid tw-border-line tw-pt-3">
+          <CalendarButton
+            appearance="danger"
+            disabled={['downloading', 'installing'].includes(appUpdate.phase)}
+            onClick={() => {
+              void controller.platform.quit?.();
+            }}
+          >
+            退出i日历
+          </CalendarButton>
+        </footer>
+      ) : null}
     </section>
   );
 }
