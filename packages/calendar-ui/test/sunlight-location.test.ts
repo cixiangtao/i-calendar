@@ -3,7 +3,11 @@ import { test } from 'node:test';
 
 import type { CalendarPlatform, SavedCalendarState } from '../src/platform.js';
 import { CalendarController, parseSavedState } from '../src/store.js';
-import { parseSunlightPreferences, type LocatedPoint } from '../src/sunlight-location.js';
+import {
+  LocationRequestError,
+  parseSunlightPreferences,
+  type LocatedPoint,
+} from '../src/sunlight-location.js';
 
 const place = {
   id: '1816670',
@@ -56,6 +60,40 @@ test('旧偏好默认不启用定位，初始化不申请权限', async () => {
   await controller.locateSunlight(true);
   assert.equal(requests, 0);
   assert.deepEqual(parseSunlightPreferences(undefined), { mode: 'off', manualLocation: null });
+});
+
+test('只有用户操作允许申请新权限，自动刷新遇到未授权保留主动申请入口', async () => {
+  const requests: boolean[] = [];
+  const env = fixture(async (_signal, requestPermission) => {
+    requests.push(requestPermission);
+    if (!requestPermission)
+      throw new LocationRequestError('permission-required', '请点击申请定位权限');
+    return fix(env.now());
+  });
+  await env.controller.initialize();
+  await env.controller.locateSunlight();
+  env.advance(31 * 60_000);
+  await env.controller.locateSunlight(true);
+  assert.deepEqual(requests, [true, false]);
+  assert.equal(env.controller.getSnapshot().sunlightLocation.issue, 'permission-required');
+  await env.controller.locateSunlight(true);
+  assert.equal(requests.length, 2);
+  await env.controller.locateSunlight();
+  assert.deepEqual(requests, [true, false, true]);
+  assert.equal(env.controller.getSnapshot().sunlightLocation.issue, undefined);
+});
+
+test('应用拒绝、系统关闭和设备限制保留不同的恢复状态', async () => {
+  for (const code of ['permission-denied', 'services-disabled', 'restricted'] as const) {
+    const { controller } = fixture(async () => {
+      throw new LocationRequestError(code, '定位暂不可用');
+    });
+    await controller.initialize();
+    await controller.locateSunlight();
+    assert.equal(controller.getSnapshot().sunlightLocation.issue, code);
+    await controller.selectSunlightPlace(place);
+    assert.equal(controller.getSnapshot().sunlightLocation.issue, undefined);
+  }
 });
 
 test('手动地点保存重载可离线使用，并复制保存值', async () => {

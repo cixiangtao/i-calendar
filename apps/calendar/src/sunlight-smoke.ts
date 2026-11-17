@@ -27,9 +27,7 @@ export async function verifySunlight(platform: CalendarPlatform) {
     });
     const render = () =>
       flushSync(() =>
-        root.render(
-          createElement(SunlightSummary, { state: controller.getSnapshot() }),
-        ),
+        root.render(createElement(SunlightSummary, { state: controller.getSnapshot() })),
       );
     controller.selectDate('2026-06-21');
     render();
@@ -47,9 +45,11 @@ export async function verifySunlight(platform: CalendarPlatform) {
       throw new Error('日照摘要未跟随日期更新');
     let isolated = false;
     try {
-      await invoke('locate_sunlight', { requestId: 999 });
+      await invoke('locate_sunlight', { requestId: 999, requestPermission: false });
     } catch (error) {
-      isolated = String(error).includes('隔离冒烟');
+      isolated = String(
+        error && typeof error === 'object' && 'message' in error ? error.message : error,
+      ).includes('隔离冒烟');
     }
     if (!isolated) throw new Error('隔离冒烟没有阻止真实定位请求');
     if (

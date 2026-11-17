@@ -18,6 +18,7 @@ import { defaultMenuClock, parseMenuClock } from './menu-clock.js';
 import type { CalendarPlatform, CalendarPreferences, SavedCalendarState } from './platform.js';
 import {
   parseSunlightPreferences,
+  LocationRequestError,
   validLocatedPoint,
   type ManualSunlightLocation,
   type SunlightLocationState,
@@ -458,10 +459,15 @@ export class CalendarController {
     this.locationAbort = abort;
     this.locationAttempt = this.now().getTime();
     this.patch({
-      sunlightLocation: { ...this.snapshot.sunlightLocation, pending: true, error: null },
+      sunlightLocation: {
+        ...this.snapshot.sunlightLocation,
+        pending: true,
+        error: null,
+        issue: undefined,
+      },
     });
     try {
-      const point = await this.platform.locate(abort.signal);
+      const point = await this.platform.locate(abort.signal, !automatic);
       if (
         abort.signal.aborted ||
         this.disposed ||
@@ -478,6 +484,7 @@ export class CalendarController {
             ...this.snapshot.sunlightLocation,
             pending: false,
             error: error instanceof Error ? error.message : '定位失败，请重试或手动选择城市',
+            issue: error instanceof LocationRequestError ? error.code : undefined,
           },
         });
     } finally {

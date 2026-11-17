@@ -44,13 +44,25 @@ fn runtime_context() -> Value {
 async fn locate_sunlight(
     app: tauri::AppHandle,
     request_id: u64,
-) -> Result<location::LocationFix, String> {
-    location::locate(app, request_id).await
+    request_permission: bool,
+) -> Result<location::LocationFix, location::LocationFailure> {
+    location::locate(app, request_id, request_permission).await
 }
 
 #[tauri::command]
 fn cancel_sunlight_location(app: tauri::AppHandle, request_id: u64) -> Result<(), String> {
     location::cancel(app, request_id)
+}
+
+#[tauri::command]
+async fn open_sunlight_settings(app: tauri::AppHandle) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    return location::open_settings(app).await;
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = app;
+        Err("请在系统设置中查看定位服务".into())
+    }
 }
 
 #[tauri::command]
@@ -398,6 +410,7 @@ pub fn run() {
             runtime_context,
             locate_sunlight,
             cancel_sunlight_location,
+            open_sunlight_settings,
             describe_sunlight_location,
             app_update_available,
             launch_at_login_available,

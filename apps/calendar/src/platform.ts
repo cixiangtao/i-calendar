@@ -119,15 +119,18 @@ export async function createPlatform(): Promise<{
       kind: context.kind,
       ...(!context.smokeTest
         ? {
-            async locate(signal: AbortSignal) {
+            async locate(signal: AbortSignal, requestPermission: boolean) {
               await invoke('set_popup_busy', { busy: true });
               try {
-                return await nativeLocate(signal);
+                return await nativeLocate(signal, requestPermission);
               } finally {
                 await invoke('set_popup_busy', { busy: false }).catch(() => {});
               }
             },
           }
+        : {}),
+      ...(context.kind === 'macos' && !context.smokeTest
+        ? { openLocationSettings: () => invoke<void>('open_sunlight_settings') }
         : {}),
       load: () => invoke<unknown>('load_state'),
       save: (state: SavedCalendarState) => invoke<void>('save_state', { state }),

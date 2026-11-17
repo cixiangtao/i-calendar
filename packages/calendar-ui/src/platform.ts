@@ -40,7 +40,9 @@ export interface CalendarPlatform {
   openExternal(url: string): Promise<void>;
   copyText(text: string): Promise<void>;
   /** 一次性高精度定位；仅由明确启用的位置功能调用，取消时停止宿主请求。 */
-  locate?(signal: AbortSignal): Promise<LocatedPoint>;
+  locate?(signal: AbortSignal, requestPermission: boolean): Promise<LocatedPoint>;
+  /** 仅 Mac 提供，打开固定的系统定位权限面板。 */
+  openLocationSettings?(): Promise<void>;
   setInteractionBusy?(busy: boolean): Promise<void>;
   /** 请求悬浮窗内容高度（逻辑像素）；宿主按当前屏幕可用空间裁切。 */
   setPopupHeight?(height: number): Promise<void>;

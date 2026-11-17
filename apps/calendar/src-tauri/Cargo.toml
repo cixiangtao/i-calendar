@@ -33,6 +33,7 @@ chrono = { version = "=0.4.45", default-features = false, features = ["clock"] }
 objc2-app-kit = { version = "=0.3.2", default-features = false, features = [
   "block2",
   "NSButton",
+  "NSApplication",
   "NSAccessibility",
   "NSAnimation",
   "NSAnimationContext",

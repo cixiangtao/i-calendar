@@ -3,4 +3,5 @@
 <plist version="1.0"><dict>
 <key>LSUIElement</key><true/>
 <key>NSLocationUsageDescription</key><string>使用当前位置的经纬度计算日出、日落与白昼时长，不保存定位坐标；系统服务可能联网解析地名。</string>
+<key>NSLocationWhenInUseUsageDescription</key><string>允许使用当前位置计算日出日落，定位坐标仅留在本次会话；系统可能联网解析地名。</string>
 </dict></plist>

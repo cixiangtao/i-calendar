@@ -130,10 +130,28 @@ export function SunlightSettings({
             }}
           >
             {state.sunlightLocation.pending
-              ? '正在定位…'
-              : state.preferences.sunlight.mode === 'automatic'
-                ? '重新定位'
-                : '使用当前位置'}
+              ? '正在请求定位…'
+              : state.sunlightLocation.issue === 'permission-required'
+                ? '申请定位权限'
+                : state.sunlightLocation.issue === 'permission-denied'
+                  ? '重新检查权限'
+                  : state.preferences.sunlight.mode === 'automatic'
+                    ? '重新定位'
+                    : '使用当前位置'}
+          </CalendarButton>
+        ) : null}
+        {controller.platform.openLocationSettings &&
+        ['permission-denied', 'services-disabled'].includes(state.sunlightLocation.issue ?? '') ? (
+          <CalendarButton
+            onClick={() => {
+              void controller.platform
+                .openLocationSettings?.()
+                .catch(() =>
+                  controller.reportError('定位设置无法打开，请在系统设置中查看定位服务。'),
+                );
+            }}
+          >
+            打开定位设置
           </CalendarButton>
         ) : null}
         <CalendarButton
@@ -174,7 +192,7 @@ export function SunlightSettings({
       ) : null}
       {state.sunlightLocation.pending ? (
         <output className="tw-mb-2 tw-block tw-text-[12px] tw-leading-[1.8] tw-text-secondary">
-          请在系统或浏览器提示中允许定位；也可以直接选择城市。
+          首次使用会请求系统或浏览器授权，允许后自动获取位置；也可以直接选择城市。
         </output>
       ) : null}
       {state.preferences.sunlight.mode === 'automatic' && state.sunlightLocation.error ? (

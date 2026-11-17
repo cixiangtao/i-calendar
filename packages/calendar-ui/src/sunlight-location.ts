@@ -23,6 +23,26 @@ export interface SunlightLocationState {
   pending: boolean;
   point: LocatedPoint | null;
   error: string | null;
+  issue?: LocationIssue;
+}
+
+export type LocationIssue =
+  | 'permission-required'
+  | 'permission-denied'
+  | 'services-disabled'
+  | 'restricted'
+  | 'unavailable';
+
+/** 可恢复的定位问题，界面据此提供申请或打开设置，避免仅靠错误文案判断权限。 */
+export class LocationRequestError extends Error {
+  constructor(
+    readonly code: LocationIssue,
+    message: string,
+    options?: ErrorOptions,
+  ) {
+    super(message, options);
+    this.name = 'LocationRequestError';
+  }
 }
 
 /** 旧版偏好默认关闭定位，不因升级弹出系统权限请求。 */
