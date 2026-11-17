@@ -1,6 +1,6 @@
 [package]
 name = "i-calendar"
-version = "1.2.1"
+version = "1.2.2"
 description = "i日历：公农历、节气与放假调休"
 license = "MIT"
 edition = "2021"
