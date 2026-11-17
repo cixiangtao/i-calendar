@@ -1,7 +1,8 @@
-import { useSyncExternalStore, type Ref } from 'react';
+import { useCallback, useSyncExternalStore, type Ref } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
 import { CalendarSwitch } from './CalendarSwitch.js';
+import { ReleaseNotesDisclosure } from './ReleaseNotesDisclosure.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 
 /** 已发现的新版始终保留底部入口；稍后只隐藏横幅，检查或安装失败仍可进入重试。 */
@@ -74,6 +75,12 @@ export function AppUpdateSection({
     controller.appUpdates.subscribe,
     controller.appUpdates.getSnapshot,
   );
+  const openReleaseLink = useCallback(
+    (url: string) => {
+      void controller.openSource(url);
+    },
+    [controller],
+  );
   const busy = ['checking', 'downloading', 'installing'].includes(update.phase);
   const unavailable = update.phase === 'unavailable';
   const progress = update.progress;
@@ -124,10 +131,11 @@ export function AppUpdateSection({
         <p className="application-update-version">发现新版本 {update.release.version}</p>
       ) : null}
       {update.release?.notes ? (
-        <details className="application-update-notes tw-mt-2 tw-text-[length:12px] tw-leading-[20px] [&_p]:tw-mt-1.5 [&_p]:tw-whitespace-pre-wrap [&_p]:tw-overflow-anywhere [&_summary]:tw-cursor-pointer">
-          <summary>更新说明</summary>
-          <p>{update.release.notes}</p>
-        </details>
+        <ReleaseNotesDisclosure
+          key={update.release.version}
+          source={update.release.notes}
+          onOpenLink={openReleaseLink}
+        />
       ) : null}
       {update.phase === 'downloading' || update.phase === 'installing' ? (
         <div

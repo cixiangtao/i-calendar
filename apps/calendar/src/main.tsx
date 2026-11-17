@@ -86,8 +86,12 @@ async function start() {
     const calculatorVerified = smokeTest
       ? (await import('./calculator-smoke.js')).verifyDateCalculator(controller)
       : undefined;
+    const releaseNotesVerified = smokeTest
+      ? (await import('./release-notes-smoke.js')).verifyReleaseNotes()
+      : undefined;
     const report = {
       calculatorVerified,
+      releaseNotesVerified,
       appUpdaterAvailable: !!platform.appUpdater,
       launchAtLoginAvailable: !!platform.launchAtLogin,
       controlGeometry: {
