@@ -687,6 +687,7 @@ fn popup_position(width: f64, left: f64, top: f64, screen_width: f64, scale: f64
 
 pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+    let isolated_smoke = std::env::args().any(|argument| argument == "--smoke-test");
     let clock = crate::read_saved_state(app.handle())
         .and_then(|value| crate::menu_clock::ClockPreferences::from_saved(value.as_ref()));
     match clock {
@@ -748,7 +749,9 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
                     let _ = hide_calendar(&window);
                 }
             }
-            WindowEvent::Focused(false) => {
+            // 隔离冒烟用显式请求驱动收起；不让外部桌面操作关闭正在采样的窗口。
+            // 旧失焦代次的保护仍由 verify_popup_motion 显式验证。
+            WindowEvent::Focused(false) if !isolated_smoke => {
                 let app = handle.clone();
                 let generation = app
                     .state::<RuntimeState>()
