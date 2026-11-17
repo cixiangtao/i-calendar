@@ -14,7 +14,7 @@ import {
 import { version as appVersion } from '../../../package.json';
 import { AdvancedColorSettings } from './AdvancedColorSettings.js';
 import { AlmanacContent } from './Almanac.js';
-import { AppUpdateNotice, AppUpdateSection } from './AppUpdateSection.js';
+import { AppUpdateButton, AppUpdateNotice, AppUpdateSection } from './AppUpdateSection.js';
 import { CalendarButton } from './CalendarButton.js';
 import { CalendarColorInput } from './CalendarColorInput.js';
 import { CalendarContextMenu } from './CalendarContextMenu.js';
@@ -140,8 +140,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const grid = useRef<HTMLDivElement>(null);
   const animatedMonth = useRef(state.year * 12 + state.monthNumber);
   const gear = useRef<HTMLButtonElement>(null);
+  const updateButton = useRef<HTMLButtonElement>(null);
   const calculator = useRef<HTMLButtonElement>(null);
   const previousPanel = useRef(state.panel);
+  const previousSettingsTab = useRef(state.settingsTab);
   const container = useRef<HTMLElement>(null);
   const dark =
     state.preferences.appearance === 'dark' ||
@@ -261,10 +263,13 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   useEffect(() => {
     if (state.panel === 'calendar' && previousPanel.current !== 'calendar') {
       if (previousPanel.current === 'calculator') calculator.current?.focus();
+      else if (previousSettingsTab.current === 'about' && updateButton.current)
+        updateButton.current.focus();
       else gear.current?.focus();
     }
     previousPanel.current = state.panel;
-  }, [state.panel]);
+    previousSettingsTab.current = state.settingsTab;
+  }, [state.panel, state.settingsTab]);
 
   useEffect(() => {
     if (focusAfterNavigation.current) {
@@ -699,6 +704,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
               </div>
             )}
             <div className="tw-flex tw-shrink-0 tw-items-center tw-gap-2">
+              <AppUpdateButton
+                ref={updateButton}
+                controller={controller}
+              />
               <CalendarButton
                 ref={calculator}
                 appearance="text"
