@@ -23,6 +23,7 @@ import { CalendarSelect } from './CalendarSelect.js';
 import { CalendarSwitch } from './CalendarSwitch.js';
 import { CalendarTabs } from './CalendarTabs.js';
 import { colorThemes, resolveColorTheme } from './color-theme.js';
+import { DateCalculator } from './DateCalculator.js';
 import { formControlVariables } from './form-theme.js';
 import { LaunchAtLoginSettings } from './LaunchAtLoginSettings.js';
 import { MenuClockSettings } from './MenuClockSettings.js';
@@ -139,6 +140,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const grid = useRef<HTMLDivElement>(null);
   const animatedMonth = useRef(state.year * 12 + state.monthNumber);
   const gear = useRef<HTMLButtonElement>(null);
+  const calculator = useRef<HTMLButtonElement>(null);
+  const previousPanel = useRef(state.panel);
   const container = useRef<HTMLElement>(null);
   const dark =
     state.preferences.appearance === 'dark' ||
@@ -180,8 +183,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
     const measure = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        // 日历按完整内容展开；设置保留稳定高度和自身的内容滚动。
-        const height = state.panel === 'settings' ? 660 : Math.ceil(element.scrollHeight);
+        // 日历按完整内容展开；设置和工具页保留稳定高度和自身的内容滚动。
+        const height = state.panel !== 'calendar' ? 660 : Math.ceil(element.scrollHeight);
         if (height === previousHeight) return;
         previousHeight = height;
         void resize(height).catch((error: unknown) => console.error('悬浮窗高度调整失败', error));
@@ -256,6 +259,14 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   }, [controller, state.ready, state.preferences.automaticAppUpdates]);
 
   useEffect(() => {
+    if (state.panel === 'calendar' && previousPanel.current !== 'calendar') {
+      if (previousPanel.current === 'calculator') calculator.current?.focus();
+      else gear.current?.focus();
+    }
+    previousPanel.current = state.panel;
+  }, [state.panel]);
+
+  useEffect(() => {
     if (focusAfterNavigation.current) {
       grid.current
         ?.querySelector<HTMLButtonElement>(`[data-date="${state.selected.date}"]`)
@@ -282,7 +293,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       if (event.key === 'Escape') {
         if (state.panel !== 'calendar') {
           controller.showSettings(false);
-          requestAnimationFrame(() => gear.current?.focus());
         } else void controller.platform.close?.();
       } else if (state.panel === 'calendar') {
         if (event.key.toLowerCase() === 't') {
@@ -337,6 +347,18 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
           state={state}
           dark={dark}
           increasedContrast={increasedContrast}
+        />
+      ) : state.panel === 'calculator' ? (
+        <DateCalculator
+          holidays={controller.holidays}
+          selectedDate={state.selected.date}
+          today={state.today}
+          onBack={() => controller.showCalculator(false)}
+          onViewDate={(date) => {
+            focusAfterNavigation.current = true;
+            controller.selectDate(date);
+            controller.showCalculator(false);
+          }}
         />
       ) : (
         <>
@@ -640,7 +662,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
             </aside>
           ) : null}
           <AppUpdateNotice controller={controller} />
-          <footer className="app-footer tw-col-[1_/_-1] tw-flex tw-min-h-7 tw-items-center tw-justify-between tw-px-3 tw-py-0 web:tw-border-0 web:tw-border-t web:tw-border-solid web:tw-border-line web:tw-px-5 web:tw-py-2">
+          <footer className="app-footer tw-col-[1_/_-1] tw-flex tw-min-h-7 tw-items-center tw-justify-between tw-gap-3 tw-px-3 tw-py-0 web:tw-border-0 web:tw-border-t web:tw-border-solid web:tw-border-line web:tw-px-5 web:tw-py-2">
             {controller.platform.kind === 'web' ? (
               <ul
                 aria-label="日历颜色说明"
@@ -676,15 +698,25 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 <span>i日历</span>
               </div>
             )}
-            <CalendarButton
-              ref={gear}
-              appearance="icon"
-              className="icon-button app:tw-inline-flex app:tw-h-7 app:tw-w-7 app:tw-shrink-0 app:tw-items-center app:tw-justify-center app:tw-rounded-[var(--form-radius)] app:tw-p-[5px] app:tw-text-secondary coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
-              aria-label="设置与调休数据"
-              title="设置与调休数据"
-              onClick={() => controller.showSettings()}
-              icon={<Icon name="settings" />}
-            />
+            <div className="tw-flex tw-shrink-0 tw-items-center tw-gap-2">
+              <CalendarButton
+                ref={calculator}
+                appearance="text"
+                disabled={!state.ready}
+                onClick={() => controller.showCalculator()}
+              >
+                日期计算
+              </CalendarButton>
+              <CalendarButton
+                ref={gear}
+                appearance="icon"
+                className="icon-button app:tw-inline-flex app:tw-h-7 app:tw-w-7 app:tw-shrink-0 app:tw-items-center app:tw-justify-center app:tw-rounded-[var(--form-radius)] app:tw-p-[5px] app:tw-text-secondary coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
+                aria-label="设置与调休数据"
+                title="设置与调休数据"
+                onClick={() => controller.showSettings()}
+                icon={<Icon name="settings" />}
+              />
+            </div>
           </footer>
         </>
       )}

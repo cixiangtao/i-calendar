@@ -3,3 +3,4 @@ export * from './date.js';
 export * from './holidays.js';
 export * from './calendar.js';
 export * from './almanac.js';
+export * from './workdays.js';

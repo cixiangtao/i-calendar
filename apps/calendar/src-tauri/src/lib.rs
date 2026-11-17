@@ -239,7 +239,8 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
             desktop::show_calendar(&app);
         }
         if std::env::args().any(|argument| argument == "--smoke-test") {
-            if report.get("appUpdaterAvailable").and_then(Value::as_bool) != Some(false)
+            if report.get("calculatorVerified").and_then(Value::as_bool) != Some(true)
+                || report.get("appUpdaterAvailable").and_then(Value::as_bool) != Some(false)
                 || report
                     .get("launchAtLoginAvailable")
                     .and_then(Value::as_bool)

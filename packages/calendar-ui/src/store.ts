@@ -28,7 +28,7 @@ export interface CalendarSnapshot {
   month: MonthCalendar;
   preferences: CalendarPreferences;
   years: number[];
-  panel: 'calendar' | 'settings';
+  panel: 'calendar' | 'settings' | 'calculator';
   settingsTab: 'general' | 'about';
   updating: boolean;
   error: string | null;
@@ -270,6 +270,11 @@ export class CalendarController {
 
   showSettings(show = true, settingsTab: 'general' | 'about' = 'general') {
     this.patch({ panel: show ? 'settings' : 'calendar', settingsTab });
+  }
+
+  /** 日期计算仅切换视图，不写入偏好或更改所选日期。 */
+  showCalculator(show = true) {
+    this.patch({ panel: show ? 'calculator' : 'calendar' });
   }
   dismissError() {
     this.patch({ error: null, notice: null });

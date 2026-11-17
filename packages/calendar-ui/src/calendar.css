@@ -159,7 +159,8 @@ a:focus-visible {
   color: var(--yellow);
   background: var(--yellow-soft);
 }
-.calendar-app[data-panel='settings'] {
+.calendar-app[data-panel='settings'],
+.calendar-app[data-panel='calculator'] {
   display: block;
 }
 .setting-label:last-child {
@@ -186,14 +187,16 @@ a:focus-visible {
     right: 16px;
   }
 
-  body[data-platform='web'] .calendar-app[data-panel='settings'] {
+  body[data-platform='web'] .calendar-app[data-panel='settings'],
+  body[data-platform='web'] .calendar-app[data-panel='calculator'] {
     width: 560px;
   }
 }
 body[data-platform='macos'] {
   overflow: hidden;
 }
-body[data-platform='macos'] .calendar-app[data-panel='settings'] {
+body[data-platform='macos'] .calendar-app[data-panel='settings'],
+body[data-platform='macos'] .calendar-app[data-panel='calculator'] {
   height: 100vh;
 }
 

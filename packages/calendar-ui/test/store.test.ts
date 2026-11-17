@@ -21,6 +21,23 @@ function fixture(overrides: Partial<CalendarPlatform> = {}) {
   return { controller: new CalendarController(platform, () => instant), saves };
 }
 
+test('日期工具往返不更改月历或写入偏好，查看结果才切换所选日期', async () => {
+  const { controller, saves } = fixture();
+  await controller.initialize();
+  const before = controller.getSnapshot();
+  controller.showCalculator();
+  assert.equal(controller.getSnapshot().panel, 'calculator');
+  assert.deepEqual(controller.getSnapshot().selected, before.selected);
+  controller.showCalculator(false);
+  assert.equal(controller.getSnapshot().panel, 'calendar');
+  assert.deepEqual(controller.getSnapshot().month, before.month);
+  controller.showCalculator();
+  controller.selectDate('2027-02-25');
+  controller.showCalculator(false);
+  assert.equal(controller.getSnapshot().selected.date, '2027-02-25');
+  assert.deepEqual(saves, []);
+});
+
 test('高级配色保存重载并保留两套外观，关闭不丢色，非法写入不污染状态', async () => {
   const { controller, saves } = fixture();
   await controller.initialize();
