@@ -324,7 +324,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   return (
     <article
       ref={container}
-      className="calendar-app tw-grid tw-w-[min(400px,_100%)] tw-min-w-0 tw-max-w-full tw-gap-3 tw-text-[length:13px] tw-text-ink mac:tw-max-h-[100vh] mac:tw-w-full mac:tw-content-start mac:tw-gap-2 mac:tw-overflow-y-auto mac:tw-p-2 web:tw-w-full web:tw-gap-0 web:tw-rounded-[22px] web:tw-border web:tw-border-solid web:tw-border-line web:tw-bg-surface web:desktop:tw-grid-cols-[minmax(0,_1fr)_304px]"
+      className="calendar-app tw-grid tw-w-[min(400px,_100%)] tw-min-w-0 tw-max-w-full tw-gap-3 tw-text-[length:13px] tw-text-ink mac:tw-max-h-[100vh] mac:tw-w-full mac:tw-content-start mac:tw-gap-2 mac:tw-overflow-y-auto mac:tw-p-2 web:tw-mx-auto web:tw-w-full web:tw-gap-0 web:tw-rounded-[22px] web:tw-border web:tw-border-solid web:tw-border-line web:tw-bg-surface web:desktop:tw-grid-cols-[minmax(0,_1fr)_304px]"
       data-panel={state.panel}
       data-show-lunar-details={state.preferences.showLunarDetails}
       aria-label="i日历"
