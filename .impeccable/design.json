@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-12T07:38:30.687632+00:00",
+  "generatedAt": "2026-11-17T03:59:25.844975Z",
   "title": "Design System: i日历",
   "extensions": {
     "colorMeta": {
@@ -577,6 +577,14 @@
       "label": {
         "displayName": "农历与辅助标签",
         "purpose": "对应 DESIGN.md Typography 中的实际角色与响应变化。"
+      },
+      "website-heading": {
+        "displayName": "官网首屏标题",
+        "purpose": "24px 标题，430px 以下为 20px；保持日历优先的阅读层级。"
+      },
+      "website-about": {
+        "displayName": "官网介绍标题",
+        "purpose": "介绍与下载区域使用 32px 标题，430px 以下为 26px。"
       }
     },
     "shadows": [
@@ -596,6 +604,21 @@
         "name": "selected-date-change",
         "value": "160ms cubic-bezier(0.16, 1, 0.3, 1)",
         "purpose": "叶片数字由 opacity .6、translateY(2px) 到不透明原位；减少动态时缩短至 .01ms。"
+      },
+      {
+        "name": "website-ready",
+        "value": "480ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "CSS 首屏就绪：从 translateY(8px)、裁切圆角 8px 到原位和 22px；内容始终可见；减少动态时 animation:none。"
+      },
+      {
+        "name": "website-month-change",
+        "value": "180ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "WAAPI 按月份方向从横向 −6px/+6px、opacity .55 归位；首次呈现不播放，连续变化取消旧动画；减少动态时跳过。"
+      },
+      {
+        "name": "website-download-arrow",
+        "value": "200ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "仅支持悬停时箭头下移 3px；减少动态时不移动。"
       }
     ],
     "breakpoints": [
@@ -688,6 +711,41 @@
         "docs/images/i日历-手机.png",
         "docs/images/i日历-品牌预览.png"
       ]
+    },
+    "website": {
+      "source": [
+        "apps/calendar/src/Website.tsx",
+        "apps/calendar/src/website.css",
+        "apps/calendar/src/main.tsx",
+        "packages/calendar-ui/src/CalendarApp.tsx"
+      ],
+      "layout": {
+        "containerIncludingInsets": "1168px",
+        "contentMaxWidth": "1120px",
+        "horizontalInset": "24px",
+        "columnsFrom": "860px",
+        "detailWidth": "304px",
+        "columnGap": "0",
+        "monthInset": "28px",
+        "wideDetailInset": "28px 24px",
+        "wideDayHeight": "clamp(52px, 7vh, 72px)",
+        "wideGridGap": "8px",
+        "frame": "1px solid var(--line), 22px radius",
+        "divider": "详情宽屏左边框、窄屏顶边框；内部无圆角，底栏顶边框。",
+        "compactInsets": "430px 以下：日历 12px，Header 16px，介绍及页脚 20px"
+      },
+      "header": "32px 共享品牌 Logo，名称与轻量“关于与下载”锚点；640px 起显示短标语。",
+      "about": "日历之后的面板色介绍与下载区；标题 32px，430px 以下 26px；860px 起双栏，列间距 80px。",
+      "legend": ["今天 / 选中", "休假", "节气", "补班", "节日"],
+      "theme": "继承共享系统、浅色、深色及自定义主题，品牌图标保持固定蓝色。",
+      "nativeBoundary": "官网不复制 Mac 屏幕边缘入退场、原生窗口高度管理、登录项与菜单栏能力。",
+      "reviewEvidence": [
+        "work/website-desktop.png",
+        "work/website-desktop-dark.png",
+        "work/website-mobile.png",
+        "work/website-mobile-dark.png"
+      ],
+      "evidenceLimit": "官网浏览器宽窄屏与明暗主题视觉证据，不代表 Mac 原生或 iOS 设备验收。"
     }
   },
   "components": [
@@ -732,7 +790,7 @@
     {
       "name": "日期状态小签",
       "kind": "chip",
-      "description": "选中日期的工作日与调休未知状态，不额外设置休班图例。",
+      "description": "选中日期的工作日与调休未知状态；Mac/iOS 无额外图例，Web 在整体面板底栏显示五色文字图例。",
       "html": "<div class=\"ds-tags\"><strong class=\"ds-working\">工作日</strong><strong class=\"ds-unknown\">调休未知</strong></div>",
       "css": ".ds-tags{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;display:flex;align-items:center;gap:12px;color:var(--secondary,#5b6575);font-size:11px}.ds-unknown{color:var(--yellow,#956300);background:var(--yellow-soft,#fff5d8)}.ds-tags strong{font-size:11px;line-height:18px;font-weight:500;padding:1px 6px;border-radius:6px}.ds-working{color:var(--green,#16804d);background:var(--green-soft,#eaf7ef)}"
     },
@@ -743,37 +801,53 @@
       "html": "<section class=\"ds-panel\"><div class=\"ds-leaf\"><span>12</span></div><div class=\"ds-detail\"><div class=\"ds-date-heading\"><h2>11月12日 周四</h2><strong>工作日</strong></div><p>农历十月初四 · 丙午年</p><span class=\"ds-traits\">生肖 <b>马</b> · 星座 <b>天蝎座</b></span></div></section>",
       "css": ".ds-panel{font-family:-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif;display:flex;align-items:center;gap:12px;background:var(--surface,#ffffff);color:var(--ink,#171b24);padding:16px 18px;border-radius:22px}.ds-leaf{position:relative;display:grid;place-items:center;width:50px;height:58px;flex:none;border-radius:13px;background:var(--leaf,#3269d9);color:#fff}.ds-leaf::before,.ds-leaf::after{content:\"\";position:absolute;top:7px;width:4px;height:4px;background:#fff;border-radius:50%}.ds-leaf::before{left:10px}.ds-leaf::after{right:10px}.ds-leaf span{padding-top:5px;font-size:28px;line-height:32px;font-weight:500;font-variant-numeric:tabular-nums}.ds-detail h2{margin:0 0 6px;font-size:13px;line-height:18px;font-weight:600}.ds-detail p{margin:0 0 4px;color:var(--secondary,#5b6575);font-size:11px;line-height:17px}.ds-detail strong{padding:1px 6px;border-radius:6px;color:var(--green,#16804d);background:var(--green-soft,#eaf7ef);font-size:11px;line-height:18px;font-weight:500}.ds-traits{display:inline-block;color:var(--secondary,#5b6575);font-size:11px;line-height:18px}.ds-traits b{color:var(--ink,#171b24);font-weight:500}.ds-date-heading{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin-bottom:4px}.ds-date-heading h2{margin:0}",
       "refersTo": "panel"
+    },
+    {
+      "name": "官网整体面板与图例",
+      "kind": "card",
+      "refersTo": "website-calendar",
+      "description": "单一圆角外框、内部直线分隔；宽屏月历与 304px 详情并排，底部五色圆点配文字。示例截取日期网格以展示视觉。",
+      "html": "<article class=\"ds-web-frame\"><div class=\"ds-web-body\"><section class=\"ds-web-month\"><strong>2026年11月</strong><div class=\"ds-web-grid\"><span class=\"ds-web-day\">1<small>农历</small></span><span class=\"ds-web-day\">2<small>农历</small></span><span class=\"ds-web-day\">3<small>农历</small></span><span class=\"ds-web-day\">4<small>农历</small></span><span class=\"ds-web-day\">5<small>农历</small></span><span class=\"ds-web-day\">6<small>农历</small></span><span class=\"ds-web-day\">7<small>农历</small></span><span class=\"ds-web-day\">8<small>农历</small></span><span class=\"ds-web-day\">9<small>农历</small></span><span class=\"ds-web-day\">10<small>农历</small></span><span class=\"ds-web-day\">11<small>农历</small></span><span class=\"ds-web-day\">12<small>农历</small></span><span class=\"ds-web-day\">13<small>农历</small></span><span class=\"ds-web-day\">14<small>农历</small></span><span class=\"ds-web-day\">15<small>农历</small></span><span class=\"ds-web-day\">16<small>农历</small></span><span class=\"ds-web-day ds-web-selected\">17<small>初九</small></span><span class=\"ds-web-day\">18<small>农历</small></span><span class=\"ds-web-day\">19<small>农历</small></span><span class=\"ds-web-day\">20<small>农历</small></span><span class=\"ds-web-day\">21<small>农历</small></span><span class=\"ds-web-day\">22<small>农历</small></span><span class=\"ds-web-day\">23<small>农历</small></span><span class=\"ds-web-day\">24<small>农历</small></span><span class=\"ds-web-day\">25<small>农历</small></span><span class=\"ds-web-day\">26<small>农历</small></span><span class=\"ds-web-day\">27<small>农历</small></span><span class=\"ds-web-day\">28<small>农历</small></span></div></section><aside class=\"ds-web-detail\"><strong>11月17日 周二</strong><p>农历十月初九</p><hr/><p>宜　祭祀、祈福</p></aside></div><footer class=\"ds-web-footer\"><ul><li><i class=\"ds-web-blue\" aria-hidden=\"true\"></i>今天 / 选中</li><li><i class=\"ds-web-red\" aria-hidden=\"true\"></i>休假</li><li><i class=\"ds-web-green\" aria-hidden=\"true\"></i>节气</li><li><i class=\"ds-web-yellow\" aria-hidden=\"true\"></i>补班</li><li><i class=\"ds-web-purple\" aria-hidden=\"true\"></i>节日</li></ul></footer></article>",
+      "css": ".ds-web-frame{width:100%;max-width:1120px;border:1px solid var(--line,#e0e0e0);border-radius:22px;background:var(--surface,#fff);color:var(--ink,#303030);font:13px -apple-system,BlinkMacSystemFont,\"PingFang SC\",sans-serif}.ds-web-body{display:grid;grid-template-columns:minmax(0,1fr) 304px}.ds-web-month{padding:28px;min-width:0}.ds-web-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-top:16px}.ds-web-day{display:flex;align-items:center;justify-content:center;flex-direction:column;height:clamp(52px,7vh,72px);border-radius:12px;font-size:22px;font-weight:600}.ds-web-day small{font-size:12px;font-weight:400;color:var(--lunar-ink,#6e6e6e)}.ds-web-selected{background:var(--blue-soft,#eff3fc);color:var(--blue,#2c5cbf);box-shadow:inset 0 0 0 2px var(--blue,#2c5cbf)}.ds-web-detail{padding:28px 24px;border-left:1px solid var(--line,#e0e0e0);text-align:center}.ds-web-detail p{font-size:12px;color:var(--secondary,#616161)}.ds-web-detail hr{border:0;border-top:1px solid var(--line,#e0e0e0);margin:20px 0}.ds-web-footer{padding:8px 20px;border-top:1px solid var(--line,#e0e0e0)}.ds-web-footer ul{display:flex;flex-wrap:wrap;gap:4px 16px;margin:0;padding:0;list-style:none;font-size:11px;color:var(--secondary,#616161)}.ds-web-footer li{display:flex;align-items:center;gap:6px}.ds-web-footer i{width:6px;height:6px;border-radius:50%}.ds-web-blue{background:var(--blue,#2c5cbf)}.ds-web-red{background:var(--red,#d71a38)}.ds-web-green{background:var(--green,#007f49)}.ds-web-yellow{background:var(--yellow,#946200)}.ds-web-purple{background:var(--purple,#8b4fc5)}@media(max-width:859px){.ds-web-body{grid-template-columns:minmax(0,1fr)}.ds-web-detail{border-left:0;border-top:1px solid var(--line,#e0e0e0)}}"
+    },
+    {
+      "name": "官网下载按钮",
+      "kind": "button",
+      "refersTo": "website-download",
+      "description": "日历之后的 Mac 下载入口，使用叶片强调色和可读浅色字，悬停时向下箭头轻移。",
+      "html": "<a class=\"ds-web-download\" href=\"#download\">下载 Mac 版<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 4v16m-6-6 6 6 6-6\"/></svg></a>",
+      "css": ".ds-web-download{display:inline-flex;align-items:center;gap:28px;min-height:48px;padding:12px 20px;border-radius:12px;background:var(--leaf,#3269d9);color:var(--leaf-ink,#fff);text-decoration:none;font:500 14px/20px -apple-system,BlinkMacSystemFont,\"PingFang SC\",sans-serif;transition:background-color 150ms}.ds-web-download:hover{background:var(--leaf-hover,#2d60c9)}.ds-web-download:active{background:var(--leaf-active,#2957b6)}.ds-web-download:focus-visible{outline:2px solid var(--blue,#2c5cbf);outline-offset:3px}.ds-web-download svg{transition:transform 200ms cubic-bezier(.16,1,.3,1)}@media(hover:hover){.ds-web-download:hover svg{transform:translateY(3px)}}@media(prefers-reduced-motion:reduce){.ds-web-download svg{transition:none;transform:none}}"
     }
   ],
   "narrative": {
     "northStar": "圆润五色小月历",
-    "overview": "以用户确认的“圆润五色小月历”为视觉方向：浅灰画布托住独立白色面板，日期数字先被看见，农历与节日节气保持第二层。红、绿、蓝、黄、紫各自承担信息任务，轻染背景提供温和分组，避免把所有日期涂成彩色。\n\nMac 保留随手展开的紧凑上下布局；宽屏网页让月历与日期详情并排，小屏回到上下排列并允许纵向滚动。统一系统字体、圆润边角与细线图标，使共享视图在不同平台仍是同一本小日历。\n\n文字采用主要、次要、弱化三个角色。提供清爽白、暖纸色和雾灰蓝预设，用户可自定义操作强调色；休假红、节气绿、补班黄、节日紫维持稳定。",
+    "overview": "以用户确认的“圆润五色小月历”为视觉方向：浅灰画布托住白色内容，日期数字先被看见，农历与节日节气保持第二层。红、绿、蓝、黄、紫各自承担信息任务，轻染背景提供温和分组，避免把所有日期涂成彩色。\n\nMac 保留随手展开的紧凑上下布局；官网以更开阔的月历与详情仪表台表达现代、清晰的科技感，内部使用直线分区，外框延续圆润轮廓。宽屏网页并排，小屏上下排列并允许纵向滚动；系统字体、细线图标与轻量动态让共享视图仍是同一本小日历。",
     "keyCharacteristics": [
       "五色按语义分工，颜色始终配合文字或形状。",
       "公历数字主导扫描，农历、节日与节气单行呈现。",
       "选中描边、今日圆点、休班角标分别表达事实。",
-      "白色圆角面板与浅灰画布分层，面板本身不使用投影。"
+      "白色圆角轮廓与浅灰画布分层，Web 以单一边框和内部直线分区组织内容，不使用面板投影。"
     ],
     "rules": [
       {
         "name": "The Five Colors Rule",
-        "body": "蓝色组织选择与系统操作，红色提示休假和周末，绿色标示节气，黄色标示补班与数据未知，紫色标示节日；保持配套文字，不以颜色单独传达状态。",
+        "body": "默认蓝色组织选择与系统操作，可通过主题和自定义强调色更换；红色提示休假和周末，绿色标示节气，黄色标示补班与数据未知，紫色标示节日；保持配套文字，不以颜色单独传达状态。",
+        "section": "colors"
+      },
+      {
+        "name": "The Brand Identity Rule",
+        "body": "品牌 Logo 固定使用 frontmatter 的品牌蓝，不随主题或自定义操作强调色变化；彩色源为共享 SVG，菜单栏模板仅表达相同的小写 i 与日历轮廓。",
         "section": "colors"
       },
       {
         "name": "The Independent States Rule",
-        "body": "蓝色内描边和浅蓝底代表选中，左上蓝色圆点代表今天，“休/班”角标代表已收录安排。三种状态可以叠加，不能互相替代。",
+        "body": "强调色内描边和轻染底色代表选中，左上同色圆点代表今天，“休/班”角标代表已收录安排。三种状态可以叠加，不能互相替代。",
         "section": "colors"
       },
       {
         "name": "The Flat Panels Rule",
         "body": "内容面板用画布色差、留白和少量分隔线建立层次，不添加装饰性卡片投影。Mac 外部窗口阴影由系统负责。",
         "section": "elevation"
-      },
-      {
-        "name": "The Brand Identity Rule",
-        "body": "品牌 Logo 固定使用 frontmatter 的品牌蓝，不随主题或自定义操作强调色变化；彩色源为共享 SVG，菜单栏模板仅表达相同的小写 i 与日历轮廓。",
-        "section": "colors"
       }
     ],
     "dos": [
@@ -782,14 +856,17 @@
       "**Do** 保留选中描边、今日圆点与休班文字各自含义。",
       "**Do** 让节气、节日、补班按五色语义出现，并保留完整日期详情。",
       "**Do** 让 Mac 紧凑上下排列，宽屏 Web 双栏，小屏可以纵向滚动。",
-      "**Do** 明确显示年度调休未知状态并提供来源入口。"
+      "**Do** 明确显示年度调休未知状态并提供来源入口。",
+      "**Do** 让官网沿用单一圆角外框、内部直线分隔、五色图例和共享系统主题。",
+      "**Do** 让官网轻量动效立即响应操作，减少动态偏好直接跳过入场与切月动画。"
     ],
     "donts": [
       "**Don't** 让品牌 Logo 随用户强调色变化，或分别手改生成的图标位图。",
       "**Don't** 将普通周末的红字解释为已确认放假，也不要补造未收录年份的休班角标。",
       "**Don't** 将所有日期填成彩色，或用深色实心填充替代当前蓝色描边选择态。",
       "**Don't** 将宽屏双栏强加给菜单栏窗口，或在窄屏固定高度裁掉详情。",
-      "**Don't** 在日历首屏插入广告、下载推广或注册流程。"
+      "**Don't** 在日历首屏插入广告、下载推广或注册流程。",
+      "**Don't** 将官网的介绍与下载区域、Web 切月动画或整体仪表台布局带入原生菜单栏窗口。"
     ]
   }
 }
