@@ -28,7 +28,7 @@ export async function verifySunlight(platform: CalendarPlatform) {
     const render = () =>
       flushSync(() =>
         root.render(
-          createElement(SunlightSummary, { controller, state: controller.getSnapshot() }),
+          createElement(SunlightSummary, { state: controller.getSnapshot() }),
         ),
       );
     controller.selectDate('2026-06-21');
@@ -36,7 +36,9 @@ export async function verifySunlight(platform: CalendarPlatform) {
     if (
       !container.textContent?.includes('04:45') ||
       !container.textContent.includes('19:46') ||
-      !container.textContent.includes('地点参考值')
+      container.textContent.includes('北京市') ||
+      container.querySelector('button') ||
+      container.querySelectorAll('dd').length !== 3
     )
       throw new Error('日照摘要未使用共享计算结果');
     controller.selectDate('2026-12-21');

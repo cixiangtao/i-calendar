@@ -46,68 +46,32 @@ function locationName(state: CalendarSnapshot) {
       : '未设置位置';
 }
 
-/** 日期详情中的紧凑日照摘要，没有有效位置时不展示猜测时间。 */
-export function SunlightSummary({
-  controller,
-  state,
-}: {
-  controller: CalendarController;
-  state: CalendarSnapshot;
-}) {
+/** 首页只保留有效位置对应的三项日照结果，定位与说明集中在设置页。 */
+export function SunlightSummary({ state }: { state: CalendarSnapshot }) {
   const point = locationFor(state);
-  const change = () => controller.showSettings();
-  if (!point)
-    return (
-      <div className="tw-mt-2 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-pt-1.5">
-        <CalendarButton
-          appearance="text"
-          onClick={change}
-          aria-label="设置日出日落位置"
-        >
-          日出日落 ·{' '}
-          {state.sunlightLocation.pending
-            ? '正在定位…'
-            : state.sunlightLocation.error
-              ? '定位失败，选择位置'
-              : '设置位置'}
-        </CalendarButton>
-      </div>
-    );
+  if (
+    !point ||
+    (state.preferences.sunlight.mode === 'automatic' &&
+      (state.sunlightLocation.pending || state.sunlightLocation.error))
+  )
+    return null;
   const day = getSunlight(state.selected.date, point);
-  const located = state.sunlightLocation.point;
-  const source =
-    state.preferences.sunlight.mode === 'manual'
-      ? '地点参考值'
-      : state.sunlightLocation.pending
-        ? '正在更新，暂用上次位置'
-        : state.sunlightLocation.error
-          ? '定位更新失败，暂用上次位置'
-          : located
-            ? `上次定位 ${new Date(located.timestamp).toLocaleTimeString('zh-CN', { timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit', hour12: false })} · 精度${accuracyLabel(located.accuracy)}`
-            : '';
   return (
     <section
       aria-label="日出日落"
       className="tw-mt-2 tw-border-0 tw-border-b tw-border-solid tw-border-line tw-pb-2"
     >
-      <div className="tw-mb-1.5 tw-flex tw-min-w-0 tw-items-center tw-justify-between tw-gap-2 tw-text-[11px] tw-text-secondary">
-        <span className="tw-min-w-0 tw-overflow-anywhere">{locationName(state)}</span>
-        <CalendarButton
-          appearance="text"
-          onClick={change}
-          aria-label="更改日出日落位置"
-        >
-          位置
-        </CalendarButton>
-      </div>
-      <dl className="tw-m-0 tw-grid tw-grid-cols-3 tw-gap-2 [&_dd]:tw-m-0 [&_dd]:tw-text-[14px] [&_dd]:tw-font-medium [&_dd]:tw-tabular-nums [&_dd]:tw-leading-6 [&_dd]:tw-text-ink [&_dt]:tw-text-[11px] [&_dt]:tw-leading-5 [&_dt]:tw-text-secondary">
+      <dl
+        aria-label="日照时间（北京时间）"
+        className="tw-m-0 tw-flex tw-flex-wrap tw-items-baseline tw-gap-x-3 tw-gap-y-1 tw-text-[11px] tw-leading-5 [&>div]:tw-flex [&>div]:tw-items-baseline [&>div]:tw-gap-1 [&_dd]:tw-m-0 [&_dd]:tw-font-medium [&_dd]:tw-tabular-nums [&_dd]:tw-text-ink [&_dt]:tw-text-secondary"
+      >
         <div>
           <dt>日出</dt>
-          <dd>{day.sunrise ?? '当日无日出'}</dd>
+          <dd>{day.sunrise ?? '无'}</dd>
         </div>
         <div>
           <dt>日落</dt>
-          <dd>{day.sunset ?? '当日无日落'}</dd>
+          <dd>{day.sunset ?? '无'}</dd>
         </div>
         <div>
           <dt>白昼</dt>
@@ -117,14 +81,6 @@ export function SunlightSummary({
           </dd>
         </div>
       </dl>
-      <p className="tw-mb-0 tw-mt-1 tw-text-[11px] tw-leading-[17px] tw-text-secondary">
-        北京时间 · {source}
-        {day.condition === 'polar-day'
-          ? ' · 极昼'
-          : day.condition === 'polar-night'
-            ? ' · 极夜'
-            : ''}
-      </p>
     </section>
   );
 }
@@ -152,6 +108,18 @@ export function SunlightSettings({
       <p>
         {point ? locationName(state) : '选择国内地点，或使用实际位置计算日出、日落和白昼时长。'}
       </p>
+      {state.preferences.sunlight.mode === 'manual' ? (
+        <p>使用手动地点参考坐标；日照时间为北京时间。</p>
+      ) : located ? (
+        <p>
+          上次定位：
+          {new Date(located.timestamp).toLocaleString('zh-CN', {
+            timeZone: 'Asia/Shanghai',
+            hour12: false,
+          })}
+          ；日照时间为北京时间。
+        </p>
+      ) : null}
       <div className="tw-mb-2 tw-flex tw-flex-wrap tw-gap-2">
         {controller.platform.locate ? (
           <CalendarButton

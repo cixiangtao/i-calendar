@@ -1,37 +1,9 @@
-import { useCallback, useSyncExternalStore, type Ref } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
 import { CalendarSwitch } from './CalendarSwitch.js';
 import { ReleaseNotesDisclosure } from './ReleaseNotesDisclosure.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
-
-/** 已发现的新版始终保留底部入口；稍后只隐藏横幅，检查或安装失败仍可进入重试。 */
-export function AppUpdateButton({
-  controller,
-  ref,
-}: {
-  controller: CalendarController;
-  ref?: Ref<HTMLButtonElement>;
-}) {
-  const update = useSyncExternalStore(
-    controller.appUpdates.subscribe,
-    controller.appUpdates.getSnapshot,
-  );
-  if (!update.release) return null;
-  const label =
-    update.phase === 'downloading' ? '下载中' : update.phase === 'installing' ? '安装中' : '更新';
-  return (
-    <CalendarButton
-      ref={ref}
-      appearance="text"
-      aria-label={`查看 i日历 ${update.release.version} 更新`}
-      title={`查看 i日历 ${update.release.version} 更新`}
-      onClick={() => controller.showSettings(true, 'about')}
-    >
-      {label}
-    </CalendarButton>
-  );
-}
 
 /** 更新提醒只在发现新版时出现，安装前可先查看说明或稍后处理。 */
 export function AppUpdateNotice({ controller }: { controller: CalendarController }) {
