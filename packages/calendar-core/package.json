@@ -7,6 +7,7 @@
     "dist",
     "src/data/*.json",
     "src/data/LICENSE-holiday-cn",
+    "src/data/LICENSE-geonames",
     "LICENSE-lunar-typescript",
     "LICENSE-suncalc",
     "LICENSE",
@@ -23,6 +24,10 @@
     "./data": {
       "types": "./dist/data.d.ts",
       "import": "./dist/data.js"
+    },
+    "./places": {
+      "types": "./dist/places.d.ts",
+      "import": "./dist/places.js"
     }
   },
   "scripts": {

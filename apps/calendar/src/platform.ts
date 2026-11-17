@@ -7,6 +7,8 @@ import type {
 } from '@i-calendar/ui';
 import { Channel, isTauri, invoke } from '@tauri-apps/api/core';
 
+import { browserLocate, nativeLocate } from './location.js';
+
 const STORAGE_KEY = 'i-calendar:state:v1';
 // 仅用于只读迁移；新数据始终写入当前名称，旧记录保留。
 const LEGACY_STORAGE_KEY = 'shiri-calendar:state:v1';
@@ -39,6 +41,7 @@ function nativeAppUpdater(): AppUpdater {
 function browserPlatform(): CalendarPlatform {
   return {
     kind: 'web',
+    locate: browserLocate,
     async load() {
       const value = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
       return value === null ? null : (JSON.parse(value) as unknown);
@@ -114,6 +117,18 @@ export async function createPlatform(): Promise<{
     smokeTest: context.smokeTest,
     platform: {
       kind: context.kind,
+      ...(!context.smokeTest
+        ? {
+            async locate(signal: AbortSignal) {
+              await invoke('set_popup_busy', { busy: true });
+              try {
+                return await nativeLocate(signal);
+              } finally {
+                await invoke('set_popup_busy', { busy: false }).catch(() => {});
+              }
+            },
+          }
+        : {}),
       load: () => invoke<unknown>('load_state'),
       save: (state: SavedCalendarState) => invoke<void>('save_state', { state }),
       async fetchHolidayYear(year, signal) {

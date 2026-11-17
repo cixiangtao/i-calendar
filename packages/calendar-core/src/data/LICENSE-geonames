@@ -1,0 +1,9 @@
+国内城市与部分区县参考点由 GeoNames cities15000 数据集筛选、转换生成。
+来源：https://www.geonames.org/
+原始数据：https://download.geonames.org/export/dump/cities15000.zip
+许可证：Creative Commons Attribution 4.0 International (CC BY 4.0)
+许可证全文：https://creativecommons.org/licenses/by/4.0/legalcode
+处理脚本：scripts/import-sunlight-places.mjs
+快照日期、来源摘要和处理说明：china-places-source.json
+数据按原样提供，可能存在遗漏、旧地名或坐标误差，不构成完整行政区划名录。
+手动选择使用参考点；自动定位使用系统经纬度，不用参考点替代实际位置。

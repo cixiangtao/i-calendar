@@ -1,0 +1,186 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
+import type { CalendarPlatform, SavedCalendarState } from '../src/platform.js';
+import { CalendarController, parseSavedState } from '../src/store.js';
+import { parseSunlightPreferences, type LocatedPoint } from '../src/sunlight-location.js';
+
+const place = {
+  id: '1816670',
+  name: '北京市',
+  region: '北京',
+  latitude: 39.9075,
+  longitude: 116.39723,
+};
+const start = Date.parse('2026-11-17T04:00:00Z');
+function fixture(locate?: CalendarPlatform['locate']) {
+  let time = start;
+  const saves: SavedCalendarState[] = [];
+  const platform: CalendarPlatform = {
+    kind: 'web',
+    load: async () => null,
+    save: async (state) => {
+      saves.push(structuredClone(state));
+    },
+    fetchHolidayYear: async () => null,
+    openExternal: async () => {},
+    copyText: async () => {},
+    locate,
+  };
+  const controller = new CalendarController(platform, () => new Date(time));
+  return {
+    controller,
+    saves,
+    platform,
+    advance: (amount: number) => {
+      time += amount;
+    },
+    now: () => time,
+  };
+}
+const fix = (timestamp = start): LocatedPoint => ({
+  latitude: 39.95,
+  longitude: 116.45,
+  accuracy: 30,
+  timestamp,
+  label: '北京 · 朝阳区 · 示例道路',
+});
+
+test('旧偏好默认不启用定位，初始化不申请权限', async () => {
+  let requests = 0;
+  const { controller } = fixture(async () => {
+    requests++;
+    return fix();
+  });
+  await controller.initialize();
+  await controller.locateSunlight(true);
+  assert.equal(requests, 0);
+  assert.deepEqual(parseSunlightPreferences(undefined), { mode: 'off', manualLocation: null });
+});
+
+test('手动地点保存重载可离线使用，并复制保存值', async () => {
+  const { controller, saves, platform } = fixture();
+  await controller.initialize();
+  await controller.selectSunlightPlace(place);
+  assert.equal(parseSavedState(saves.at(-1)).preferences.sunlight.mode, 'manual');
+  const restored = new CalendarController({ ...platform, load: async () => saves.at(-1) });
+  await restored.initialize();
+  assert.deepEqual(restored.getSnapshot().preferences.sunlight.manualLocation, place);
+  assert.notEqual(restored.getSnapshot().preferences.sunlight.manualLocation, place);
+});
+
+test('实际定位坐标只留在内存，其他偏好保存也不泄漏到持久化', async () => {
+  const { controller, saves } = fixture(async () => fix());
+  await controller.initialize();
+  await controller.locateSunlight();
+  assert.deepEqual(controller.getSnapshot().sunlightLocation.point, fix());
+  await controller.setPreferences({ appearance: 'dark' });
+  const serialized = JSON.stringify(saves);
+  assert.ok(!serialized.includes('116.45') && !serialized.includes('示例道路'));
+  assert.deepEqual(saves.at(-1)!.preferences.sunlight, { mode: 'automatic', manualLocation: null });
+});
+
+test('前台刷新限频，拒绝授权后停止自动重试，主动重试可恢复', async () => {
+  let count = 0;
+  const env = fixture(async () => {
+    count++;
+    if (count === 1) throw new Error('定位权限未开启');
+    return fix(env.now());
+  });
+  await env.controller.initialize();
+  await env.controller.locateSunlight();
+  env.advance(31 * 60_000);
+  await env.controller.locateSunlight(true);
+  assert.equal(count, 1);
+  await env.controller.locateSunlight();
+  await env.controller.locateSunlight(true);
+  assert.equal(count, 2);
+  env.advance(31 * 60_000);
+  await env.controller.locateSunlight(true);
+  assert.equal(count, 3);
+});
+
+test('手动切换中止定位，迟到回调不能覆盖用户选择', async () => {
+  let complete!: (point: LocatedPoint) => void;
+  let signal: AbortSignal | undefined;
+  const { controller } = fixture(async (value) => {
+    signal = value;
+    return new Promise((resolve) => {
+      complete = resolve;
+    });
+  });
+  await controller.initialize();
+  const request = controller.locateSunlight();
+  await controller.selectSunlightPlace(place);
+  assert.equal(signal?.aborted, true);
+  complete(fix());
+  await request;
+  assert.equal(controller.getSnapshot().preferences.sunlight.mode, 'manual');
+  assert.equal(controller.getSnapshot().sunlightLocation.point, null);
+});
+
+test('并发点击只启动一个请求，关闭会取消，销毁后回调不更新', async () => {
+  let requests = 0;
+  let complete!: (point: LocatedPoint) => void;
+  const { controller } = fixture(async () => {
+    requests++;
+    return new Promise((resolve) => {
+      complete = resolve;
+    });
+  });
+  await controller.initialize();
+  const first = controller.locateSunlight();
+  await controller.locateSunlight();
+  assert.equal(requests, 1);
+  controller.dispose();
+  const snapshot = controller.getSnapshot();
+  complete(fix());
+  await first;
+  assert.equal(controller.getSnapshot(), snapshot);
+});
+
+test('过期缓存、负精度和无效坐标不能显示为新定位', async () => {
+  for (const point of [
+    fix(start - 180_000),
+    { ...fix(), accuracy: -1 },
+    { ...fix(), latitude: NaN },
+  ]) {
+    const { controller } = fixture(async () => point);
+    await controller.initialize();
+    await controller.locateSunlight();
+    assert.equal(controller.getSnapshot().sunlightLocation.point, null);
+    assert.match(controller.getSnapshot().sunlightLocation.error!, /无效或已过期/);
+  }
+});
+
+test('刷新失败保留上次有效位置并明确错误，关闭后清除会话位置', async () => {
+  let requests = 0;
+  const { controller } = fixture(async () => {
+    if (++requests > 1) throw new Error('定位超时');
+    return fix();
+  });
+  await controller.initialize();
+  await controller.locateSunlight();
+  await controller.locateSunlight();
+  assert.deepEqual(controller.getSnapshot().sunlightLocation.point, fix());
+  assert.equal(controller.getSnapshot().sunlightLocation.error, '定位超时');
+  await controller.setPreferences({ sunlight: { mode: 'off', manualLocation: null } });
+  assert.deepEqual(controller.getSnapshot().sunlightLocation, {
+    point: null,
+    pending: false,
+    error: null,
+  });
+});
+
+test('导入设置只保留手动地点白名单，不接纳伪造的自动定位历史', () => {
+  const parsed = parseSunlightPreferences({
+    mode: 'automatic',
+    manualLocation: null,
+    point: fix(),
+  });
+  assert.deepEqual(parsed, { mode: 'automatic', manualLocation: null });
+  assert.throws(() => parseSunlightPreferences({ mode: 'manual', manualLocation: null }));
+  assert.throws(() =>
+    parseSunlightPreferences({ mode: 'manual', manualLocation: { ...place, latitude: 91 } }),
+  );
+});

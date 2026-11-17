@@ -1,0 +1,9 @@
+{
+  "source": "GeoNames",
+  "url": "https://download.geonames.org/export/dump/cities15000.zip",
+  "license": "CC-BY-4.0",
+  "retrievedAt": "2026-11-17",
+  "archiveSha256": "0f8657850fbad681c25dc222150794b60b11bbe57979c80f55ee1668f8a1bc46",
+  "count": 1772,
+  "transformation": "筛选国内中文地名参考点，保留 GeoNames 标识和 WGS84 坐标；不构成完整行政区划或边界数据。"
+}

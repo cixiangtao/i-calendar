@@ -15,6 +15,7 @@
     "paths": {
       "@i-calendar/core": ["./packages/calendar-core/src/index.ts"],
       "@i-calendar/core/data": ["./packages/calendar-core/src/data.ts"],
+      "@i-calendar/core/places": ["./packages/calendar-core/src/places.ts"],
       "@i-calendar/ui": ["./packages/calendar-ui/src/index.ts"]
     },
     "jsx": "react-jsx"

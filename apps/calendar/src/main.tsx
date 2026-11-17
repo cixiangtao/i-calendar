@@ -89,7 +89,11 @@ async function start() {
     const releaseNotesVerified = smokeTest
       ? (await import('./release-notes-smoke.js')).verifyReleaseNotes()
       : undefined;
+    const sunlightVerified = smokeTest
+      ? await (await import('./sunlight-smoke.js')).verifySunlight(platform)
+      : undefined;
     const report = {
+      sunlightVerified,
       calculatorVerified,
       releaseNotesVerified,
       appUpdaterAvailable: !!platform.appUpdater,

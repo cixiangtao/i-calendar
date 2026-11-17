@@ -4,6 +4,7 @@ import type { AppUpdater } from './app-update.js';
 import type { ColorThemeId, CustomColors } from './color-theme.js';
 import type { LaunchAtLogin } from './launch-at-login.js';
 import type { MenuClockPreferences } from './menu-clock.js';
+import type { LocatedPoint, SunlightPreferences } from './sunlight-location.js';
 
 /** 三端使用相同数据格式；存储、网络和窗口操作由宿主实现。 */
 export interface CalendarPreferences {
@@ -19,6 +20,7 @@ export interface CalendarPreferences {
   menuClock: MenuClockPreferences;
   /** 正式 Mac 构建后台检查应用版本；安装仍需用户确认。 */
   automaticAppUpdates: boolean;
+  sunlight: SunlightPreferences;
 }
 
 /** 持久化格式显式版本化，避免以后升级时误读缓存。 */
@@ -37,6 +39,8 @@ export interface CalendarPlatform {
   fetchHolidayYear(year: number, signal: AbortSignal): Promise<unknown | null>;
   openExternal(url: string): Promise<void>;
   copyText(text: string): Promise<void>;
+  /** 一次性高精度定位；仅由明确启用的位置功能调用，取消时停止宿主请求。 */
+  locate?(signal: AbortSignal): Promise<LocatedPoint>;
   setInteractionBusy?(busy: boolean): Promise<void>;
   /** 请求悬浮窗内容高度（逻辑像素）；宿主按当前屏幕可用空间裁切。 */
   setPopupHeight?(height: number): Promise<void>;

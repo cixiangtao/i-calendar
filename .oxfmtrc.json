@@ -26,6 +26,7 @@
     ".playwright-cli/**",
     ".impeccable/review/**",
     "apps/calendar/public/third-party-licenses.txt",
-    "pnpm-lock.yaml"
+    "pnpm-lock.yaml",
+    "packages/calendar-core/src/data/china-places*.json"
   ]
 }

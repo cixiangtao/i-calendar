@@ -4,6 +4,8 @@ mod app_update;
 mod desktop;
 #[cfg(target_os = "macos")]
 mod launch_at_login;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+mod location;
 #[cfg(target_os = "macos")]
 mod menu_clock;
 mod storage;
@@ -36,6 +38,29 @@ fn runtime_context() -> Value {
         "kind": if cfg!(target_os = "macos") { "macos" } else { "ios" },
         "smokeTest": std::env::args().any(|argument| argument == "--smoke-test")
     })
+}
+
+#[tauri::command]
+async fn locate_sunlight(
+    app: tauri::AppHandle,
+    request_id: u64,
+) -> Result<location::LocationFix, String> {
+    location::locate(app, request_id).await
+}
+
+#[tauri::command]
+fn cancel_sunlight_location(app: tauri::AppHandle, request_id: u64) -> Result<(), String> {
+    location::cancel(app, request_id)
+}
+
+#[tauri::command]
+async fn describe_sunlight_location(
+    app: tauri::AppHandle,
+    request_id: u64,
+    latitude: f64,
+    longitude: f64,
+) -> Result<Option<String>, String> {
+    location::describe(app, request_id, latitude, longitude).await
 }
 
 #[tauri::command]
@@ -241,6 +266,7 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
         if std::env::args().any(|argument| argument == "--smoke-test") {
             if report.get("calculatorVerified").and_then(Value::as_bool) != Some(true)
                 || report.get("releaseNotesVerified").and_then(Value::as_bool) != Some(true)
+                || report.get("sunlightVerified").and_then(Value::as_bool) != Some(true)
                 || report.get("appUpdaterAvailable").and_then(Value::as_bool) != Some(false)
                 || report
                     .get("launchAtLoginAvailable")
@@ -370,6 +396,9 @@ pub fn run() {
     let application = builder
         .invoke_handler(tauri::generate_handler![
             runtime_context,
+            locate_sunlight,
+            cancel_sunlight_location,
+            describe_sunlight_location,
             app_update_available,
             launch_at_login_available,
             get_launch_at_login,

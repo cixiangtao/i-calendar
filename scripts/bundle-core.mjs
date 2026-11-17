@@ -20,7 +20,7 @@ execFileSync(
 );
 await build({
   absWorkingDir: project,
-  entryPoints: ['src/index.ts', 'src/data.ts'],
+  entryPoints: ['src/index.ts', 'src/data.ts', 'src/places.ts'],
   outdir: 'dist',
   bundle: true,
   format: 'esm',

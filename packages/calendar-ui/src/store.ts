@@ -16,6 +16,12 @@ import { isAccentColor, isColorTheme, parseCustomColors } from './color-theme.js
 import { LaunchAtLoginController } from './launch-at-login.js';
 import { defaultMenuClock, parseMenuClock } from './menu-clock.js';
 import type { CalendarPlatform, CalendarPreferences, SavedCalendarState } from './platform.js';
+import {
+  parseSunlightPreferences,
+  validLocatedPoint,
+  type ManualSunlightLocation,
+  type SunlightLocationState,
+} from './sunlight-location.js';
 
 /** 可观察的应用快照；React、测试和宿主都读取同一状态。 */
 export interface CalendarSnapshot {
@@ -33,6 +39,7 @@ export interface CalendarSnapshot {
   updating: boolean;
   error: string | null;
   notice: string | null;
+  sunlightLocation: SunlightLocationState;
   updatedAt?: string;
 }
 
@@ -45,6 +52,7 @@ const defaults: CalendarPreferences = {
   customColors: parseCustomColors(undefined),
   menuClock: { ...defaultMenuClock },
   automaticAppUpdates: true,
+  sunlight: parseSunlightPreferences(undefined),
 };
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -68,6 +76,7 @@ export function parseSavedState(input: unknown): SavedCalendarState {
   const accentColor = input.preferences.accentColor ?? null;
   const customColors = parseCustomColors(input.preferences.customColors);
   const menuClock = parseMenuClock(input.preferences.menuClock);
+  const sunlight = parseSunlightPreferences(input.preferences.sunlight);
   const automaticAppUpdates =
     input.preferences.automaticAppUpdates === undefined
       ? defaults.automaticAppUpdates
@@ -100,6 +109,7 @@ export function parseSavedState(input: unknown): SavedCalendarState {
       customColors,
       menuClock,
       automaticAppUpdates,
+      sunlight,
     },
     datasets,
     updatedAt: input.updatedAt as string | undefined,
@@ -121,6 +131,8 @@ export class CalendarController {
   private updateAbort?: AbortController;
   private disposed = false;
   private saveFailed = false;
+  private locationAbort?: AbortController;
+  private locationAttempt = -Infinity;
   readonly appUpdates: AppUpdateController;
   readonly launchAtLogin: LaunchAtLoginController;
 
@@ -151,6 +163,7 @@ export class CalendarController {
         ...defaults,
         menuClock: { ...defaultMenuClock },
         customColors: parseCustomColors(undefined),
+        sunlight: parseSunlightPreferences(undefined),
       },
       years: this.holidays.years,
       panel: 'calendar',
@@ -158,6 +171,7 @@ export class CalendarController {
       updating: false,
       error: null,
       notice: null,
+      sunlightLocation: { pending: false, point: null, error: null },
     };
   }
 
@@ -284,6 +298,7 @@ export class CalendarController {
     const next = { ...this.snapshot.preferences, ...preferences };
     next.menuClock = parseMenuClock(next.menuClock);
     next.customColors = parseCustomColors(next.customColors);
+    next.sunlight = parseSunlightPreferences(next.sunlight);
     if (
       (next.weekStartsOn !== 1 && next.weekStartsOn !== 7) ||
       !['system', 'light', 'dark'].includes(next.appearance) ||
@@ -293,6 +308,12 @@ export class CalendarController {
       (next.accentColor !== null && !isAccentColor(next.accentColor))
     )
       throw new Error('显示设置无效');
+    if (next.sunlight.mode !== this.snapshot.preferences.sunlight.mode) {
+      this.locationAbort?.abort();
+      this.locationAbort = undefined;
+      this.locationAttempt = -Infinity;
+      this.patch({ sunlightLocation: { pending: false, point: null, error: null } });
+    }
     this.patch({ preferences: next });
     this.refresh();
     return this.persist();
@@ -305,6 +326,7 @@ export class CalendarController {
         ...this.snapshot.preferences,
         menuClock: { ...this.snapshot.preferences.menuClock },
         customColors: parseCustomColors(this.snapshot.preferences.customColors),
+        sunlight: parseSunlightPreferences(this.snapshot.preferences.sunlight),
       },
       datasets: this.holidays.export(),
       updatedAt: this.snapshot.updatedAt,
@@ -411,11 +433,63 @@ export class CalendarController {
   reportError(message: string) {
     this.patch({ error: message });
   }
+
+  /** 手动地点是参考点，选择后立即取消未完成的自动定位，迟到回调不会覆盖。 */
+  selectSunlightPlace(place: ManualSunlightLocation) {
+    return this.setPreferences({ sunlight: { mode: 'manual', manualLocation: place } });
+  }
+
+  /** 用户启用后仅在前台有界刷新；拒绝或失败后本次会话只允许主动重试。 */
+  async locateSunlight(automatic = false) {
+    if (this.disposed || !this.snapshot.ready || !this.platform.locate) return;
+    if (
+      automatic &&
+      (this.snapshot.preferences.sunlight.mode !== 'automatic' ||
+        this.snapshot.sunlightLocation.error ||
+        this.now().getTime() - this.locationAttempt < 30 * 60_000)
+    )
+      return;
+    if (this.locationAbort) return;
+    if (!automatic)
+      void this.setPreferences({
+        sunlight: { ...this.snapshot.preferences.sunlight, mode: 'automatic' },
+      });
+    const abort = new AbortController();
+    this.locationAbort = abort;
+    this.locationAttempt = this.now().getTime();
+    this.patch({
+      sunlightLocation: { ...this.snapshot.sunlightLocation, pending: true, error: null },
+    });
+    try {
+      const point = await this.platform.locate(abort.signal);
+      if (
+        abort.signal.aborted ||
+        this.disposed ||
+        this.snapshot.preferences.sunlight.mode !== 'automatic'
+      )
+        return;
+      if (!validLocatedPoint(point, this.now().getTime()))
+        throw new Error('定位结果无效或已过期，请重新定位或选择城市');
+      this.patch({ sunlightLocation: { pending: false, point: { ...point }, error: null } });
+    } catch (error) {
+      if (!abort.signal.aborted && !this.disposed)
+        this.patch({
+          sunlightLocation: {
+            ...this.snapshot.sunlightLocation,
+            pending: false,
+            error: error instanceof Error ? error.message : '定位失败，请重试或手动选择城市',
+          },
+        });
+    } finally {
+      if (this.locationAbort === abort) this.locationAbort = undefined;
+    }
+  }
   dispose() {
     this.disposed = true;
     this.appUpdates.dispose();
     this.launchAtLogin.dispose();
     this.updateAbort?.abort();
+    this.locationAbort?.abort();
     this.listeners.clear();
   }
 }

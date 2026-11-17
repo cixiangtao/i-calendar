@@ -33,3 +33,4 @@ export { CalendarColorInput } from './CalendarColorInput.js';
 export { parseThemePackage, builtInThemes } from './theme-package.js';
 export type { ThemePalette, CalendarThemePackage } from './theme-package.js';
 export { deriveColorTokens } from './color-theme.js';
+export type { LocatedPoint, SunlightPreferences } from './sunlight-location.js';

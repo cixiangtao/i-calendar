@@ -36,6 +36,10 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
     alias: [
       {
+        find: '@i-calendar/core/places',
+        replacement: source('../../packages/calendar-core/src/places.ts'),
+      },
+      {
         find: '@i-calendar/core/data',
         replacement: source('../../packages/calendar-core/src/data.ts'),
       },

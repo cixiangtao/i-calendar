@@ -29,6 +29,7 @@ import { LaunchAtLoginSettings } from './LaunchAtLoginSettings.js';
 import { MenuClockSettings } from './MenuClockSettings.js';
 import type { CalendarPreferences } from './platform.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
+import { SunlightSettings, SunlightSummary, useSunlightLocation } from './Sunlight.js';
 
 import './calendar.css';
 
@@ -130,6 +131,7 @@ function Feedback({
 /** 三端共用日历视图；平台壳不复制月历、节日或设置界面。 */
 export function CalendarApp({ controller }: { controller: CalendarController }) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  useSunlightLocation(controller, state.ready, state.preferences.sunlight.mode);
   const [systemDark, setSystemDark] = useState(
     () => window.matchMedia('(prefers-color-scheme: dark)').matches,
   );
@@ -658,6 +660,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 </section>
               </CalendarContextMenu>
               <div className="almanac-inline tw-mt-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-line web:desktop:tw-mt-0 web:desktop:tw-block web:desktop:tw-border-0 web:desktop:tw-border-t web:desktop:tw-border-solid web:desktop:tw-border-line web:desktop:tw-p-0">
+                <SunlightSummary
+                  controller={controller}
+                  state={state}
+                />
                 <AlmanacContent almanac={state.almanac} />
               </div>
               <Feedback
@@ -793,6 +799,10 @@ function Settings({
                 {controller.platform.kind === 'macos' ? (
                   <LaunchAtLoginSettings controller={controller.launchAtLogin} />
                 ) : null}
+                <SunlightSettings
+                  controller={controller}
+                  state={state}
+                />
                 <section>
                   <h2>日历显示</h2>
                   <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">

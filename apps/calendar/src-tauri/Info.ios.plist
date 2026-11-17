@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>NSLocationWhenInUseUsageDescription</key><string>使用当前位置的经纬度计算日出、日落和白昼时长，仅在前台按需获取位置，不保存定位坐标。</string>
+</dict></plist>
