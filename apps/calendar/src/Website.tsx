@@ -1,9 +1,10 @@
-import { CalendarApp, type CalendarController } from '@i-calendar/ui';
-import type { ReactNode } from 'react';
+import { CalendarApp, CalendarButton, type CalendarController } from '@i-calendar/ui';
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 
 import { version } from '../../../package.json';
 import logo from '../../../packages/calendar-ui/src/assets/logo.svg';
 import releaseConfig from '../../../release/config.json';
+import { AmbientOrbit } from './AmbientOrbit.js';
 
 import './website.css';
 
@@ -32,7 +33,7 @@ function Arrow({ down = false }: { down?: boolean }) {
 
 function InfoRow({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="tw-grid tw-gap-2 tw-border-0 tw-border-b tw-border-solid tw-border-line tw-py-5 first:tw-pt-0 last:tw-border-0 desktop:tw-grid-cols-[112px_minmax(0,1fr)] desktop:tw-gap-6">
+    <div className="tw-grid tw-gap-2 tw-py-5 first:tw-pt-0 last:tw-border-0 desktop:tw-grid-cols-[112px_minmax(0,1fr)] desktop:tw-gap-6">
       <dt className="tw-font-medium tw-text-ink">{title}</dt>
       <dd className="tw-m-0 tw-leading-7 tw-text-secondary">{children}</dd>
     </div>
@@ -41,6 +42,17 @@ function InfoRow({ title, children }: { title: string; children: ReactNode }) {
 
 /** 官网围绕可操作日历组织内容，使用同一控制器及主题，不复制平台数据能力。 */
 export function Website({ controller }: { controller: CalendarController }) {
+  const [motion, setMotion] = useState(true);
+  const [reduced, setReduced] = useState(
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  useEffect(() => {
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const changed = () => setReduced(preference.matches);
+    preference.addEventListener('change', changed);
+    return () => preference.removeEventListener('change', changed);
+  }, []);
+  const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   return (
     <div className="website tw-text-ink">
       <a
@@ -49,64 +61,81 @@ export function Website({ controller }: { controller: CalendarController }) {
       >
         跳到日历
       </a>
-      <header className="tw-mx-auto tw-flex tw-w-full tw-max-w-[1168px] tw-items-center tw-justify-between tw-gap-4 tw-px-6 tw-py-6 compact:tw-px-4 compact:tw-py-5">
-        <a
-          href="#calendar"
-          aria-label="i日历，回到日历"
-          className="tw-flex tw-items-center tw-gap-3 tw-text-ink tw-no-underline"
-        >
-          <img
-            src={logo}
-            width="32"
-            height="32"
-            alt=""
-          />
-          <span className="tw-text-lg tw-font-semibold tw-tracking-tight">i日历</span>
-          <span className="tw-ml-2 tw-hidden tw-border-0 tw-border-l tw-border-solid tw-border-line tw-pl-5 tw-text-xs tw-text-secondary sm:tw-inline">
-            让日期，清晰可见。
-          </span>
-        </a>
-        <nav
-          aria-label="官网导航"
-          className="tw-flex tw-items-center tw-gap-6 tw-text-xs"
-        >
-          <a
-            href="#about"
-            className="tw-inline-flex tw-min-h-11 tw-items-center tw-gap-2 tw-text-secondary tw-no-underline hover:tw-text-action"
-          >
-            关于与下载 <Arrow down />
-          </a>
-        </nav>
-      </header>
       <main>
-        <section
-          id="calendar"
-          aria-label="在线日历"
-          tabIndex={-1}
-          className="site-calendar tw-mx-auto tw-w-full tw-max-w-[1168px] tw-scroll-mt-4 tw-px-6 tw-pb-10 tw-pt-5 compact:tw-px-3 compact:tw-pb-6 compact:tw-pt-2"
-        >
-          <div className="tw-mb-5 tw-flex tw-items-end tw-justify-between tw-gap-4 tw-px-1">
-            <div>
-              <h1 className="tw-m-0 tw-text-2xl tw-font-semibold tw-tracking-tight compact:tw-text-xl">
-                日子里的每一面。
-              </h1>
-              <p className="tw-mb-0 tw-mt-2 tw-text-xs tw-leading-6 tw-text-secondary">
-                公历与农历，节气与休班，一眼看清。
+        <div className="tw-relative tw-isolate tw-overflow-hidden">
+          <AmbientOrbit
+            enabled={motion}
+            date={state.selected.date}
+          />
+          <header className="tw-relative tw-mx-auto tw-flex tw-w-full tw-max-w-[1168px] tw-items-center tw-justify-between tw-gap-4 tw-px-6 tw-py-6 compact:tw-px-4 compact:tw-py-5">
+            <a
+              href="#calendar"
+              aria-label="i日历，回到日历"
+              className="tw-flex tw-items-center tw-gap-3 tw-text-ink tw-no-underline"
+            >
+              <img
+                src={logo}
+                width="32"
+                height="32"
+                alt=""
+              />
+              <span className="tw-text-lg tw-font-semibold tw-tracking-tight">i日历</span>
+              <span className="tw-ml-2 tw-hidden tw-border-0 tw-border-l tw-border-solid tw-border-line tw-pl-5 tw-text-xs tw-text-ink sm:tw-inline">
+                时间，自有轨迹。
+              </span>
+            </a>
+            <nav
+              aria-label="官网导航"
+              className="tw-flex tw-items-center tw-gap-6 tw-text-xs"
+            >
+              <CalendarButton
+                appearance="text"
+                aria-pressed={motion && !reduced}
+                disabled={reduced}
+                onClick={() => setMotion((value) => !value)}
+                title="系统减少动态效果时自动保持静态"
+              >
+                {reduced ? '静态光轨' : motion ? '暂停光轨' : '播放光轨'}
+              </CalendarButton>
+              <a
+                href="#about"
+                className="tw-inline-flex tw-min-h-11 tw-items-center tw-gap-2 tw-text-ink tw-no-underline hover:tw-text-action"
+              >
+                关于与下载 <Arrow down />
+              </a>
+            </nav>
+          </header>
+          <div className="tw-relative">
+            <section
+              id="calendar"
+              aria-label="在线日历"
+              tabIndex={-1}
+              className="site-calendar tw-mx-auto tw-w-full tw-max-w-[1168px] tw-scroll-mt-4 tw-px-6 tw-pb-10 tw-pt-5 compact:tw-px-3 compact:tw-pb-6 compact:tw-pt-2"
+            >
+              <div className="tw-mb-8 tw-flex tw-items-end tw-justify-between tw-gap-4 tw-px-1 compact:tw-mb-5">
+                <div>
+                  <h1 className="tw-m-0 tw-text-[40px] tw-font-semibold tw-leading-tight tw-tracking-[-0.035em] compact:tw-text-[28px]">
+                    时间，触手可及。
+                  </h1>
+                  <p className="tw-mb-0 tw-mt-3 tw-text-[13px] tw-leading-6 tw-text-ink">
+                    公历与农历 · 节气与休班
+                  </p>
+                </div>
+                <span className="tw-hidden tw-pb-1 tw-text-xs tw-text-ink sm:tw-inline">
+                  北京时间 · 本地计算
+                </span>
+              </div>
+              <CalendarApp controller={controller} />
+              <p className="tw-mb-0 tw-mt-4 tw-text-center tw-text-[11px] tw-leading-5 tw-text-ink">
+                点击日期查看详情
+                <span className="tw-hidden desktop:tw-inline">
+                  {' '}
+                  · 方向键选日 · PageUp / PageDown 切月 · T 回到今天
+                </span>
               </p>
-            </div>
-            <span className="tw-hidden tw-pb-1 tw-text-xs tw-text-secondary sm:tw-inline">
-              日历按北京时间 · 无需登录
-            </span>
+            </section>
           </div>
-          <CalendarApp controller={controller} />
-          <p className="tw-mb-0 tw-mt-4 tw-text-center tw-text-[11px] tw-leading-5 tw-text-secondary">
-            点击日期查看详情
-            <span className="tw-hidden desktop:tw-inline">
-              {' '}
-              · 方向键选日 · PageUp / PageDown 切月 · T 回到今天
-            </span>
-          </p>
-        </section>
+        </div>
         <section
           id="about"
           aria-labelledby="about-title"

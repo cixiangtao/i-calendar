@@ -5,7 +5,7 @@
 @keyframes calendar-resolve {
   from {
     clip-path: inset(0 0 0 0 round 8px);
-    transform: translateY(8px);
+    transform: perspective(1200px) rotateX(2deg) translateY(10px);
   }
   to {
     clip-path: inset(0 0 0 0 round 22px);
@@ -28,4 +28,10 @@
     transition: none;
     transform: none;
   }
+}
+
+/* 官网用数字本身表达所选日期，菜单栏继续沿用纸页造型。 */
+body[data-platform='web'] .date-leaf::before,
+body[data-platform='web'] .date-leaf::after {
+  content: none;
 }

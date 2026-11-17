@@ -324,7 +324,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   return (
     <article
       ref={container}
-      className="calendar-app tw-grid tw-w-[min(400px,_100%)] tw-min-w-0 tw-max-w-full tw-gap-3 tw-text-[length:13px] tw-text-ink mac:tw-max-h-[100vh] mac:tw-w-full mac:tw-content-start mac:tw-gap-2 mac:tw-overflow-y-auto mac:tw-p-2 web:tw-mx-auto web:tw-w-full web:tw-gap-0 web:tw-rounded-[22px] web:tw-border web:tw-border-solid web:tw-border-line web:tw-bg-surface web:desktop:tw-grid-cols-[minmax(0,_1fr)_304px]"
+      className="calendar-app tw-grid tw-w-[min(400px,_100%)] tw-min-w-0 tw-max-w-full tw-gap-3 tw-text-[length:13px] tw-text-ink mac:tw-max-h-[100vh] mac:tw-w-full mac:tw-content-start mac:tw-gap-2 mac:tw-overflow-y-auto mac:tw-p-2 web:tw-relative web:tw-isolate web:tw-mx-auto web:tw-w-full web:tw-gap-0 web:tw-rounded-[22px] web:tw-border-0 web:tw-bg-surface web:desktop:tw-grid-cols-[minmax(0,_1fr)_304px]"
       data-panel={state.panel}
       data-show-lunar-details={state.preferences.showLunarDetails}
       aria-label="i日历"
@@ -341,9 +341,22 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       ) : (
         <>
           <section
-            className="month-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:desktop:tw-p-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
+            className="month-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-bg-transparent web:desktop:tw-p-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
             aria-label="月历"
           >
+            {controller.platform.kind === 'web' ? (
+              <div className="tw-mb-5 tw-flex tw-items-baseline tw-gap-3 tw-px-1 compact:tw-mb-3">
+                <span
+                  aria-hidden="true"
+                  className="tw-text-[32px] tw-font-semibold tw-tabular-nums tw-leading-none tw-tracking-tight compact:tw-text-2xl"
+                >
+                  {String(state.monthNumber).padStart(2, '0')}
+                </span>
+                <span className="tw-text-xs tw-font-medium tw-text-secondary">
+                  {state.year} 年 · {state.monthNumber} 月
+                </span>
+              </div>
+            ) : null}
             <div className="month-toolbar tw-mb-3 tw-flex tw-items-center tw-justify-between tw-gap-2 tw-text-[length:13px] tw-font-medium tiny:coarse:tw-gap-0 [&_svg]:tw-h-[13px] [&_svg]:tw-w-[13px]">
               <h1
                 className="sr-only"
@@ -513,7 +526,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
           </section>
           {state.preferences.showLunarDetails ? (
             <aside
-              className="detail-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-px-[18px] tw-py-3 mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-rounded-none web:tw-border-0 web:tw-border-t web:tw-border-solid web:tw-border-line web:desktop:tw-flex web:desktop:tw-flex-col web:desktop:tw-border-l web:desktop:tw-border-t-0 web:desktop:tw-px-6 web:desktop:tw-py-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-3 web:compact:tw-rounded-none web:desktop:[&>*]:tw-shrink-0"
+              className="detail-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-px-[18px] tw-py-3 mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-rounded-none web:tw-border-0 web:tw-border-t web:tw-border-solid web:tw-border-line web:tw-bg-transparent web:desktop:tw-flex web:desktop:tw-flex-col web:desktop:tw-border-l-0 web:desktop:tw-border-t-0 web:desktop:tw-px-6 web:desktop:tw-py-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-3 web:compact:tw-rounded-none web:desktop:[&>*]:tw-shrink-0"
               aria-label="日期详情"
             >
               <CalendarContextMenu
@@ -543,7 +556,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   aria-label="所选日期"
                 >
                   <div
-                    className="date-leaf tw-relative tw-col-[1] tw-row-[1] tw-grid tw-h-[58px] tw-w-[50px] tw-shrink-0 tw-place-items-center tw-rounded-[13px] tw-bg-[var(--leaf)] tw-text-[var(--leaf-ink)] web:desktop:tw-h-[94px] web:desktop:tw-w-[84px] web:desktop:tw-rounded-[19px] compact:tw-h-[54px] compact:tw-w-11 [&>span]:tw-pt-[5px] [&>span]:tw-text-[length:28px] [&>span]:tw-font-medium [&>span]:tw-tabular-nums [&>span]:tw-leading-[32px] web:desktop:[&>span]:tw-text-[length:46px] web:desktop:[&>span]:tw-leading-[54px]"
+                    className="date-leaf tw-relative tw-col-[1] tw-row-[1] tw-grid tw-h-[58px] tw-w-[50px] tw-shrink-0 tw-place-items-center tw-rounded-[13px] tw-bg-[var(--leaf)] tw-text-[var(--leaf-ink)] web:tw-bg-transparent web:tw-text-action web:desktop:tw-h-[94px] web:desktop:tw-w-[84px] web:desktop:tw-rounded-[19px] compact:tw-h-[54px] compact:tw-w-11 [&>span]:tw-pt-[5px] [&>span]:tw-text-[length:28px] [&>span]:tw-font-medium [&>span]:tw-tabular-nums [&>span]:tw-leading-[32px] web:desktop:[&>span]:tw-text-[length:72px] web:desktop:[&>span]:tw-font-light web:desktop:[&>span]:tw-leading-none"
                     aria-hidden="true"
                   >
                     <span key={state.selected.date}>{state.selected.day}</span>
