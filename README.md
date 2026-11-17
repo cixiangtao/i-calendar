@@ -99,14 +99,14 @@ pnpm run preview:web   # 预览已构建的静态网页
 
 ## 准备正式版本
 
-先提交本轮修改与 `docs/releases/<下一版本>.md` 中文说明，再从干净的 `main` 执行：
+确认本轮改动需要应用发版后，先提交修改与 `docs/releases/<下一版本>.md` 中文说明，再从干净的 `main` 执行：
 
 ```sh
 pnpm run release:dry patch # 只预演命令，不写文件、不执行质量门禁、不推送
 pnpm run release patch     # 同步各端版本、检查、提交并原子推送 main 与当前版本标签
 ```
 
-release-it 统一管理本地版本准备，正式 Mac 构建、更新签名、GitHub Release 与官网部署仍由 GitHub Actions 单一入口完成。本地正式命令需要 Mac 构建环境；推送成功后仍须验收 Actions 与公开产物。版本规则、失败现场和恢复方式见[发布约定](docs/发布约定.md)。
+仅在应用功能、共享能力或应用交付内容变化时执行上述发版命令。release-it 统一管理应用版本准备，Mac 构建、更新签名和 GitHub Release 由统一 Actions 入口完成，可同步官网；本地应用发版需要 Mac 构建环境，推送后仍须验收公开产物。官网专属改动应独立部署 Pages，纯文档与流程维护正常提交，不因此递增应用版本。官网独立部署流水线目前尚未接入，接入前不得用应用发版代替。范围判断、接入状态及失败恢复见[发布约定](docs/发布约定.md)。
 
 ## 工具链与格式约定
 
