@@ -137,6 +137,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   );
   const focusAfterNavigation = useRef(false);
   const grid = useRef<HTMLDivElement>(null);
+  const animatedMonth = useRef(state.year * 12 + state.monthNumber);
   const gear = useRef<HTMLButtonElement>(null);
   const container = useRef<HTMLElement>(null);
   const dark =
@@ -146,6 +147,29 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
     () => resolveColorTheme(state.preferences, dark, increasedContrast),
     [state.preferences, dark, increasedContrast],
   );
+
+  useEffect(() => {
+    const month = state.year * 12 + state.monthNumber;
+    const offset = Math.sign(month - animatedMonth.current) * 6;
+    animatedMonth.current = month;
+    if (
+      controller.platform.kind !== 'web' ||
+      state.panel !== 'calendar' ||
+      !grid.current ||
+      !offset
+    )
+      return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+    const animation = grid.current.animate(
+      [
+        { opacity: 0.55, transform: `translateX(${offset}px)` },
+        { opacity: 1, transform: 'translateX(0)' },
+      ],
+      { duration: 180, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+    );
+    return () => animation.cancel();
+  }, [controller, state.year, state.monthNumber, state.panel]);
 
   useEffect(() => {
     const element = container.current;
@@ -300,7 +324,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   return (
     <article
       ref={container}
-      className="calendar-app tw-grid tw-w-[min(400px,_100%)] tw-min-w-0 tw-max-w-full tw-gap-3 tw-text-[length:13px] tw-text-ink mac:tw-max-h-[100vh] mac:tw-w-full mac:tw-content-start mac:tw-gap-2 mac:tw-overflow-y-auto mac:tw-p-2 web:desktop:tw-w-[min(960px,_100%)] web:desktop:tw-grid-cols-[minmax(0,_1fr)_280px] web:desktop:tw-gap-4"
+      className="calendar-app tw-grid tw-w-[min(400px,_100%)] tw-min-w-0 tw-max-w-full tw-gap-3 tw-text-[length:13px] tw-text-ink mac:tw-max-h-[100vh] mac:tw-w-full mac:tw-content-start mac:tw-gap-2 mac:tw-overflow-y-auto mac:tw-p-2 web:tw-w-full web:tw-gap-0 web:tw-rounded-[22px] web:tw-border web:tw-border-solid web:tw-border-line web:tw-bg-surface web:desktop:tw-grid-cols-[minmax(0,_1fr)_304px]"
       data-panel={state.panel}
       data-show-lunar-details={state.preferences.showLunarDetails}
       aria-label="i日历"
@@ -317,7 +341,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       ) : (
         <>
           <section
-            className="month-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:desktop:tw-p-6 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
+            className="month-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:desktop:tw-p-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
             aria-label="月历"
           >
             <div className="month-toolbar tw-mb-3 tw-flex tw-items-center tw-justify-between tw-gap-2 tw-text-[length:13px] tw-font-medium tiny:coarse:tw-gap-0 [&_svg]:tw-h-[13px] [&_svg]:tw-w-[13px]">
@@ -423,7 +447,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         <button
                           type="button"
                           className={[
-                            'day-cell tw-w-full tw-h-[46px] tw-relative tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-0.5 tw-py-[3px] tw-px-0 tw-border-0 tw-rounded-[12px] tw-bg-transparent tw-text-ink [&_.term-label]:tw-text-green [&_.festival-label]:tw-text-[var(--purple)] web:desktop:tw-h-[clamp(44px,_6.4vh,_60px)] mac:tw-h-10 mac:tw-py-0.5 mac:tw-px-0 mac:tw-rounded-[10px] mac:tw-gap-px coarse:tw-h-12 web:desktop:short:tw-gap-px web:desktop:short:tw-py-0.5 web:desktop:short:tw-px-0',
+                            'day-cell tw-w-full tw-h-[46px] tw-relative tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-0.5 tw-py-[3px] tw-px-0 tw-border-0 tw-rounded-[12px] tw-bg-transparent tw-text-ink [&_.term-label]:tw-text-green [&_.festival-label]:tw-text-[var(--purple)] web:desktop:tw-h-[clamp(52px,_7vh,_72px)] mac:tw-h-10 mac:tw-py-0.5 mac:tw-px-0 mac:tw-rounded-[10px] mac:tw-gap-px coarse:tw-h-12 web:desktop:short:tw-gap-px web:desktop:short:tw-py-0.5 web:desktop:short:tw-px-0',
                             day.month !== state.monthNumber ? 'outside-month' : '',
                             state.selected.date === day.date ? 'selected' : '',
                             state.today === day.date ? 'is-today' : '',
@@ -467,7 +491,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                       <span
                         key={`empty-${index}`}
                         role="gridcell"
-                        className="empty-day tw-h-[46px] tw-w-full mac:tw-h-10 mac:tw-gap-px mac:tw-rounded-[10px] mac:tw-px-0 mac:tw-py-0.5 web:desktop:tw-h-[clamp(44px,_6.4vh,_60px)] coarse:tw-h-12"
+                        className="empty-day tw-h-[46px] tw-w-full mac:tw-h-10 mac:tw-gap-px mac:tw-rounded-[10px] mac:tw-px-0 mac:tw-py-0.5 web:desktop:tw-h-[clamp(52px,_7vh,_72px)] coarse:tw-h-12"
                         aria-label="日期范围之外"
                       />
                     ),
@@ -489,7 +513,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
           </section>
           {state.preferences.showLunarDetails ? (
             <aside
-              className="detail-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-px-[18px] tw-py-3 mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:desktop:tw-flex web:desktop:tw-flex-col compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-3 web:desktop:[&>*]:tw-shrink-0"
+              className="detail-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-px-[18px] tw-py-3 mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-rounded-none web:tw-border-0 web:tw-border-t web:tw-border-solid web:tw-border-line web:desktop:tw-flex web:desktop:tw-flex-col web:desktop:tw-border-l web:desktop:tw-border-t-0 web:desktop:tw-px-6 web:desktop:tw-py-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-3 web:compact:tw-rounded-none web:desktop:[&>*]:tw-shrink-0"
               aria-label="日期详情"
             >
               <CalendarContextMenu
@@ -603,16 +627,42 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
             </aside>
           ) : null}
           <AppUpdateNotice controller={controller} />
-          <footer className="app-footer tw-col-[1_/_-1] tw-flex tw-min-h-7 tw-items-center tw-justify-between tw-px-3 tw-py-0">
-            <div className="brand tw-flex tw-items-center tw-gap-[7px] tw-text-[length:13px] tw-font-semibold tw-tracking-[0.02em] web:desktop:tw-text-[length:14px] [&_img]:tw-block [&_img]:tw-h-[19px] [&_img]:tw-w-[19px]">
-              <img
-                src={new URL('./assets/logo.svg', import.meta.url).href}
-                width="19"
-                height="19"
-                alt=""
-              />
-              <span>i日历</span>
-            </div>
+          <footer className="app-footer tw-col-[1_/_-1] tw-flex tw-min-h-7 tw-items-center tw-justify-between tw-px-3 tw-py-0 web:tw-border-0 web:tw-border-t web:tw-border-solid web:tw-border-line web:tw-px-5 web:tw-py-2">
+            {controller.platform.kind === 'web' ? (
+              <ul
+                aria-label="日历颜色说明"
+                className="tw-m-0 tw-flex tw-list-none tw-flex-wrap tw-gap-x-4 tw-gap-y-1 tw-p-0 tw-text-[11px] tw-text-secondary compact:tw-gap-x-2"
+              >
+                {[
+                  ['tw-bg-action', '今天 / 选中'],
+                  ['tw-bg-red', '休假'],
+                  ['tw-bg-green', '节气'],
+                  ['tw-bg-yellow', '补班'],
+                  ['tw-bg-[var(--purple)]', '节日'],
+                ].map(([color, label]) => (
+                  <li
+                    key={label}
+                    className="tw-flex tw-items-center tw-gap-1.5"
+                  >
+                    <span
+                      className={`tw-h-1.5 tw-w-1.5 tw-rounded-full ${color}`}
+                      aria-hidden="true"
+                    />
+                    {label}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="brand tw-flex tw-items-center tw-gap-[7px] tw-text-[length:13px] tw-font-semibold tw-tracking-[0.02em] web:desktop:tw-text-[length:14px] [&_img]:tw-block [&_img]:tw-h-[19px] [&_img]:tw-w-[19px]">
+                <img
+                  src={new URL('./assets/logo.svg', import.meta.url).href}
+                  width="19"
+                  height="19"
+                  alt=""
+                />
+                <span>i日历</span>
+              </div>
+            )}
             <CalendarButton
               ref={gear}
               appearance="icon"

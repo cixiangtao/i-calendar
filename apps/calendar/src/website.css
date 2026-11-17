@@ -1,0 +1,31 @@
+/* 仪表台边界在首屏就绪时收拢一次；内容始终可见，不等待动画才能使用。 */
+.site-calendar > .calendar-app {
+  animation: calendar-resolve 480ms var(--motion-ease) both;
+}
+@keyframes calendar-resolve {
+  from {
+    clip-path: inset(0 0 0 0 round 8px);
+    transform: translateY(8px);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 22px);
+    transform: translateY(0);
+  }
+}
+.site-download svg {
+  transition: transform var(--motion-state) var(--motion-ease);
+}
+@media (hover: hover) {
+  .site-download:hover svg {
+    transform: translateY(3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-calendar > .calendar-app {
+    animation: none;
+  }
+  .site-download svg {
+    transition: none;
+    transform: none;
+  }
+}

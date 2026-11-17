@@ -4,9 +4,8 @@ import { Component, StrictMode, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-import { version as appVersion } from '../../../package.json';
-import releaseConfig from '../../../release/config.json';
 import { createPlatform } from './platform.js';
+import { Website } from './Website.js';
 
 class AppBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -45,36 +44,13 @@ async function start() {
     root.render(
       <StrictMode>
         <AppBoundary>
-          <main className="calendar-stage tw-grid tw-min-h-[100svh] tw-grid-cols-[minmax(0,_1fr)] tw-items-start tw-justify-items-center tw-px-6 tw-py-8 mac:tw-block mac:tw-min-h-[100vh] mac:tw-p-0 ios:tw-pb-[max(12px,env(safe-area-inset-bottom))] ios:tw-pl-[max(10px,env(safe-area-inset-left))] ios:tw-pr-[max(10px,env(safe-area-inset-right))] ios:tw-pt-[max(12px,env(safe-area-inset-top))] compact:tw-items-start compact:tw-p-3">
-            <CalendarApp controller={controller} />
-          </main>
           {platform.kind === 'web' ? (
-            <section
-              className="web-info tw-mx-auto tw-my-0 tw-max-w-[880px] tw-px-6 tw-pb-[72px] tw-pt-12 tw-text-[length:13px] tw-leading-[1.9] tw-text-[var(--hint-ink)] [&_a]:tw-text-action [&_a]:tw-underline-offset-[4px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-2.5 [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:18px] [&_h2]:tw-font-semibold [&_h2]:tw-text-ink [&_p]:tw-mx-0 [&_p]:tw-mb-3 [&_p]:tw-mt-0"
-              aria-label="关于i日历"
-            >
-              <h2>查日子，打开就好。</h2>
-              <p>
-                i日历提供公农历、节气和中国大陆放假调休。日历计算在本地完成，免费、无广告，无需登录。
-              </p>
-              <p>
-                当前版本 {appVersion}。Mac 与网页版共用日历核心和界面组件，iOS 版本将在后续提供。
-              </p>
-              <p>
-                放假与补班根据全国统一安排整理，个人排班以所在单位为准。数据来源可在日历设置中查看。
-              </p>
-              <p>
-                <a
-                  href={`https://github.com/${releaseConfig.repository}/releases/download/v${appVersion}/i-calendar-${appVersion}-mac-arm64.zip`}
-                >
-                  下载 Mac 版（Apple 芯片）
-                </a>{' '}
-                · <a href={`https://github.com/${releaseConfig.repository}`}>源代码</a> ·{' '}
-                <a href="./third-party-licenses.txt">许可声明</a>
-              </p>
-              <p>Mac 版采用本地签名，尚未通过 Apple 公证；首次安装说明见版本发布页。</p>
-            </section>
-          ) : null}
+            <Website controller={controller} />
+          ) : (
+            <main className="calendar-stage tw-grid tw-min-h-[100svh] tw-grid-cols-[minmax(0,_1fr)] tw-items-start tw-justify-items-center tw-px-6 tw-py-8 mac:tw-block mac:tw-min-h-[100vh] mac:tw-p-0 ios:tw-pb-[max(12px,env(safe-area-inset-bottom))] ios:tw-pl-[max(10px,env(safe-area-inset-left))] ios:tw-pr-[max(10px,env(safe-area-inset-right))] ios:tw-pt-[max(12px,env(safe-area-inset-top))] compact:tw-items-start compact:tw-p-3">
+              <CalendarApp controller={controller} />
+            </main>
+          )}
         </AppBoundary>
       </StrictMode>,
     ),
