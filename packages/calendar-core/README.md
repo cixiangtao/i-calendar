@@ -56,6 +56,24 @@ value.source.version; // '1.8.7'
 
 固定口径为春节换年、节交接日零点换月、北京时间零点换日；宜忌和福神显式使用流派 1。上游“无”原样保留，不能解释为“诸事皆宜”。本轮是日期查询，不推导时柱或晚子时；规则变化须更新 `rules.id`、边界测试和文档。来源版本与实际锁定依赖有一致性测试。详见[黄历数据与口径](../../docs/黄历数据与口径.md)。
 
+## 日期计算 API
+
+```ts
+import { addDays, countWorkdays, daysBetween } from '@i-calendar/core';
+
+daysBetween('2024-02-28', '2024-03-01'); // 2；结束日期较早时返回负数
+addDays('2026-11-17', 100); // '2027-02-25'；负数向前推算，0 为当天
+countWorkdays('2026-02-13', '2026-02-14', holidays);
+// { coverage: 'published', days: 1, missingYears: [] }，周六补班计入
+countWorkdays('2026-02-13', '2026-02-14', holidays, true); // 同时计入起始日，2 个工作日
+countWorkdays('2027-12-31', '2028-01-03', holidays);
+// { coverage: 'unavailable', days: null, missingYears: [2028] }
+```
+
+`addDays` 与 `daysBetween` 按公历自然日计算，使用 UTC 民用日期运算，不受宿主时区或夏令时影响。输入、推算结果均限制在 1901—2100 年，天数须为整数。
+
+`countWorkdays` 复用调用方注入的 `HolidayStore`，默认不计起始日、计入结束日，第四个参数为 `true` 时同时计入起始日；结束日期不得早于起始日期。同日区间默认是空区间，确定返回 0，计入起始日时才查询当天安排。普通工作日与补班日计入，休假与常规周末扣除；任一参与计算的日期缺少调休覆盖时，返回缺失年份与 `days: null`，不暴露不完整计数。下一年通知中明确覆盖的前一年十二月日期仍有效，不据此推断前一年其余日期。不包含个人排班或地方假期。
+
 ## 分发
 
 在项目根目录执行 `pnpm run build:core` 生成 ESM 与 TypeScript 声明；`pnpm --filter @i-calendar/core pack --pack-destination "$PWD/outputs"` 生成可安装包，尚未发布至公共 npm。
