@@ -16,7 +16,10 @@
   "gitlab": { "release": false },
   "plugins": { "./scripts/release-version-plugin.mjs": {} },
   "hooks": {
-    "before:init": "node scripts/release-version.mjs guard",
+    "before:init": [
+      "node scripts/release-version.mjs guard",
+      "node scripts/release-native-ready.mjs"
+    ],
     "before:bump": "node scripts/release-version.mjs validate ${version}",
     "after:bump": [
       "pnpm run check",

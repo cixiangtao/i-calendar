@@ -51,6 +51,8 @@ async function fixture() {
     await copyFile(path.join(source, 'scripts', file), path.join(root, 'scripts', file));
   await symlink(path.join(source, 'node_modules'), path.join(root, 'node_modules'), 'dir');
   const config = JSON.parse(await readFile(path.join(source, 'release/release-it.json')));
+  // 会话检查单独测试；隔离 Git 仓库不启动原生窗口，也不依赖宿主是否锁屏。
+  config.hooks['before:init'] = 'node scripts/release-version.mjs guard';
   // 隔离仓库只检验编排与阻断传播；实际产品质量门禁由正式配置执行。
   config.hooks['after:bump'] = 'node -e "process.exit(Number(process.env.RELEASE_TEST_GATE || 0))"';
   await writeFile(path.join(root, 'release/release-it.json'), JSON.stringify(config));
