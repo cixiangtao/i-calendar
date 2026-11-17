@@ -2,6 +2,14 @@
 
 本应用本地运行，无账户、广告或遥测。用户手动点击“检查调休更新”时，会请求 holiday-cn 的 GitHub 静态数据。
 
+用户主动启用自动定位后，系统或浏览器定位服务、Apple 系统地名解析可能联网；i日历不提供位置上传服务器、不保存定位坐标或轨迹。日照计算和已随应用分发的地点参考点离线运行；网页首次载入相应资源仍需网络。
+
+## SunCalc 2.1.1 与 GeoNames
+
+- SunCalc 作者：Volodymyr Agafonkin；代码与算法说明：https://github.com/mourner/suncalc 。许可为 BSD-2-Clause，副本位于 `packages/calendar-core/LICENSE-suncalc`，构建时纳入随附许可证。
+- 国内城市与部分区县参考点由 [GeoNames](https://www.geonames.org/) 的 [cities15000 数据集](https://download.geonames.org/export/dump/)筛选并转换，采用 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)。原始数据为 WGS84，来源摘要、日期与转换方式位于 `packages/calendar-core/src/data/china-places-source.json`；处理脚本为 `scripts/import-sunlight-places.mjs`。
+- 数据按原样提供，可能存在遗漏、旧地名或坐标误差，不是完整行政区划或边界数据。手动选择使用参考点，自动定位使用系统返回的实际坐标；GeoNames 附近地名只作提示。
+
 ## lunar-typescript 1.8.7
 
 - 作者：6tail

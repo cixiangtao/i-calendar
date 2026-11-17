@@ -74,7 +74,21 @@ countWorkdays('2027-12-31', '2028-01-03', holidays);
 
 `countWorkdays` 复用调用方注入的 `HolidayStore`，默认不计起始日、计入结束日，第四个参数为 `true` 时同时计入起始日；结束日期不得早于起始日期。同日区间默认是空区间，确定返回 0，计入起始日时才查询当天安排。普通工作日与补班日计入，休假与常规周末扣除；任一参与计算的日期缺少调休覆盖时，返回缺失年份与 `days: null`，不暴露不完整计数。下一年通知中明确覆盖的前一年十二月日期仍有效，不据此推断前一年其余日期。不包含个人排班或地方假期。
 
-## 分发
+## 日出日落 API
+
+```ts
+import { getSunlight } from '@i-calendar/core';
+
+getSunlight('2026-06-21', { latitude: 39.9, longitude: 116.4 });
+// { date: '2026-06-21', sunrise: '04:45', sunset: '19:46',
+//   daylightMinutes: 900, condition: 'normal', rule: 'suncalc-2.1.1-beijing-v1' }
+```
+
+日期限制沿用 1901—2100 年，坐标为 WGS84 十进制度，非法日期、非有限数值及越界坐标抛出 `RangeError`。固定使用 UTC+8 民用日，不受设备时区或历史夏令时影响；升落时间截断秒、按 `HH:mm` 展示，白昼由事件瞬间计算后取整分钟，两者直接相减可能相差一分钟。极昼/极夜返回空事件和 1440/0 分钟，其他缺少单侧事件的日期返回 `partial`。
+
+采用 SunCalc 2.1.1 的太阳上缘、标准折射和理想地平线口径，观察高度为零，不将设备海拔错误当作高于地平线的高度，不计地形、建筑与天气遮挡。规则标识随口径或库版本变化更新。`@i-calendar/core/places` 独立导出国内城市及部分区县参考点和附近查询，数据不是完整行政区划；附近名称不应替代用于计算的真实坐标。详细来源与边界见[日出日落与定位](../../docs/日出日落与定位.md)。
+
+## ESM 分发
 
 在项目根目录执行 `pnpm run build:core` 生成 ESM 与 TypeScript 声明；`pnpm --filter @i-calendar/core pack --pack-destination "$PWD/outputs"` 生成可安装包，尚未发布至公共 npm。
 
@@ -82,4 +96,4 @@ Mac、iOS 与 Web 均由共享 TypeScript 应用状态直接调用本包；Apple
 
 ## 许可与校验
 
-底层 lunar-typescript 和 holiday-cn 采用 MIT 许可，许可副本随包保留。当前年份跨度是产品支持范围，不代表所有年份都已经逐日与天文台数据穷举比对。测试覆盖已知历法边界、输入校验、数据更新、序列化隔离和官方调休样例。
+底层 lunar-typescript 和 holiday-cn 采用 MIT 许可，SunCalc 采用 BSD-2-Clause，国内地点数据来自 GeoNames（CC BY 4.0）；相应许可证及数据来源随包保留。当前年份跨度是产品支持范围，不代表所有年份都已经逐日与天文台数据穷举比对。测试覆盖已知历法边界、日照独立样例及坐标/时区边界、输入校验、数据更新、序列化隔离和官方调休样例。
