@@ -6,7 +6,7 @@ use objc2_app_kit::{
 use objc2_quartz_core::CAMediaTimingFunction;
 use std::{
     sync::atomic::{AtomicBool, AtomicU64, Ordering},
-    time::Duration,
+    time::{Duration, Instant},
 };
 use tauri::{
     menu::{Menu, MenuItem},
@@ -325,7 +325,7 @@ pub async fn verify_popup_motion(app: &tauri::AppHandle) -> Result<(), String> {
     // 仅影响隔离冒烟：云端仍检查窗口状态闭环，真实分发包在本机检查完整轨迹。
     let sample_frames = std::env::var("I_CALENDAR_SMOKE_SETTLED_ONLY").as_deref() != Ok("1");
     let window = app.get_webview_window("main").ok_or("主界面不存在")?;
-    wait_for_motion_settle().await;
+    wait_for_motion_settle(app).await?;
     let settled = motion_snapshot(&window).await?;
     hide_calendar(&window).map_err(|error| error.to_string())?;
     let exit_start = motion_snapshot(&window).await?;
@@ -344,7 +344,7 @@ pub async fn verify_popup_motion(app: &tauri::AppHandle) -> Result<(), String> {
     resize_popup(app, height)?;
     // 重复的收起请求不应重播退场或改变关闭回调。
     hide_calendar(&window).map_err(|error| error.to_string())?;
-    wait_for_motion_settle().await;
+    wait_for_motion_settle(app).await?;
     let exit_end = motion_snapshot(&window).await?;
     if window.is_visible().unwrap_or(true) || app.state::<RuntimeState>().popup_motion.is_closing()
     {
@@ -364,10 +364,12 @@ pub async fn verify_popup_motion(app: &tauri::AppHandle) -> Result<(), String> {
         .await
         .map_err(|error| error.to_string())?;
     let middle = motion_snapshot(&window).await?;
-    wait_for_motion_settle().await;
+    wait_for_motion_settle(app).await?;
     let end = motion_snapshot(&window).await?;
     if (end.0 - settled.0).abs() > 1.0 || (end.1 - 1.0).abs() > 0.01 {
-        return Err("悬浮窗入场终点或透明度未恢复".into());
+        return Err(format!(
+            "悬浮窗入场终点或透明度未恢复：基线 {settled:?}，轨迹 {start:?} → {middle:?} → {end:?}"
+        ));
     }
     if sample_frames && !start.2 && !(start.0 > middle.0 + 1.0 && middle.0 > end.0 + 1.0) {
         return Err(format!(
@@ -389,7 +391,7 @@ pub async fn verify_popup_motion(app: &tauri::AppHandle) -> Result<(), String> {
     hide_calendar_if_current(&window, Some(stale_blur)).map_err(|error| error.to_string())?;
     hide_calendar(&window).map_err(|error| error.to_string())?;
     show_calendar(app);
-    wait_for_motion_settle().await;
+    wait_for_motion_settle(app).await?;
     let monitor = window
         .current_monitor()
         .map_err(|error| error.to_string())?
@@ -440,11 +442,41 @@ pub async fn verify_popup_motion(app: &tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-pub async fn wait_for_motion_settle() {
-    let _ = tauri::async_runtime::spawn_blocking(|| {
-        std::thread::sleep(Duration::from_millis(360));
-    })
-    .await;
+/// 仅供隔离冒烟：等待原生状态连续稳定，终点仍由调用方独立断言。
+pub async fn wait_for_motion_settle(app: &tauri::AppHandle) -> Result<(), String> {
+    let window = app.get_webview_window("main").ok_or("主界面不存在")?;
+    let started = Instant::now();
+    // 保留完整动画时长后的观察窗口，不在 AppKit 动画刚启动时判定静止。
+    tauri::async_runtime::spawn_blocking(|| std::thread::sleep(Duration::from_millis(360)))
+        .await
+        .map_err(|error| error.to_string())?;
+    let mut previous = motion_snapshot(&window).await?;
+    let mut stable_samples = 0;
+    loop {
+        // 动画中只通过主线程读取 AppKit；避免交替调用同步 Tauri 位置 API。
+        let snapshot = motion_snapshot(&window).await?;
+        let closing = app.state::<RuntimeState>().popup_motion.is_closing();
+        if !closing
+            && (snapshot.0 - previous.0).abs() <= 0.01
+            && (snapshot.1 - previous.1).abs() <= 0.001
+        {
+            stable_samples += 1;
+            if stable_samples >= 3 {
+                return Ok(());
+            }
+        } else {
+            stable_samples = 0;
+        }
+        previous = snapshot;
+        if started.elapsed() >= Duration::from_secs(2) {
+            let error = format!("等待悬浮窗停稳超时：快照 {snapshot:?}，关闭中 {closing}");
+            eprintln!("{error}");
+            return Err(error);
+        }
+        tauri::async_runtime::spawn_blocking(|| std::thread::sleep(Duration::from_millis(20)))
+            .await
+            .map_err(|error| error.to_string())?;
+    }
 }
 
 /// 隔离冒烟通过真实前端事件读取已渲染页面，覆盖隐藏 WebView 的状态恢复。
@@ -477,12 +509,12 @@ pub async fn verify_popup_reset(app: &tauri::AppHandle) -> Result<(), String> {
     }
     hide_calendar(&window).map_err(|error| error.to_string())?;
     show_calendar(app);
-    wait_for_motion_settle().await;
+    wait_for_motion_settle(app).await?;
     if frontend_snapshot(app).await?["panel"] != "settings" {
         return Err("被打断的退场不应重置设置页面".into());
     }
     hide_calendar(&window).map_err(|error| error.to_string())?;
-    wait_for_motion_settle().await;
+    wait_for_motion_settle(app).await?;
     let after = frontend_snapshot(app).await?;
     if window.is_visible().unwrap_or(true)
         || after["panel"] != "calendar"
@@ -492,7 +524,7 @@ pub async fn verify_popup_reset(app: &tauri::AppHandle) -> Result<(), String> {
         return Err(format!("关闭后未恢复日历或改变了选择及偏好：{after}"));
     }
     show_calendar(app);
-    wait_for_motion_settle().await;
+    wait_for_motion_settle(app).await?;
     if frontend_snapshot(app).await?["panel"] != "calendar" {
         return Err("收起重开后没有显示日历页面".into());
     }

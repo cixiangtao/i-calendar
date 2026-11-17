@@ -285,7 +285,7 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 app.exit(1);
                 return Err("菜单栏日历未显示".into());
             }
-            desktop::wait_for_motion_settle().await;
+            desktop::wait_for_motion_settle(&app).await?;
             desktop::verify_rounded_popup(&window).await?;
             desktop::verify_content_height(&app)?;
             window.hide().map_err(|_| "日历收起失败")?;
@@ -295,7 +295,7 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 app.exit(1);
                 return Err("日历重新打开失败".into());
             }
-            desktop::wait_for_motion_settle().await;
+            desktop::wait_for_motion_settle(&app).await?;
             desktop::verify_rounded_popup(&window).await?;
             desktop::verify_content_height(&app)?;
             if let Err(error) = desktop::verify_popup_motion(&app).await {
