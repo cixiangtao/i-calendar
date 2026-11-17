@@ -27,7 +27,7 @@ corepack pnpm run dev:mac
 
 项目固定使用 pnpm 12.18.0，由 Corepack 按 `packageManager` 选择版本。以下 `pnpm` 命令均使用该版本，也可统一写成 `corepack pnpm …`。工作区使用 `pnpm-workspace.yaml`，JavaScript 依赖锁文件为 `pnpm-lock.yaml`。
 
-Mac 开发需要 Node 24+、macOS 13+、Command Line Tools 和通过 rustup 安装的 Rust。项目在 `rust-toolchain.toml` 中锁定 Rust 1.99.1，不修改系统全局默认工具链。首次运行会下载和编译 Rust 依赖，耗时比后续启动长。`dev:mac` 会自动启动前端服务，再打开菜单栏日历。
+Mac 开发建议使用 Node 24 LTS（至少 24.15.0，满足 release-it 工具要求）、macOS 13+、Command Line Tools 和通过 rustup 安装的 Rust。项目在 `rust-toolchain.toml` 中锁定 Rust 1.99.1，不修改系统全局默认工具链。首次运行会下载和编译 Rust 依赖，耗时比后续启动长。`dev:mac` 会自动启动前端服务，再打开菜单栏日历。
 
 只看网页版不需要 Rust：
 
@@ -96,6 +96,17 @@ pnpm run preview:web   # 预览已构建的静态网页
 ```
 
 `check:mac` 使用隔离的冒烟实例，跳过偏好与调休缓存读写，可与正在运行的开发窗口并行验证；正常应用继续保持单实例。运行前先构建最新 Mac 应用。验证范围与限制见[验证记录](docs/验证记录.md)。
+
+## 准备正式版本
+
+先提交本轮修改与 `docs/releases/<下一版本>.md` 中文说明，再从干净的 `main` 执行：
+
+```sh
+pnpm run release:dry patch # 只预演命令，不写文件、不执行质量门禁、不推送
+pnpm run release patch     # 同步各端版本、检查、提交并原子推送 main 与当前版本标签
+```
+
+release-it 统一管理本地版本准备，正式 Mac 构建、更新签名、GitHub Release 与官网部署仍由 GitHub Actions 单一入口完成。本地正式命令需要 Mac 构建环境；推送成功后仍须验收 Actions 与公开产物。版本规则、失败现场和恢复方式见[发布约定](docs/发布约定.md)。
 
 ## 工具链与格式约定
 

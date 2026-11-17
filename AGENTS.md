@@ -45,6 +45,7 @@
 - 发布到 `cixiangtao/i-calendar` 公开仓库，项目主许可证为 MIT；同步发布 GitHub Release、Mac 下载及 GitHub Pages 官网。
 - 首发 Mac 为 arm64、本地 ad-hoc 签名、未通过 Apple 公证，必须明确披露。长期驻留、真实登录、最低系统与手机真机等未完成项继续如实记录，不宣称已通过。
 - 正式发布由 GitHub Actions 单一入口执行；本地负责校验、提交与明确的版本标签推送。更新私钥只存仓库外受保护目录及 GitHub Secret，公钥与地址位于 `release/config.json`。
+- 本地通过 `pnpm run release:dry patch` 预演、`pnpm run release patch` 实际准备，使用 release-it 统一同步版本、执行检查、提交与原子推送；不手工逐处改版本或并行使用其他本地发布入口。中文版本说明须预先提交，预演不执行质量门禁，失败现场按发布约定核实后恢复。
 - 版本发布按照 `docs/版本规划.md` 和 `docs/发布约定.md` 执行；1.0 前确定仓库归属、许可证与正式部署配置。
 - 发布时项目介绍、README、版本说明和 Release Notes 使用中文。
 

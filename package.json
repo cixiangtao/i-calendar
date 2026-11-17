@@ -47,6 +47,8 @@
     "lint": "oxlint --deny-warnings .",
     "lint:fix": "oxlint --fix .",
     "preview:web": "vite preview --config apps/calendar/vite.config.ts --host 127.0.0.1",
+    "release": "release-it --config release/release-it.json --ci",
+    "release:dry": "release-it --config release/release-it.json --ci --dry-run",
     "release:manifest": "node scripts/create-update-manifest.mjs",
     "tauri": "node scripts/tauri.mjs",
     "test": "tsx --test packages/calendar-core/test/*.test.ts packages/calendar-ui/test/*.test.ts && node --test scripts/*.test.mjs",
@@ -73,13 +75,14 @@
     "oxfmt": "0.78.0",
     "oxlint": "1.93.0",
     "postcss": "^8",
+    "release-it": "21.1.2",
     "tailwindcss": "3.4.19",
     "tsx": "^4.20.0",
     "typescript": "7.0.2",
     "vite": "8.3.8"
   },
   "engines": {
-    "node": ">=24",
+    "node": "^24.15.0 || >=26.0.0",
     "pnpm": ">=12.18.0 <13"
   },
   "packageManager": "pnpm@12.18.0"
