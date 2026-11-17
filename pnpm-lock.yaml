@@ -242,6 +242,9 @@ importers:
       lunar-typescript:
         specifier: 1.8.7
         version: 1.8.7
+      suncalc:
+        specifier: 2.1.1
+        version: 2.1.1
 
   packages/calendar-ui:
     dependencies:
@@ -2457,6 +2460,9 @@ packages:
     engines: {node: '>=16 || 14 >=14.17'}
     hasBin: true
 
+  suncalc@2.1.1:
+    resolution: {integrity: sha512-ufMOPzYRk5aomEs3g+qeJGdCPZWC3TL94E0HQagoSusFnNXCvfuewWBroY3lxRHqA7IA8UGvgg7dcrSSDJsuEg==}
+
   supports-preserve-symlinks-flag@1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
@@ -4380,6 +4386,8 @@ snapshots:
       pirates: 4.0.7
       tinyglobby: 0.2.17
       ts-interface-checker: 0.1.13
+
+  suncalc@2.1.1: {}
 
   supports-preserve-symlinks-flag@1.0.0: {}
 

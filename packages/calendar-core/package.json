@@ -8,6 +8,7 @@
     "src/data/*.json",
     "src/data/LICENSE-holiday-cn",
     "LICENSE-lunar-typescript",
+    "LICENSE-suncalc",
     "LICENSE",
     "README.md"
   ],
@@ -29,6 +30,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "lunar-typescript": "1.8.7"
+    "lunar-typescript": "1.8.7",
+    "suncalc": "2.1.1"
   }
 }

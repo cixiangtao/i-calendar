@@ -46,13 +46,33 @@ objc2-app-kit = { version = "=0.3.2", default-features = false, features = [
   "objc2-core-foundation",
   "objc2-quartz-core",
 ] }
-objc2 = "=0.6.5"
-block2 = "=0.6.2"
 objc2-quartz-core = { version = "=0.3.2", default-features = false, features = [
   "CAMediaTimingFunction",
 ] }
 tauri-plugin-updater = "=2.14.1"
 tauri-plugin-autostart = "=2.7.0"
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
+objc2 = "=0.6.5"
+block2 = "=0.6.2"
+objc2-foundation = { version = "=0.3.2", default-features = false, features = [
+  "std",
+  "NSArray",
+  "NSDate",
+  "NSError",
+  "NSLocale",
+  "NSObject",
+  "NSString",
+] }
+objc2-core-location = { version = "=0.3.2", default-features = false, features = [
+  "std",
+  "block2",
+  "CLLocation",
+  "CLLocationManager",
+  "CLLocationManagerDelegate",
+  "CLGeocoder",
+  "CLPlacemark",
+] }
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
