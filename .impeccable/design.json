@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-17T05:09:33.965946Z",
+  "generatedAt": "2026-11-18T10:27:22Z",
   "title": "Design System: i日历",
   "extensions": {
     "colorMeta": {
@@ -672,11 +672,18 @@
       "limits": "截图用于视觉对照；compact 为浏览器模拟 Mac 内容 CSS，mobile 为浏览器深色触控仿真。本文件不据此宣称完成 CUA、真实 WKWebView 或 iOS 设备验证；本轮独立 reviewer 的 ship 结论限于其修复清单。"
     },
     "implementationNotes": [
-      "Tailwind 使用 tw- 前缀且 Preflight 关闭；实际色值以共享 CSS 为准。",
+      "Tailwind 使用 tw- 前缀且 Preflight 关闭；八个主题主色定义在共享 UI 的 theme-package.ts，实际界面色值由 color-theme.ts 派生。",
       "面板不设投影；Ant Design Segmented 与描边按钮仍沿用库内控件深度，不提取为全局面板阴影。",
       "色带为从源码规范色合成的 OKLCH 展示阶梯，不是运行时额外主题，也不写回 CSS。",
       "高对比偏好会覆盖 secondary、muted 和 line；具体覆盖见共享 CSS，不作为默认主题色。"
     ],
+    "themes": {
+      "default": "清爽白沿用原浅深配色，月历上沿显示纯色。",
+      "gallery": "内置和自定义主题分别使用三列缩略图，展示浅色画布、强调色色块与可选图片。山雾内置照片，暮紫为纯色主题。",
+      "preview": "列表、编辑和导入使用当前选中日期所在的一周。设置控件使用清爽白的相应明暗配色，编辑预览独立切换浅深色并跟随草稿。",
+      "background": "可选背景图在月历与预览上沿覆盖裁切，向日期区渐隐。上沿工具保持实色衬底，日期与详情保持实色阅读底。",
+      "compactColorInputs": "视口宽度在 430px 及以下时，RGB(A) 和 HSL(A) 输入框独占第二行，名称和取色器留在首行。"
+    },
     "brand": {
       "name": "i日历",
       "colorToken": "brand-blue",
