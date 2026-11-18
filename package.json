@@ -1,7 +1,7 @@
 {
   "name": "i-calendar",
   "displayName": "i日历",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "private": true,
   "description": "i日历：免费无广告的菜单栏日历，提供公农历、节气与放假调休，Mac、iOS 与 Web 共享核心和界面",
   "keywords": [
