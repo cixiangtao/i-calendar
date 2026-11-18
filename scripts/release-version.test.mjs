@@ -6,6 +6,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { assertVersionAdvance } from './release-semver.mjs';
 import { guardRelease, syncVersions, validateRelease, verifyVersions } from './release-version.mjs';
 
 const source = fileURLToPath(new URL('../', import.meta.url));
@@ -47,7 +48,7 @@ async function fixture() {
     await writeFile(path.join(root, file), content);
   }
   await mkdir(path.join(root, 'scripts'));
-  for (const file of ['release-version.mjs', 'release-version-plugin.mjs'])
+  for (const file of ['release-semver.mjs', 'release-version.mjs', 'release-version-plugin.mjs'])
     await copyFile(path.join(source, 'scripts', file), path.join(root, 'scripts', file));
   await symlink(path.join(source, 'node_modules'), path.join(root, 'node_modules'), 'dir');
   const config = JSON.parse(await readFile(path.join(source, 'release/release-it.json')));
@@ -141,6 +142,10 @@ test('缺少版本说明、预览版本与不干净工作区在写入前拒绝',
   const { root, cleanup } = await fixture();
   try {
     await assert.rejects(validateRelease(root, '1.0.1-beta.1'), /正式版本/);
+    await assert.rejects(validateRelease(root, '1.00.1'), /无前导零/);
+    await assert.rejects(validateRelease(root, '2.0.1'), /须归零/);
+    await assert.rejects(syncVersions(root, '1.1.1'), /须归零/);
+    await verifyVersions(root, '1.0.0');
     await assert.rejects(validateRelease(root, '1.0.0'), /必须高于/);
     await assert.rejects(validateRelease(root, '1.0.2'));
     await writeFile(path.join(root, 'untracked.txt'), '用户文件');
@@ -152,6 +157,17 @@ test('缺少版本说明、预览版本与不干净工作区在写入前拒绝',
   } finally {
     await cleanup();
   }
+});
+
+test('按数字比较三段版本，只在相同版本恢复时允许相等', () => {
+  for (const target of ['1.3.9', '1.4.0', '1.10.0', '2.0.0'])
+    assert.doesNotThrow(() => assertVersionAdvance('1.3.8', target));
+  for (const target of ['1.03.9', '1.3.09', '1.3.9\n', '1.3.9+build'])
+    assert.throws(() => assertVersionAdvance('1.3.8', target), /正式版本/);
+  for (const target of ['1.4.8', '2.1.0'])
+    assert.throws(() => assertVersionAdvance('1.3.8', target), /须归零/);
+  assert.doesNotThrow(() => assertVersionAdvance('1.3.8', '1.3.8', { allowSame: true }));
+  assert.throws(() => assertVersionAdvance('1.3.8', '1.3.7', { allowSame: true }), /必须高于/);
 });
 
 test('质量门禁失败保留版本差异供检查，不创建提交、标签或远端修改', async () => {

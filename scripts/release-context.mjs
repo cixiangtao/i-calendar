@@ -4,13 +4,14 @@ import { appendFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { parseStableVersion } from './release-semver.mjs';
 import { root, updateConfiguration } from './update-release.mjs';
 
 const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
 
 /** 稳定版本、标签和目标仓库必须完全对应，避免普通分支或旧预览误发布。 */
 export function releaseMetadata(version, tag, repository, config) {
-  assert.match(version, /^[1-9]\d*\.\d+\.\d+$/, '只允许发布 1.0.0 起的正式版本');
+  parseStableVersion(version);
   assert.equal(tag, `v${version}`, '标签与应用版本不一致');
   assert.equal(repository, config.repository, '发布仓库不一致');
   const updater = updateConfiguration({

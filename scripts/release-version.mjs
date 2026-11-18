@@ -4,6 +4,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { assertVersionAdvance, parseStableVersion } from './release-semver.mjs';
+
 const jsonFiles = [
   'package.json',
   'packages/calendar-core/package.json',
@@ -26,14 +28,9 @@ const git = (root, ...args) =>
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim();
 
-function stableVersion(version) {
-  assert.match(version, /^[1-9]\d*\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/, '只允许 1.0.0 起的正式版本');
-  return version.split('.').map(BigInt);
-}
-
 /** 发布前后统一核对所有版本位置；不将 Cargo.lock 当普通文本替换。 */
 export async function verifyVersions(root, expected) {
-  stableVersion(expected);
+  parseStableVersion(expected);
   for (const file of jsonFiles)
     assert.equal(JSON.parse(await read(root, file)).version, expected, `${file} 版本不一致`);
   const cargo = await read(root, cargoFile);
@@ -70,11 +67,8 @@ export async function guardRelease(root = process.cwd()) {
 
 /** 在任何版本写入前拒绝旧版本、预览版、缺失说明和落后于远端的分支。 */
 export async function validateRelease(root, version) {
-  const next = stableVersion(version);
   const current = JSON.parse(await read(root, 'package.json')).version;
-  const previous = stableVersion(current);
-  const differing = next.findIndex((part, index) => part !== previous[index]);
-  assert.ok(differing >= 0 && next[differing] > previous[differing], '新版本必须高于当前版本');
+  assertVersionAdvance(current, version);
   await verifyVersions(root, current);
   git(root, 'merge-base', '--is-ancestor', 'origin/main', 'HEAD');
   git(root, 'merge-base', '--is-ancestor', `refs/tags/v${current}`, 'origin/main');
@@ -92,8 +86,8 @@ export async function validateRelease(root, version) {
 
 /** 一个版本拥有者：JSON 清单、Cargo 和当前版本文档一起同步。 */
 export async function syncVersions(root, version) {
-  stableVersion(version);
   const { version: current } = JSON.parse(await read(root, 'package.json'));
+  assertVersionAdvance(current, version);
   await verifyVersions(root, current);
   const changes = [];
   for (const file of jsonFiles) {

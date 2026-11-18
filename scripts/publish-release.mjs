@@ -8,6 +8,7 @@ import { promisify } from 'node:util';
 
 import { createDraftRelease, preparePublication, selectRelease } from './github-release.mjs';
 import { releaseMetadata } from './release-context.mjs';
+import { assertVersionAdvance } from './release-semver.mjs';
 
 // 本地只能准备和验证；真正的发布由唯一 Actions 工作流执行。
 assert.equal(process.env.GITHUB_ACTIONS, 'true', '正式发布只允许在 GitHub Actions 执行');
@@ -34,14 +35,7 @@ const commit = process.env.RELEASE_COMMIT;
 assert.match(commit ?? '', /^[a-f0-9]{40}$/);
 assert.equal((await api(`repos/${repository}/commits/${tag}`)).sha, commit, '远程标签已变化');
 const latest = await lookup(`repos/${repository}/releases/latest`);
-if (latest) {
-  const previous = latest.tag_name.replace(/^v/, '').split('.').map(Number);
-  const current = version.split('.').map(Number);
-  for (let i = 0; i < 3; i++) {
-    assert.ok(previous[i] <= current[i], '禁止旧版本覆盖最新发布');
-    if (previous[i] < current[i]) break;
-  }
-}
+if (latest) assertVersionAdvance(latest.tag_name.replace(/^v/, ''), version, { allowSame: true });
 const folder = path.resolve(process.env.ASSET_DIRECTORY ?? 'release-assets');
 const payloads = await preparePublication(folder, version, repository);
 const digest = async (file) =>

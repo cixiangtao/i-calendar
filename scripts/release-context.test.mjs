@@ -13,6 +13,9 @@ test('发布入口只接受正式版本及匹配的仓库和标签', () => {
   for (const [version, tag, repository] of [
     ['0.1.0', 'v0.1.0', config.repository],
     ['1.0.0-rc.1', 'v1.0.0-rc.1', config.repository],
+    ['1.01.0', 'v1.01.0', config.repository],
+    ['1.0.01', 'v1.0.01', config.repository],
+    ['1.0.0+build', 'v1.0.0+build', config.repository],
     ['1.0.0', 'main', config.repository],
     ['1.0.0', 'v1.0.1', config.repository],
     ['1.0.0', 'v1.0.0', 'someone/another-repo'],
