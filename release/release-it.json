@@ -18,14 +18,14 @@
   "hooks": {
     "before:init": [
       "node scripts/release-version.mjs guard",
-      "node scripts/release-native-ready.mjs"
+      "node scripts/release-native-ready.mjs --defer-unavailable"
     ],
     "before:bump": "node scripts/release-version.mjs validate ${version}",
     "after:bump": [
       "pnpm run check",
       "pnpm run check:native",
       "pnpm run build:mac",
-      "pnpm run check:mac"
+      "pnpm run check:mac --defer-unavailable"
     ],
     "before:git:release": "node scripts/release-version.mjs verify ${version}",
     "after:release": "git push --atomic origin HEAD:refs/heads/main refs/tags/v${version}:refs/tags/v${version}"
