@@ -2,6 +2,7 @@ export { CalendarButton } from './CalendarButton.js';
 export type { CalendarButtonProps } from './CalendarButton.js';
 export { CalendarApp } from './CalendarApp.js';
 export { CalendarSelect } from './CalendarSelect.js';
+export { CalendarSlider } from './CalendarSlider.js';
 export type { CalendarSelectOption, CalendarSelectProps } from './CalendarSelect.js';
 export { CalendarController, parseSavedState } from './store.js';
 export { bindPageLifecycle } from './page-lifecycle.js';

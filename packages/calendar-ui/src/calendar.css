@@ -163,6 +163,49 @@ a:focus-visible {
 .clock-format-error:empty {
   display: none;
 }
+.calendar-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  --slider-track: linear-gradient(
+    to right,
+    var(--blue) 0 var(--slider-progress),
+    var(--control-active) var(--slider-progress) 100%
+  );
+}
+.calendar-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--slider-track);
+}
+.calendar-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--slider-track);
+}
+.calendar-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  margin-top: -5.5px;
+  border: 2px solid var(--blue);
+  border-radius: 50%;
+  background: var(--surface);
+}
+.calendar-slider::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--blue);
+  border-radius: 50%;
+  background: var(--surface);
+}
+.calendar-slider:focus-visible {
+  outline: 1px solid var(--secondary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 .month-panel[data-theme-backdrop='true'] {
   isolation: isolate;
 }

@@ -6,7 +6,12 @@ import postcss from 'postcss';
 
 import { calendarThemeDefaults } from '../../../scripts/theme-css.js';
 import { contrastRatio, deriveColorTokens, resolveThemeTokens } from '../src/color-theme.js';
-import { formatThemeColor, normalizeThemeColor, parseThemeColor } from '../src/theme-color.js';
+import {
+  formatThemeColorField,
+  normalizeThemeColor,
+  normalizeThemeColorField,
+  parseThemeColor,
+} from '../src/theme-color.js';
 import { activeTheme, migrateThemeLibrary } from '../src/theme-library.js';
 import { builtInThemes, parseThemePackage } from '../src/theme-package.js';
 
@@ -46,8 +51,6 @@ test('多种颜色格式归一化并保留 Alpha，派生文字以实际实色�
     'hsla(210, 25%, 73.333333%, .53333333)',
   ])
     assert.equal(normalizeThemeColor(value, true), 'rgba(170, 187, 204, 0.533333)');
-  const opaque = parseThemeColor('#6e812c')!;
-  assert.deepEqual(parseThemeColor(formatThemeColor(opaque, 'hsl')), opaque);
   assert.equal(normalizeThemeColor('rgba(170, 187, 204, .5)', false), null);
   for (const invalid of [
     '#aabbc',
@@ -77,6 +80,19 @@ test('多种颜色格式归一化并保留 Alpha，派生文字以实际实色�
   assert.equal(dark['--surface'], '#0c0e12');
   for (const tokens of [light, dark])
     assert.ok(contrastRatio(tokens['--lunar-ink'], tokens['--surface']) >= 4.5);
+});
+
+test('RGBA 编辑栏紧凑显示四通道，粘贴或编辑后仍保留 Alpha 精度', () => {
+  const stored = 'rgba(247, 250, 248, 0.713497)';
+  const color = parseThemeColor(stored)!;
+  assert.equal(formatThemeColorField(color, 'hex'), '#f7faf8b6');
+  const compact = formatThemeColorField(color, 'rgba');
+  assert.equal(compact, '247,250,248,0.713497');
+  assert.equal(normalizeThemeColorField(compact, true), stored);
+  assert.equal(normalizeThemeColorField(stored, true), stored);
+  assert.equal(normalizeThemeColorField('hsl(120, 100%, 50%)', false), '#00ff00');
+  assert.equal(normalizeThemeColorField('37,105,89,1', false), '#256959');
+  assert.equal(normalizeThemeColorField('37,105,89,', true), null);
 });
 
 test('带图主题包往返保留图片与裁切，拒绝外链、无效图像和越界参数', async () => {

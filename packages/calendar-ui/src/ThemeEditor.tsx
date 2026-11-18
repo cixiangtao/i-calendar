@@ -5,11 +5,13 @@ import { CalendarColorInput } from './CalendarColorInput.js';
 import { CalendarInput } from './CalendarInput.js';
 import { CalendarSegmented } from './CalendarSegmented.js';
 import { CalendarSelect } from './CalendarSelect.js';
+import { CalendarSlider } from './CalendarSlider.js';
 import type { CalendarPlatform } from './platform.js';
 import type { CalendarSnapshot } from './store.js';
 import {
   formatThemeColor,
-  normalizeThemeColor,
+  formatThemeColorField,
+  normalizeThemeColorField,
   parseThemeColor,
   type ThemeColorFormat,
 } from './theme-color.js';
@@ -24,8 +26,7 @@ const appearanceOptions = [
 ] as const;
 const colorFormatOptions = [
   { label: 'HEX', value: 'hex' },
-  { label: 'RGB(A)', value: 'rgb' },
-  { label: 'HSL(A)', value: 'hsl' },
+  { label: 'RGBA', value: 'rgba' },
 ] as const;
 const easyColors = [
   { key: 'canvas', label: '页面背景' },
@@ -43,34 +44,6 @@ type Mode = 'light' | 'dark';
 type ColorKey = keyof ThemePalette;
 const supportsAlpha = (key: ColorKey) => key === 'canvas' || key === 'surface';
 type TextInputs = Partial<Record<Mode, Partial<Record<ColorKey, string>>>>;
-
-function ThemeRange({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <label className="tw-grid tw-gap-0.5 tw-text-xs tw-text-secondary">
-      <span className="tw-flex tw-justify-between tw-gap-2">
-        {label}
-        <span className="tw-tabular-nums">{value}%</span>
-      </span>
-      <input
-        type="range"
-        aria-label={label}
-        className="tw-m-0 tw-h-6 tw-w-full tw-accent-action coarse:tw-h-11"
-        min={0}
-        max={100}
-        value={value}
-        onChange={(event) => onChange(event.currentTarget.valueAsNumber)}
-      />
-    </label>
-  );
-}
 
 /** 在本地草稿中编辑主题，保存前只改变预览。 */
 export function ThemeEditor({
@@ -108,7 +81,7 @@ export function ThemeEditor({
     const palette = { ...draft.palettes[mode] };
     for (const [name, text] of Object.entries(colors)) {
       const key = name as ColorKey;
-      const color = normalizeThemeColor(text, supportsAlpha(key));
+      const color = text === undefined ? null : normalizeThemeColorField(text, supportsAlpha(key));
       if (color !== null) palette[key] = color;
     }
     return { ...draft, palettes: { ...draft.palettes, [mode]: palette } };
@@ -116,7 +89,8 @@ export function ThemeEditor({
   const invalid = (['light', 'dark'] as const).some((look) =>
     Object.entries(inputs[look] ?? {}).some(
       ([key, value]) =>
-        value !== undefined && normalizeThemeColor(value, supportsAlpha(key as ColorKey)) === null,
+        value !== undefined &&
+        normalizeThemeColorField(value, supportsAlpha(key as ColorKey)) === null,
     ),
   );
   function updateColor(key: ColorKey, value: string) {
@@ -130,38 +104,26 @@ export function ThemeEditor({
   }
   function colorRow({ key, label }: { key: ColorKey; label: string }) {
     const color = parseThemeColor(previewTheme.palettes[mode][key])!;
-    const value = inputs[mode]?.[key] ?? formatThemeColor(color, format);
+    const value = inputs[mode]?.[key] ?? formatThemeColorField(color, format);
     const isInvalid =
-      inputs[mode]?.[key] !== undefined && normalizeThemeColor(value, supportsAlpha(key)) === null;
+      inputs[mode]?.[key] !== undefined &&
+      normalizeThemeColorField(value, supportsAlpha(key)) === null;
     return (
       <div
         key={key}
         className="tw-grid tw-gap-0.5"
       >
-        <div
-          className={
-            'tw-grid tw-min-h-8 tw-grid-cols-[5rem_minmax(0,_1fr)_auto] tw-items-center tw-gap-x-1.5 coarse:tw-min-h-11' +
-            (format !== 'hex' ? ' compact:tw-grid-cols-[minmax(0,_1fr)_auto]' : '')
-          }
-        >
+        <div className="tw-grid tw-min-h-8 tw-grid-cols-[4.5rem_minmax(0,_1fr)_auto] tw-items-center tw-gap-x-1.5 coarse:tw-min-h-11">
           <label
             htmlFor={id + key}
-            className={
-              'tw-text-xs tw-font-medium' +
-              (format !== 'hex' ? ' compact:tw-col-start-1 compact:tw-row-start-1' : '')
-            }
+            className="tw-text-xs tw-font-medium"
           >
             {label}
           </label>
-          <div
-            className={
-              'tw-flex tw-min-w-0' +
-              (format !== 'hex' ? ' compact:tw-col-span-2 compact:tw-row-start-2' : '')
-            }
-          >
+          <div className="tw-flex tw-min-w-0">
             <CalendarInput
               id={id + key}
-              className={'tw-tabular-nums' + (format !== 'hex' ? ' compact:tw-text-xs' : '')}
+              className="tw-tabular-nums"
               spellCheck={false}
               autoComplete="off"
               value={value}
@@ -175,7 +137,7 @@ export function ThemeEditor({
               }}
               onBlur={() => {
                 if (inputs[mode]?.[key] === undefined) return;
-                const normalized = normalizeThemeColor(value, supportsAlpha(key));
+                const normalized = normalizeThemeColorField(value, supportsAlpha(key));
                 if (normalized !== null) {
                   updateColor(key, normalized);
                   discardInput(key);
@@ -193,11 +155,7 @@ export function ThemeEditor({
               }}
             />
           </div>
-          <div
-            className={
-              'tw-flex' + (format !== 'hex' ? ' compact:tw-col-start-2 compact:tw-row-start-1' : '')
-            }
-          >
+          <div className="tw-flex">
             <CalendarColorInput
               aria-label={label + '取色'}
               value={formatThemeColor({ ...color, alpha: 1 }, 'hex')}
@@ -209,7 +167,7 @@ export function ThemeEditor({
                   const opacity = color.alpha;
                   updateColor(
                     key,
-                    formatThemeColor({ ...picked, alpha: opacity }, opacity === 1 ? 'hex' : 'rgb'),
+                    formatThemeColor({ ...picked, alpha: opacity }, opacity === 1 ? 'hex' : 'rgba'),
                   );
                   discardInput(key);
                 }
@@ -223,7 +181,7 @@ export function ThemeEditor({
             className="!tw-m-0 tw-text-xs !tw-text-red"
           >
             {supportsAlpha(key)
-              ? '请输入 HEX、RGB(A) 或 HSL(A) 色值。'
+              ? '请输入 HEX 或 RGBA 色值。'
               : '请输入有效的实色，透明度需为 100%。'}
           </p>
         ) : null}
@@ -353,7 +311,7 @@ export function ThemeEditor({
         ) : null}
         {background ? (
           <>
-            <ThemeRange
+            <CalendarSlider
               label="图片强度"
               value={background.strength}
               onChange={(strength) => updateBackground({ strength })}
@@ -363,12 +321,12 @@ export function ThemeEditor({
                 调整裁切
               </summary>
               <div className="tw-grid tw-grid-cols-2 tw-gap-3">
-                <ThemeRange
+                <CalendarSlider
                   label="水平位置"
                   value={background.x}
                   onChange={(x) => updateBackground({ x })}
                 />
-                <ThemeRange
+                <CalendarSlider
                   label="垂直位置"
                   value={background.y}
                   onChange={(y) => updateBackground({ y })}

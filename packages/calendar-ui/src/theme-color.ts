@@ -1,4 +1,4 @@
-export type ThemeColorFormat = 'hex' | 'rgb' | 'hsl';
+export type ThemeColorFormat = 'hex' | 'rgba';
 
 /** SRGB 八位通道及 0 至 1 的 Alpha；格式切换只改变显示。 */
 export interface ThemeColor {
@@ -76,7 +76,7 @@ export function parseThemeColor(value: unknown): ThemeColor | null {
   return [red, green, blue].every(Number.isFinite) ? { red, green, blue, alpha } : null;
 }
 
-const decimal = (value: number, digits = 6) => Number(value.toFixed(digits));
+const decimal = (value: number) => Number(value.toFixed(6));
 
 /** 用户可切换输入表示，存储始终调用 normalizeThemeColor。 */
 export function formatThemeColor(color: ThemeColor, format: ThemeColorFormat): string {
@@ -85,27 +85,23 @@ export function formatThemeColor(color: ThemeColor, format: ThemeColorFormat): s
     const channels = alpha === 1 ? [red, green, blue] : [red, green, blue, Math.round(alpha * 255)];
     return '#' + channels.map((channel) => channel.toString(16).padStart(2, '0')).join('');
   }
-  const opacity = decimal(alpha);
-  const suffix = alpha === 1 ? ')' : ', ' + opacity + ')';
-  if (format === 'rgb') {
-    return (alpha === 1 ? 'rgb(' : 'rgba(') + [red, green, blue].join(', ') + suffix;
-  }
-  const [r = 0, g = 0, b = 0] = [red, green, blue].map((channel) => channel / 255);
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const chroma = max - min;
-  const lightness = (max + min) / 2;
-  let angle = 0;
-  let saturation = 0;
-  if (chroma) {
-    angle = max === r ? (g - b) / chroma : max === g ? 2 + (b - r) / chroma : 4 + (r - g) / chroma;
-    saturation = chroma / (1 - Math.abs(2 * lightness - 1));
-  }
-  const hue = decimal((angle * 60 + 360) % 360, 3);
-  const parts = [hue, decimal(saturation * 100, 3) + '%', decimal(lightness * 100, 3) + '%'];
-  return (
-    (alpha === 1 ? 'hsl(' : 'hsla(') + parts.join(',') + (alpha === 1 ? ')' : ',' + opacity + ')')
-  );
+  return 'rgba(' + [red, green, blue, decimal(alpha)].join(', ') + ')';
+}
+
+/** RGBA 编辑栏省去语法外壳与分隔空格，保留数值精度。 */
+export function formatThemeColorField(color: ThemeColor, format: ThemeColorFormat): string {
+  return format === 'hex'
+    ? formatThemeColor(color, format)
+    : [color.red, color.green, color.blue, decimal(color.alpha)].join(',');
+}
+
+/** 编辑栏支持简写四通道，并可将粘贴的标准色值转换到当前显示格式。 */
+export function normalizeThemeColorField(value: string, allowAlpha: boolean): string | null {
+  const input = value.trim();
+  if (input.startsWith('#') || functionPattern.test(input.toLowerCase()))
+    return normalizeThemeColor(input, allowAlpha);
+  if (input.split(',').length !== 4) return null;
+  return normalizeThemeColor('rgba(' + input + ')', allowAlpha);
 }
 
 /** 只允许背景色有 Alpha。透明度保留六位小数，实色输出六位 HEX。 */
@@ -113,7 +109,7 @@ export function normalizeThemeColor(value: unknown, allowAlpha: boolean): string
   const color = parseThemeColor(value);
   if (!color || (!allowAlpha && color.alpha !== 1)) return null;
   color.alpha = decimal(color.alpha);
-  return formatThemeColor(color, color.alpha === 1 ? 'hex' : 'rgb');
+  return formatThemeColor(color, color.alpha === 1 ? 'hex' : 'rgba');
 }
 
 /** 先合成确定的实色底，再用实际显示背景计算前景对比度。 */
