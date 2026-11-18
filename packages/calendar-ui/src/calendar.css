@@ -93,7 +93,7 @@ a:focus-visible {
   color: var(--outside-ink);
   font-weight: 400;
 }
-.day-cell.outside-month.rest-day .solar-day {
+.day-cell.outside-month:where(.rest-day) .solar-day {
   color: var(--outside-red);
 }
 .day-cell.outside-month .term-label {
@@ -102,17 +102,7 @@ a:focus-visible {
 .day-cell.outside-month .festival-label {
   color: var(--outside-purple);
 }
-.day-cell.is-today::after {
-  content: '';
-  position: absolute;
-  top: 5px;
-  left: 6px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--blue);
-}
-.day-cell.selected {
+.day-cell.selected:not(.is-today) {
   background: var(--blue-soft);
   box-shadow: inset 0 0 0 2px var(--blue);
 }
@@ -128,6 +118,13 @@ a:focus-visible {
 }
 .day-cell.selected .festival-label {
   color: var(--purple);
+}
+.day-cell.is-today {
+  background: var(--leaf);
+}
+.day-cell.is-today .solar-day,
+.day-cell.is-today .lunar-day {
+  color: var(--leaf-ink);
 }
 .day-mark.makeup {
   background: var(--yellow-soft);
