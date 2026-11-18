@@ -746,6 +746,9 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   );
 }
 
+const settingsScroll =
+  'settings-scroll tw-h-full tw-min-h-0 tw-overflow-y-auto tw-overscroll-contain tw-px-0.5 tw-py-0 [&>section:first-child]:tw-pt-2 [&>section:last-child]:tw-border-0 [&>section]:tw-border-0 [&>section]:tw-border-b [&>section]:tw-border-solid [&>section]:tw-border-line [&>section]:tw-px-0 [&>section]:tw-py-[18px] [&_.clock-format-error]:tw-mx-0 [&_.clock-format-error]:tw-mb-2 [&_.clock-format-error]:tw-mt-0 [&_.clock-format-error]:tw-block [&_.clock-format-error]:tw-text-[length:12px] [&_.clock-format-error]:tw-leading-[1.8] [&_.clock-format-error]:tw-text-red [&_.clock-help]:tw-text-[length:11px] [&_.setting-hint]:tw-text-[length:11px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-[13px] [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[20px] [&_p]:tw-mx-0 [&_p]:tw-mb-2 [&_p]:tw-mt-0 [&_p]:tw-text-[length:12px] [&_p]:tw-leading-[1.8] [&_p]:tw-text-[var(--hint-ink)]';
+
 function Settings({
   controller,
   state,
@@ -802,14 +805,10 @@ function Settings({
             key: 'general',
             label: '常规',
             children: (
-              <div className="settings-scroll tw-h-full tw-min-h-0 tw-overflow-y-auto tw-overscroll-contain tw-px-0.5 tw-py-0 [&>section:first-child]:tw-pt-2 [&>section:last-child]:tw-border-0 [&>section]:tw-border-0 [&>section]:tw-border-b [&>section]:tw-border-solid [&>section]:tw-border-line [&>section]:tw-px-0 [&>section]:tw-py-[18px] [&_.clock-format-error]:tw-mx-0 [&_.clock-format-error]:tw-mb-2 [&_.clock-format-error]:tw-mt-0 [&_.clock-format-error]:tw-block [&_.clock-format-error]:tw-text-[length:12px] [&_.clock-format-error]:tw-leading-[1.8] [&_.clock-format-error]:tw-text-red [&_.clock-help]:tw-text-[length:11px] [&_.setting-hint]:tw-text-[length:11px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-[13px] [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[20px] [&_p]:tw-mx-0 [&_p]:tw-mb-2 [&_p]:tw-mt-0 [&_p]:tw-text-[length:12px] [&_p]:tw-leading-[1.8] [&_p]:tw-text-[var(--hint-ink)]">
+              <div className={settingsScroll}>
                 {controller.platform.kind === 'macos' ? (
                   <LaunchAtLoginSettings controller={controller.launchAtLogin} />
                 ) : null}
-                <SunlightSettings
-                  controller={controller}
-                  state={state}
-                />
                 <section>
                   <h2>日历显示</h2>
                   <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">
@@ -840,10 +839,20 @@ function Settings({
                       }}
                     />
                   </div>
+                </section>
+              </div>
+            ),
+          },
+          {
+            key: 'appearance',
+            label: '外观',
+            children: (
+              <div className={settingsScroll}>
+                <section>
                   <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">
-                    <span>外观</span>
+                    <h2 className="!tw-mb-0">明暗模式</h2>
                     <CalendarSegmented
-                      aria-label="外观"
+                      aria-label="明暗模式"
                       options={[
                         { label: '跟随系统', value: 'system' },
                         { label: '浅色', value: 'light' },
@@ -933,13 +942,25 @@ function Settings({
               </div>
             ),
           },
+          {
+            key: 'sunlight',
+            label: '日出日落',
+            children: (
+              <div className={settingsScroll}>
+                <SunlightSettings
+                  controller={controller}
+                  state={state}
+                />
+              </div>
+            ),
+          },
           ...(controller.platform.kind === 'macos'
             ? [
                 {
                   key: 'menu-bar',
                   label: '菜单栏',
                   children: (
-                    <div className="settings-scroll tw-h-full tw-min-h-0 tw-overflow-y-auto tw-overscroll-contain tw-px-0.5 tw-py-0 [&>section:first-child]:tw-pt-2 [&>section:last-child]:tw-border-0 [&>section]:tw-border-0 [&>section]:tw-border-b [&>section]:tw-border-solid [&>section]:tw-border-line [&>section]:tw-px-0 [&>section]:tw-py-[18px] [&_.clock-format-error]:tw-mx-0 [&_.clock-format-error]:tw-mb-2 [&_.clock-format-error]:tw-mt-0 [&_.clock-format-error]:tw-block [&_.clock-format-error]:tw-text-[length:12px] [&_.clock-format-error]:tw-leading-[1.8] [&_.clock-format-error]:tw-text-red [&_.clock-help]:tw-text-[length:11px] [&_.setting-hint]:tw-text-[length:11px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-[13px] [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[20px] [&_p]:tw-mx-0 [&_p]:tw-mb-2 [&_p]:tw-mt-0 [&_p]:tw-text-[length:12px] [&_p]:tw-leading-[1.8] [&_p]:tw-text-[var(--hint-ink)]">
+                    <div className={settingsScroll}>
                       <MenuClockSettings
                         settings={state.preferences.menuClock}
                         onChange={(menuClock) => {
@@ -955,7 +976,7 @@ function Settings({
             key: 'data',
             label: '数据',
             children: (
-              <div className="settings-scroll tw-h-full tw-min-h-0 tw-overflow-y-auto tw-overscroll-contain tw-px-0.5 tw-py-0 [&>section:first-child]:tw-pt-2 [&>section:last-child]:tw-border-0 [&>section]:tw-border-0 [&>section]:tw-border-b [&>section]:tw-border-solid [&>section]:tw-border-line [&>section]:tw-px-0 [&>section]:tw-py-[18px] [&_.clock-format-error]:tw-mx-0 [&_.clock-format-error]:tw-mb-2 [&_.clock-format-error]:tw-mt-0 [&_.clock-format-error]:tw-block [&_.clock-format-error]:tw-text-[length:12px] [&_.clock-format-error]:tw-leading-[1.8] [&_.clock-format-error]:tw-text-red [&_.clock-help]:tw-text-[length:11px] [&_.setting-hint]:tw-text-[length:11px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-[13px] [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[20px] [&_p]:tw-mx-0 [&_p]:tw-mb-2 [&_p]:tw-mt-0 [&_p]:tw-text-[length:12px] [&_p]:tw-leading-[1.8] [&_p]:tw-text-[var(--hint-ink)]">
+              <div className={settingsScroll}>
                 <section>
                   <h2>放假与调休</h2>
                   <p>已收录：{state.years.join('、')}年</p>
@@ -1000,7 +1021,7 @@ function Settings({
             key: 'about',
             label: '关于',
             children: (
-              <div className="settings-scroll tw-h-full tw-min-h-0 tw-overflow-y-auto tw-overscroll-contain tw-px-0.5 tw-py-0 [&>section:first-child]:tw-pt-2 [&>section:last-child]:tw-border-0 [&>section]:tw-border-0 [&>section]:tw-border-b [&>section]:tw-border-solid [&>section]:tw-border-line [&>section]:tw-px-0 [&>section]:tw-py-[18px] [&_.clock-format-error]:tw-mx-0 [&_.clock-format-error]:tw-mb-2 [&_.clock-format-error]:tw-mt-0 [&_.clock-format-error]:tw-block [&_.clock-format-error]:tw-text-[length:12px] [&_.clock-format-error]:tw-leading-[1.8] [&_.clock-format-error]:tw-text-red [&_.clock-help]:tw-text-[length:11px] [&_.setting-hint]:tw-text-[length:11px] [&_h2]:tw-mx-0 [&_h2]:tw-mb-[13px] [&_h2]:tw-mt-0 [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[20px] [&_p]:tw-mx-0 [&_p]:tw-mb-2 [&_p]:tw-mt-0 [&_p]:tw-text-[length:12px] [&_p]:tw-leading-[1.8] [&_p]:tw-text-[var(--hint-ink)]">
+              <div className={settingsScroll}>
                 <section>
                   <h2>i日历</h2>
                   <p>版本 {appVersion}</p>

@@ -53,7 +53,7 @@ export function CalendarTabs({ defaultValue, items, className }: CalendarTabsPro
       <Tabs.List
         ref={listRef}
         aria-label="设置分类"
-        className="tw-relative tw-mb-2 tw-flex tw-shrink-0 tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-line"
+        className="tw-relative tw-mb-2 tw-flex tw-shrink-0 tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-line compact:tw-justify-between compact:tw-gap-0"
         onPointerDownCapture={() => setPointerFocus(true)}
         onKeyDownCapture={() => setPointerFocus(false)}
         onBlurCapture={(event) => {
