@@ -23,6 +23,7 @@ export function CalendarButton({
   onPointerDown,
   ...props
 }: CalendarButtonProps) {
+  const busy = loading || props['aria-busy'] === true || props['aria-busy'] === 'true';
   const [hovered, setHovered] = useState(false);
   useEffect(() => {
     if (!hovered) return;
@@ -35,14 +36,15 @@ export function CalendarButton({
       {...props}
       type={type}
       disabled={disabled || loading}
-      aria-busy={loading || undefined}
+      aria-busy={busy || undefined}
       aria-label={
         props['aria-label'] ?? (loading && typeof children === 'string' ? children : undefined)
       }
       data-appearance={appearance}
       data-hovered={hovered && !disabled && !loading ? 'true' : undefined}
       className={cn(
-        'calendar-button tw-relative tw-isolate tw-inline-flex tw-shrink-0 tw-items-center tw-justify-center tw-gap-2 tw-whitespace-nowrap tw-rounded-[var(--form-radius)] tw-border tw-border-solid tw-border-transparent tw-bg-transparent tw-px-[var(--form-inset)] tw-py-0 tw-font-sans tw-text-[length:var(--form-font-size)] tw-font-medium tw-leading-[var(--form-line-height)] tw-shadow-none tw-outline-none tw-transition-colors tw-duration-[var(--motion-feedback)] tw-ease-[var(--motion-ease)] disabled:tw-cursor-default disabled:tw-text-muted disabled:tw-opacity-50',
+        'calendar-button tw-relative tw-isolate tw-inline-flex tw-shrink-0 tw-items-center tw-justify-center tw-gap-2 tw-whitespace-nowrap tw-rounded-[var(--form-radius)] tw-border tw-border-solid tw-border-transparent tw-bg-transparent tw-px-[var(--form-inset)] tw-py-0 tw-font-sans tw-text-[length:var(--form-font-size)] tw-font-medium tw-leading-[var(--form-line-height)] tw-shadow-none tw-outline-none tw-transition-colors tw-duration-[var(--motion-feedback)] tw-ease-[var(--motion-ease)] disabled:tw-cursor-default disabled:tw-opacity-100',
+        appearance !== 'primary' && 'disabled:tw-text-muted',
         "before:tw-pointer-events-none before:tw-absolute before:tw-left-1/2 before:tw-top-1/2 before:tw-z-[-1] before:tw-w-[var(--button-width,calc(100%+2px))] before:-tw-translate-x-1/2 before:-tw-translate-y-1/2 before:tw-rounded-[inherit] before:tw-border before:tw-border-solid before:tw-transition-colors before:tw-duration-[var(--motion-feedback)] before:tw-ease-[var(--motion-ease)] before:tw-content-['']",
         'focus-visible:before:tw-outline focus-visible:before:tw-outline-1 focus-visible:before:tw-outline-offset-2',
         appearance === 'primary'
@@ -50,6 +52,10 @@ export function CalendarButton({
           : appearance === 'danger'
             ? 'tw-text-red before:tw-border-transparent before:tw-bg-transparent focus-visible:before:tw-outline-red enabled:active:before:tw-border-red enabled:active:before:tw-bg-red-soft data-[hovered=true]:before:tw-bg-red-soft'
             : 'focus-visible:before:tw-outline-secondary enabled:active:before:tw-bg-control-active data-[hovered=true]:before:tw-bg-control-hover',
+        appearance === 'primary' &&
+          (busy
+            ? 'disabled:tw-text-[var(--leaf-ink)]'
+            : 'disabled:tw-text-secondary disabled:before:tw-bg-control'),
         appearance !== 'choice' && 'tw-h-[var(--form-height)] before:tw-h-[var(--form-height)]',
         appearance !== 'choice' &&
           "coarse:after:tw-absolute coarse:after:tw-left-1/2 coarse:after:tw-top-1/2 coarse:after:tw-h-11 coarse:after:tw-w-[max(100%,44px)] coarse:after:-tw-translate-x-1/2 coarse:after:-tw-translate-y-1/2 coarse:after:tw-content-['']",
@@ -62,10 +68,10 @@ export function CalendarButton({
         appearance === 'toolbar' &&
           'tw-w-[var(--form-height)] tw-p-0 before:tw-w-[var(--form-height)]',
         appearance === 'accent' &&
-          'tw-min-w-11 tw-text-action before:tw-w-11 before:tw-border-transparent before:tw-bg-action-soft',
+          'tw-min-w-11 tw-text-action before:tw-w-11 before:tw-border-transparent before:tw-bg-action-soft disabled:before:tw-bg-control',
         appearance === 'choice' &&
           'tw-h-auto tw-flex-col tw-text-ink before:tw-h-[calc(100%+2px)] before:tw-border-line before:tw-bg-surface aria-pressed:before:tw-border-action aria-pressed:before:tw-shadow-[inset_0_0_0_1px_var(--blue)]',
-        loading && 'tw-cursor-progress',
+        busy && 'tw-cursor-progress disabled:tw-cursor-progress',
         className,
       )}
       onPointerEnter={(event) => {

@@ -9,7 +9,7 @@ import {
   type PropsWithChildren,
 } from 'react';
 
-import { CalendarButton } from './CalendarButton.js';
+import { CalendarButton, Spinner } from './CalendarButton.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 
 const PlaceSearch = lazy(() => import('./SunlightPlaceSearch.js'));
@@ -125,6 +125,8 @@ export function SunlightSettings({
           <CalendarButton
             appearance="primary"
             disabled={state.sunlightLocation.pending}
+            aria-busy={state.sunlightLocation.pending}
+            icon={state.sunlightLocation.pending ? <Spinner /> : undefined}
             onClick={() => {
               void controller.locateSunlight();
             }}
@@ -140,10 +142,15 @@ export function SunlightSettings({
                     : '使用当前位置'}
           </CalendarButton>
         ) : null}
-        {controller.platform.openLocationSettings &&
-        ['permission-denied', 'services-disabled'].includes(state.sunlightLocation.issue ?? '') ? (
+        {state.sunlightLocation.pending ? (
+          <CalendarButton onClick={() => controller.cancelSunlightLocation()}>
+            取消定位
+          </CalendarButton>
+        ) : null}
+        {controller.platform.openLocationSettings ? (
           <CalendarButton
             onClick={() => {
+              controller.cancelSunlightLocation();
               void controller.platform
                 .openLocationSettings?.()
                 .catch(() =>
@@ -192,7 +199,7 @@ export function SunlightSettings({
       ) : null}
       {state.sunlightLocation.pending ? (
         <output className="tw-mb-2 tw-block tw-text-[12px] tw-leading-[1.8] tw-text-secondary">
-          首次使用会请求系统或浏览器授权，允许后自动获取位置；也可以直接选择城市。
+          正在等待定位，可取消或手动选择城市；未出现授权提示时请检查定位权限。
         </output>
       ) : null}
       {state.preferences.sunlight.mode === 'automatic' && state.sunlightLocation.error ? (

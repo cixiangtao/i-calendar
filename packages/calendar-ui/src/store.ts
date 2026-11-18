@@ -440,6 +440,14 @@ export class CalendarController {
     return this.setPreferences({ sunlight: { mode: 'manual', manualLocation: place } });
   }
 
+  /** 取消等待立即恢复操作，迟到的位置不能覆盖后续请求或手动选择。 */
+  cancelSunlightLocation() {
+    this.locationAbort?.abort();
+    this.locationAbort = undefined;
+    if (this.snapshot.sunlightLocation.pending)
+      this.patch({ sunlightLocation: { pending: false, point: null, error: null } });
+  }
+
   /** 用户启用后仅在前台有界刷新；拒绝或失败后本次会话只允许主动重试。 */
   async locateSunlight(automatic = false) {
     if (this.disposed || !this.snapshot.ready || !this.platform.locate) return;

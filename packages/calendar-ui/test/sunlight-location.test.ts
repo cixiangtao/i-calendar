@@ -157,6 +157,30 @@ test('手动切换中止定位，迟到回调不能覆盖用户选择', async ()
   assert.equal(controller.getSnapshot().sunlightLocation.point, null);
 });
 
+test('主动取消立即恢复操作，旧结果不覆盖随后发起的定位', async () => {
+  const complete: ((point: LocatedPoint) => void)[] = [];
+  const signals: AbortSignal[] = [];
+  const { controller } = fixture((signal) => {
+    signals.push(signal);
+    return new Promise((resolve) => complete.push(resolve));
+  });
+  await controller.initialize();
+  const first = controller.locateSunlight();
+  assert.equal(controller.getSnapshot().sunlightLocation.pending, true);
+  controller.cancelSunlightLocation();
+  assert.equal(signals[0]?.aborted, true);
+  assert.equal(controller.getSnapshot().sunlightLocation.pending, false);
+  const second = controller.locateSunlight();
+  complete[0]!(fix());
+  await first;
+  assert.equal(controller.getSnapshot().sunlightLocation.pending, true);
+  assert.equal(controller.getSnapshot().sunlightLocation.point, null);
+  complete[1]!({ ...fix(), accuracy: 50 });
+  await second;
+  assert.equal(controller.getSnapshot().sunlightLocation.point?.accuracy, 50);
+  assert.equal(controller.getSnapshot().sunlightLocation.pending, false);
+});
+
 test('并发点击只启动一个请求，关闭会取消，销毁后回调不更新', async () => {
   let requests = 0;
   let complete!: (point: LocatedPoint) => void;

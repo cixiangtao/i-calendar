@@ -4,7 +4,21 @@ import { createElement } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
+import { CalendarButton } from '../../../packages/calendar-ui/src/CalendarButton.js';
+import {
+  colorThemes,
+  contrastRatio,
+  resolveColorTheme,
+} from '../../../packages/calendar-ui/src/color-theme.js';
 import { SunlightSummary } from '../../../packages/calendar-ui/src/Sunlight.js';
+
+const hex = (value: string) =>
+  '#' +
+  value
+    .match(/\d+/g)!
+    .slice(0, 3)
+    .map((number) => Number(number).toString(16).padStart(2, '0'))
+    .join('');
 
 /** 真实 WKWebView 验证计算、日期切换与 IPC 隔离，不申请真实权限或保存位置。 */
 export async function verifySunlight(platform: CalendarPlatform) {
@@ -15,6 +29,9 @@ export async function verifySunlight(platform: CalendarPlatform) {
     locate: undefined,
   });
   const container = document.createElement('div');
+  container.setAttribute('aria-hidden', 'true');
+  container.style.cssText = 'position:fixed;left:-10000px;top:0;--motion-feedback:0ms';
+  document.body.append(container);
   const root = createRoot(container);
   try {
     await controller.initialize();
@@ -61,9 +78,45 @@ export async function verifySunlight(platform: CalendarPlatform) {
     )
       throw new Error('隔离冒烟不应联网解析地名');
     await invoke('cancel_sunlight_location', { requestId: 999 });
+    for (const theme of colorThemes) {
+      for (const dark of [false, true]) {
+        const { tokens } = resolveColorTheme({ colorTheme: theme.id, accentColor: null }, dark);
+        for (const [key, value] of Object.entries(tokens)) container.style.setProperty(key, value);
+        for (const busy of [false, true]) {
+          flushSync(() =>
+            root.render(
+              createElement(
+                CalendarButton,
+                {
+                  appearance: 'primary',
+                  disabled: true,
+                  'aria-busy': busy,
+                },
+                busy ? '正在请求定位…' : '使用当前位置',
+              ),
+            ),
+          );
+          const button = container.querySelector('button')!;
+          const style = getComputedStyle(button);
+          const background = getComputedStyle(button, '::before').backgroundColor;
+          const textFill = style.getPropertyValue('-webkit-text-fill-color');
+          const foreground = /^rgba?\(/.test(textFill) ? textFill : style.color;
+          if (style.opacity !== '1' || contrastRatio(hex(foreground), hex(background)) < 4.5)
+            throw new Error('禁用或等待中的主按钮文字对比度不足');
+        }
+      }
+    }
+    let settingsIsolated = false;
+    try {
+      await invoke('open_sunlight_settings');
+    } catch (error) {
+      settingsIsolated = String(error).includes('隔离冒烟');
+    }
+    if (!settingsIsolated) throw new Error('隔离冒烟不应打开真实定位设置');
     return true;
   } finally {
     controller.dispose();
     flushSync(() => root.unmount());
+    container.remove();
   }
 }
