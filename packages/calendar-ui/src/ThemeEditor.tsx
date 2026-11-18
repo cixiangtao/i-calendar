@@ -123,7 +123,7 @@ export function ThemeEditor({
           <div className="tw-flex tw-min-w-0">
             <CalendarInput
               id={id + key}
-              className="tw-tabular-nums"
+              className="tw-tabular-nums tiny:app:tw-px-1"
               spellCheck={false}
               autoComplete="off"
               value={value}
