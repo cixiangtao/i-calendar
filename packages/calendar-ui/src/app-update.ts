@@ -31,11 +31,28 @@ export interface AppUpdateSnapshot {
 
 const AUTOMATIC_INTERVAL = 24 * 60 * 60 * 1000;
 
-/** 检查与安装互斥，自动检查每日最多一次；安装必须由用户明确触发。 */
+const FAILED_CHECK_INTERVAL = 60 * 60 * 1000;
+
+function updateMessage(error: unknown, fallback: string) {
+  switch (error) {
+    case 'UPDATE_NETWORK':
+      return '与更新服务器的连接中断或超时，请稍后重试。';
+    case 'UPDATE_SERVER':
+      return '更新服务器暂未提供所需文件，请稍后重试。';
+    case 'UPDATE_MANIFEST':
+      return '无法读取适用于此设备的更新清单，请稍后重新检查。';
+    case 'UPDATE_SIGNATURE':
+      return '更新包未通过签名校验，请重新检查版本并下载。';
+    default:
+      return fallback;
+  }
+}
+
+/** 检查与安装互斥；安装必须由用户明确触发。 */
 export class AppUpdateController {
   private snapshot: AppUpdateSnapshot;
   private listeners = new Set<() => void>();
-  private lastAutomaticCheck = -Infinity;
+  private nextAutomaticCheck = -Infinity;
   private dismissedVersion?: string;
   private disposed = false;
 
@@ -73,21 +90,21 @@ export class AppUpdateController {
   async check(automatic = false) {
     if (!this.updater || this.disposed || this.busy()) return;
     const time = this.now().getTime();
-    if (automatic && time - this.lastAutomaticCheck < AUTOMATIC_INTERVAL) return;
-    // 失败也计入自动频率，离线时不反复请求；手动检查不受此限制。
-    this.lastAutomaticCheck = time;
+    if (automatic && time < this.nextAutomaticCheck) return;
     this.patch({ phase: 'checking', error: null, progress: null });
     try {
       const release = await this.updater.check();
       if (this.disposed) return;
+      this.nextAutomaticCheck = time + AUTOMATIC_INTERVAL;
       this.patch({
         phase: release ? 'available' : 'idle',
         release,
         checkedAt: this.now().toISOString(),
         dismissed: release?.version === this.dismissedVersion,
       });
-    } catch {
-      this.patch({ phase: 'error', error: '检查失败，仍可正常使用日历，请稍后重试。' });
+    } catch (error) {
+      this.nextAutomaticCheck = time + FAILED_CHECK_INTERVAL;
+      this.patch({ phase: 'error', error: updateMessage(error, '检查新版本失败，请稍后重试。') });
     }
   }
 
@@ -100,27 +117,28 @@ export class AppUpdateController {
     const release = this.snapshot.release;
     if (!this.updater || !release || this.disposed || this.busy()) return;
     this.patch({ phase: 'downloading', progress: null, error: null });
+    let failureMessage = '设置保存失败，请保存后重试。';
     try {
       await this.beforeInstall();
       if (this.disposed) return;
+      failureMessage = '更新包下载失败，请重新下载。';
       await this.updater.install(
         release.version,
         (progress) => {
           this.patch({ phase: progress.phase, progress });
         },
         async () => {
+          failureMessage = '设置保存失败，请保存后重试。';
           await this.beforeInstall();
           if (this.disposed) throw new Error('页面已退出');
+          failureMessage = '更新安装失败，请检查应用所在目录的写入权限后重试。';
           this.patch({ phase: 'installing' });
         },
       );
       // Mac 安装成功后由宿主重启；宿主未立即退出时保留完成提示。
       this.patch({ phase: 'installing' });
-    } catch {
-      this.patch({
-        phase: 'error',
-        error: '更新未完成。请确认设置已保存、网络与安装权限正常，再重试。',
-      });
+    } catch (error) {
+      this.patch({ phase: 'error', error: updateMessage(error, failureMessage) });
     }
   }
 

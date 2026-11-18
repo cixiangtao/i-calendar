@@ -1,5 +1,7 @@
 use serde::Serialize;
 use std::{
+    error::Error,
+    future::Future,
     sync::{
         atomic::{AtomicBool, Ordering},
         Mutex,
@@ -7,7 +9,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tauri::{ipc::Channel, Manager};
-use tauri_plugin_updater::{Update, UpdaterExt};
+use tauri_plugin_updater::{Error as UpdateError, Update, UpdaterExt};
 
 #[derive(Default)]
 pub struct AppUpdates {
@@ -86,19 +88,67 @@ fn updater(
         .endpoints(vec![endpoint])
         .map_err(|_| "应用更新地址无效")?
         .pubkey(key)
-        .configure_client(|client| client.https_only(true))
+        .configure_client(|client| {
+            client
+                .https_only(true)
+                .connect_timeout(Duration::from_secs(10))
+                .read_timeout(Duration::from_secs(30))
+        })
         .timeout(timeout)
         .build()
         .map_err(|_| "无法初始化应用更新".to_string())
 }
 
+fn is_transport_failure(error: &UpdateError) -> bool {
+    let UpdateError::Reqwest(error) = error else {
+        return false;
+    };
+    // reqwest 也将响应体传输中断包装为 Decode；格式错误的 JSON 不应重试。
+    let interrupted_body = error.is_decode()
+        && error
+            .source()
+            .is_some_and(|cause| !cause.is::<serde_json::Error>());
+    error.is_timeout() || error.is_request() || error.is_body() || interrupted_body
+}
+
+// 只重试获取清单、下载包这两种只读操作。重试期间仍由外层 Operation 持有互斥锁。
+async fn retry_transport<T, F: Future<Output = Result<T, UpdateError>>>(
+    mut request: impl FnMut() -> F,
+) -> Result<T, UpdateError> {
+    for delay in [1, 3] {
+        match request().await {
+            Err(error) if is_transport_failure(&error) => {
+                tokio::time::sleep(Duration::from_secs(delay)).await;
+            }
+            result => return result,
+        }
+    }
+    request().await
+}
+
+fn update_error(error: UpdateError, fallback: &'static str) -> String {
+    if is_transport_failure(&error) {
+        return "UPDATE_NETWORK".into();
+    }
+    match error {
+        UpdateError::Minisign(_)
+        | UpdateError::Base64(_)
+        | UpdateError::SignatureUtf8(_)
+        | UpdateError::SignedVersionMismatch { .. }
+        | UpdateError::MissingSignedVersion => "UPDATE_SIGNATURE",
+        UpdateError::Network(_) | UpdateError::ReleaseNotFound => "UPDATE_SERVER",
+        _ => fallback,
+    }
+    .into()
+}
+
 pub async fn check(app: tauri::AppHandle) -> Result<Option<Release>, String> {
     let state = app.state::<AppUpdates>();
     let _operation = Operation::acquire(&state.busy)?;
-    let update = updater(&app, Duration::from_secs(15))?
-        .check()
+    let updater = updater(&app, Duration::from_secs(15))?;
+    let update = retry_transport(|| updater.check())
         .await
-        .map_err(|_| "应用更新检查失败")?;
+        .map_err(|error| update_error(error, "UPDATE_MANIFEST"))?;
     if let Some(update) = &update {
         // 不把下载地址交给界面；安装时只使用已检查且保存在 Rust 中的对象。
         if update.download_url.scheme() != "https"
@@ -138,17 +188,20 @@ pub async fn download(
         .filter(|update| update.version == version)
         .ok_or("请重新检查应用更新")?;
     update.timeout = Some(Duration::from_secs(300));
-    let mut downloaded = 0u64;
-    let mut last_event = Instant::now() - Duration::from_secs(1);
-    let bytes = update.download(|length, total| {
-        downloaded = downloaded.saturating_add(length as u64);
-        if last_event.elapsed() >= Duration::from_millis(100) || total == Some(downloaded) {
-            let _ = progress.send(serde_json::json!({"phase": "downloading", "downloaded": downloaded, "total": total}));
-            last_event = Instant::now();
-        }
-    }, || {}).await.map_err(|_| "更新包下载或签名验证失败")?;
+    let bytes = retry_transport(|| async {
+        let mut downloaded = 0u64;
+        let mut last_event = Instant::now() - Duration::from_secs(1);
+        let _ = progress.send(serde_json::json!({"phase": "downloading", "downloaded": 0}));
+        update.download(|length, total| {
+            downloaded = downloaded.saturating_add(length as u64);
+            if last_event.elapsed() >= Duration::from_millis(100) || total == Some(downloaded) {
+                let _ = progress.send(serde_json::json!({"phase": "downloading", "downloaded": downloaded, "total": total}));
+                last_event = Instant::now();
+            }
+        }, || {}).await
+    }).await.map_err(|error| update_error(error, "UPDATE_DOWNLOAD"))?;
     let _ = progress.send(
-        serde_json::json!({"phase": "downloading", "downloaded": downloaded, "total": downloaded}),
+        serde_json::json!({"phase": "downloading", "downloaded": bytes.len(), "total": bytes.len()}),
     );
     *state.downloaded.lock().map_err(|_| "应用更新状态不可用")? = Some((version, bytes));
     Ok(())
@@ -178,7 +231,7 @@ pub async fn install(app: tauri::AppHandle, version: String) -> Result<(), Strin
     tauri::async_runtime::spawn_blocking(move || update.install(bytes))
         .await
         .map_err(|_| "应用更新安装线程失败")?
-        .map_err(|_| "应用更新安装失败")?;
+        .map_err(|error| update_error(error, "UPDATE_INSTALL"))?;
     *state.pending.lock().map_err(|_| "应用更新状态不可用")? = None;
     app.restart();
 }
@@ -206,6 +259,75 @@ mod tests {
         assert!(configuration(None, Some("public-key")).is_err());
         assert!(!available(), "开发与隔离冒烟构建不自动请求更新");
     }
+    #[test]
+    fn truncated_manifest_retries_but_invalid_json_and_signature_stop() {
+        use std::{
+            io::{BufRead, BufReader, Write},
+            net::TcpListener,
+        };
+
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let endpoint = format!("http://{}", listener.local_addr().unwrap());
+        let mut context = tauri::test::mock_context(tauri::test::noop_assets());
+        context.config_mut().plugins.0.insert("updater".into(), serde_json::json!({
+            "pubkey": "test", "dangerousInsecureTransportProtocol": true, "endpoints": [endpoint]
+        }));
+        let app = tauri::test::mock_builder()
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .build(context)
+            .unwrap();
+        let updater = app
+            .updater_builder()
+            .no_proxy()
+            .timeout(Duration::from_secs(2))
+            .build()
+            .unwrap();
+        let server = std::thread::spawn(move || {
+            for response in [
+                "200 OK\r\nContent-Length: 10\r\n\r\n{",
+                "204 No Content\r\n\r\n",
+                "200 OK\r\nContent-Length: 1\r\n\r\n{",
+            ] {
+                let (mut socket, _) = listener.accept().unwrap();
+                let reader = BufReader::new(&socket);
+                for line in reader.lines() {
+                    if line.unwrap().is_empty() {
+                        break;
+                    }
+                }
+                write!(socket, "HTTP/1.1 {response}").unwrap();
+            }
+        });
+        tauri::async_runtime::block_on(async {
+            let mut attempts = 0;
+            let result = retry_transport(|| {
+                attempts += 1;
+                updater.check()
+            })
+            .await
+            .unwrap();
+            assert!(result.is_none());
+            assert_eq!(attempts, 2);
+            let mut attempts = 0;
+            let result = retry_transport(|| {
+                attempts += 1;
+                updater.check()
+            })
+            .await;
+            assert_eq!(
+                update_error(result.err().unwrap(), "UPDATE_MANIFEST"),
+                "UPDATE_MANIFEST"
+            );
+            assert_eq!(attempts, 1);
+            assert!(!is_transport_failure(&UpdateError::MissingSignedVersion));
+            assert_eq!(
+                update_error(UpdateError::MissingSignedVersion, "UPDATE_DOWNLOAD"),
+                "UPDATE_SIGNATURE"
+            );
+        });
+        server.join().unwrap();
+    }
+
     #[test]
     fn operations_are_exclusive_and_recover_on_drop() {
         let busy = AtomicBool::new(false);

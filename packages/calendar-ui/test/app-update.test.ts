@@ -63,7 +63,7 @@ test('检查、下载和安装互斥，失败后可重试且不改变日历数�
       assert.equal(version, '1.0.1');
       installs++;
       progress({ phase: 'downloading', downloaded: 20, total: 100 });
-      if (installs === 1) throw new Error('signature mismatch');
+      if (installs === 1) throw 'UPDATE_SIGNATURE';
       await new Promise<void>((resolve) => {
         completeInstall = resolve;
       });
@@ -80,7 +80,7 @@ test('检查、下载和安装互斥，失败后可重试且不改变日历数�
   await checking;
   await controller.install();
   assert.equal(controller.getSnapshot().phase, 'error');
-  assert.ok(controller.getSnapshot().error);
+  assert.match(controller.getSnapshot().error!, /签名/);
   const installing = controller.install();
   await Promise.resolve();
   assert.equal(controller.getSnapshot().progress?.downloaded, 20);
@@ -99,20 +99,31 @@ test('离线自动检查不反复请求，未配置与销毁后的控制器不�
   await unavailable.install();
   assert.equal(unavailable.getSnapshot().phase, 'unavailable');
   let checks = 0;
-  const controller = new AppUpdateController({
-    check: async () => {
-      checks++;
-      throw new Error('offline');
+  let time = 0;
+  const controller = new AppUpdateController(
+    {
+      check: async () => {
+        checks++;
+        throw 'UPDATE_NETWORK';
+      },
+      install: async () => {},
     },
-    install: async () => {},
-  });
+    () => new Date(time),
+  );
   await controller.check(true);
   await controller.check(true);
   assert.equal(checks, 1);
   assert.equal(controller.getSnapshot().phase, 'error');
+  assert.match(controller.getSnapshot().error!, /连接/);
+  time += 60 * 60 * 1000 - 1;
+  await controller.check(true);
+  assert.equal(checks, 1);
+  time++;
+  await controller.check(true);
+  assert.equal(checks, 2);
   controller.dispose();
   await controller.check();
-  assert.equal(checks, 1);
+  assert.equal(checks, 2);
 });
 
 test('下载完成后再次保存偏好，期间保存失败不进入安装', async () => {
@@ -137,6 +148,7 @@ test('下载完成后再次保存偏好，期间保存失败不进入安装', as
   await controller.install();
   assert.equal(preparations, 2);
   assert.equal(applied, false);
+  assert.match(controller.getSnapshot().error!, /设置保存/);
   assert.equal(controller.getSnapshot().phase, 'error');
 });
 
