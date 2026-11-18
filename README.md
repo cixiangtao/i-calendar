@@ -104,7 +104,7 @@ pnpm run preview:web   # 预览已构建的静态网页
 
 ## 准备正式版本
 
-确认本轮改动需要应用发版后，先提交修改与 `docs/releases/<下一版本>.md` 中文说明，再从干净的 `main` 执行：
+本轮改动先在本地验证并汇报结果。收到 IKUN 同学对当次应用发版的明确同意后，提交修改与 `docs/releases/<下一版本>.md` 中文说明，再从干净的 `main` 执行以下命令。
 
 ```sh
 pnpm run release:dry patch # 只预演命令，不写文件、不执行质量门禁、不推送
