@@ -39,6 +39,9 @@ objc2-app-kit = { version = "=0.3.2", default-features = false, features = [
   "NSAnimationContext",
   "NSColor",
   "NSImage",
+  "NSPanel",
+  "NSResponder",
+  "NSSavePanel",
   "NSStatusBarButton",
   "NSStatusItem",
   "NSView",
@@ -60,11 +63,13 @@ block2 = "=0.6.2"
 objc2-foundation = { version = "=0.3.2", default-features = false, features = [
   "std",
   "NSArray",
+  "NSData",
   "NSDate",
   "NSError",
   "NSLocale",
   "NSObject",
   "NSString",
+  "NSURL",
 ] }
 objc2-core-location = { version = "=0.3.2", default-features = false, features = [
   "std",

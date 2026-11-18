@@ -9,6 +9,8 @@ mod location;
 #[cfg(target_os = "macos")]
 mod menu_clock;
 mod storage;
+#[cfg(target_os = "macos")]
+mod theme_export;
 
 use serde_json::{json, Value};
 use std::{
@@ -202,6 +204,21 @@ async fn save_state(
 }
 
 #[tauri::command]
+async fn export_theme(
+    app: tauri::AppHandle,
+    name: String,
+    content: String,
+) -> Result<bool, String> {
+    #[cfg(target_os = "macos")]
+    return theme_export::save(app, name, content).await;
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (app, name, content);
+        Err("此平台不支持原生保存对话框".into())
+    }
+}
+
+#[tauri::command]
 async fn fetch_holiday_year(year: u16) -> Result<Option<Value>, String> {
     if !(1901..=2100).contains(&year) {
         return Err("调休年份超出范围".into());
@@ -279,6 +296,7 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
             if report.get("calculatorVerified").and_then(Value::as_bool) != Some(true)
                 || report.get("releaseNotesVerified").and_then(Value::as_bool) != Some(true)
                 || report.get("sunlightVerified").and_then(Value::as_bool) != Some(true)
+                || report.get("themesVerified").and_then(Value::as_bool) != Some(true)
                 || report.get("appUpdaterAvailable").and_then(Value::as_bool) != Some(false)
                 || report
                     .get("launchAtLoginAvailable")
@@ -421,6 +439,7 @@ pub fn run() {
             install_app_update,
             load_state,
             save_state,
+            export_theme,
             fetch_holiday_year,
             set_popup_busy,
             resize_popup,

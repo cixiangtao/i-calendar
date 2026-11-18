@@ -3,6 +3,8 @@ import { test } from 'node:test';
 
 import type { CalendarPlatform, SavedCalendarState } from '../src/platform.js';
 import { CalendarController, parseSavedState } from '../src/store.js';
+import { activeTheme, copyTheme } from '../src/theme-library.js';
+import { builtInThemes } from '../src/theme-package.js';
 
 const instant = new Date('2026-11-11T04:00:00Z');
 function fixture(overrides: Partial<CalendarPlatform> = {}) {
@@ -38,64 +40,61 @@ test('日期工具往返不更改月历或写入偏好，查看结果才切换�
   assert.deepEqual(saves, []);
 });
 
-test('高级配色保存重载并保留两套外观，关闭不丢色，非法写入不污染状态', async () => {
+test('自定义主题浅深配色保存、重载、切换，非法写入不污染快照', async () => {
   const { controller, saves } = fixture();
   await controller.initialize();
   const before = controller.getSnapshot();
-  assert.deepEqual(before.preferences.customColors, { enabled: false, light: {}, dark: {} });
-  const customColors = {
-    enabled: true,
-    light: { '--surface': '#fff8ee' },
-    dark: { '--ink': '#e0e0e0' },
-  };
-  await controller.setPreferences({ customColors });
-  customColors.light['--surface'] = '#000000';
-  assert.equal(controller.getSnapshot().preferences.customColors.light['--surface'], '#fff8ee');
+  assert.deepEqual(before.preferences.themes, { selectedId: 'clear', custom: [] });
+  const theme = copyTheme(structuredClone(builtInThemes[0]));
+  theme.name = '我的主题';
+  theme.schemaVersion = 2;
+  theme.rulesVersion = 2;
+  theme.palettes.light.surface = 'rgba(255, 248, 238, 0.83)';
+  theme.palettes.dark.ink = '#e0e0e0';
+  await controller.setPreferences({ themes: { selectedId: theme.id, custom: [theme] } });
+  theme.palettes.light.surface = '#000000';
   const restored = fixture({ load: async () => saves.at(-1) }).controller;
   await restored.initialize();
-  const savedColors = restored.getSnapshot().preferences.customColors;
-  assert.equal(savedColors.light['--surface'], '#fff8ee');
-  assert.equal(savedColors.dark['--ink'], '#e0e0e0');
-  await restored.setPreferences({ customColors: { ...savedColors, enabled: false } });
-  await restored.setPreferences({ colorTheme: 'paper', accentColor: '#123456' });
-  assert.deepEqual(restored.getSnapshot().preferences.customColors, {
-    ...savedColors,
-    enabled: false,
-  });
+  const library = restored.getSnapshot().preferences.themes;
+  const applied = activeTheme(library);
+  assert.equal(applied.palettes.light.surface, 'rgba(255, 248, 238, 0.83)');
+  assert.equal(applied.palettes.dark.ink, '#e0e0e0');
+  await restored.setPreferences({ themes: { ...library, selectedId: 'paper' } });
+  assert.equal(restored.getSnapshot().preferences.themes.custom[0]?.name, '我的主题');
   const valid = restored.getSnapshot();
   assert.throws(
-    () => restored.setPreferences({ customColors: { ...savedColors, light: { '--ink': 'red' } } }),
-    /高级配色设置无效/,
+    () => restored.setPreferences({ themes: { selectedId: 'missing', custom: [theme] } }),
+    /当前主题不存在/,
   );
   assert.equal(restored.getSnapshot(), valid);
   assert.deepEqual(controller.getSnapshot().selected, before.selected);
   assert.deepEqual(controller.getSnapshot().almanac, before.almanac);
 });
 
-test('载入1.0.3完整配色后保留主色，后续保存不再写入旧派生色', async () => {
-  const preferences = fixture().controller.getSnapshot().preferences;
+test('旧版启用的完整配色迁为当前主题，后续保存只写入主题模型', async () => {
+  const preferences = {
+    weekStartsOn: 1,
+    appearance: 'light',
+    customColors: {
+      enabled: true,
+      light: { '--ink': '#453833', '--secondary': '#123456' },
+      dark: { '--red': '#f98798', '--control-active': '#123456' },
+    },
+  };
   const { controller, saves } = fixture({
-    load: async () => ({
-      schemaVersion: 1,
-      datasets: [],
-      preferences: {
-        ...preferences,
-        customColors: {
-          enabled: true,
-          light: { '--ink': '#453833', '--secondary': '#123456' },
-          dark: { '--red': '#f98798', '--control-active': '#123456' },
-        },
-      },
-    }),
+    load: async () => ({ schemaVersion: 1, datasets: [], preferences }),
   });
   await controller.initialize();
   assert.equal(saves.length, 0);
   await controller.setPreferences({ appearance: 'dark' });
-  assert.deepEqual(saves.at(-1)?.preferences.customColors, {
-    enabled: true,
-    light: { '--ink': '#453833' },
-    dark: { '--red': '#f98798' },
-  });
+  const saved = saves.at(-1)!.preferences;
+  assert.equal('customColors' in saved, false);
+  const theme = activeTheme(saved.themes);
+  assert.equal(theme.name, '我的配色');
+  assert.equal(theme.palettes.light.ink, '#453833');
+  assert.equal(theme.palettes.dark.red, '#f98798');
+  assert.equal(Object.keys(theme.palettes.light).length, 8);
+  assert.equal(Object.keys(theme.palettes.dark).length, 8);
 });
 
 test('农历详情旧设置默认开启，显式布尔值保留，非法值拒绝载入', () => {
@@ -300,16 +299,31 @@ test('黄历与所选日期同步，未收录调休仍可查看，设置返回�
   assert.equal(saves.length, 0);
 });
 
-test('主题和强调色持久化后可恢复，非法配色不改变现有偏好', async () => {
-  const { controller, saves } = fixture();
-  await controller.initialize();
-  await controller.setPreferences({ colorTheme: 'paper', accentColor: '#bb3366' });
-  const restored = fixture({ load: async () => saves.at(-1) }).controller;
-  await restored.initialize();
-  assert.equal(restored.getSnapshot().preferences.colorTheme, 'paper');
-  assert.equal(restored.getSnapshot().preferences.accentColor, '#bb3366');
-  assert.throws(() => restored.setPreferences({ accentColor: 'red' }));
-  assert.equal(restored.getSnapshot().preferences.accentColor, '#bb3366');
-  await restored.setPreferences({ accentColor: null });
-  assert.equal(restored.getSnapshot().preferences.accentColor, null);
+test('迁移停用的高级配色时保留当前强调色与停用草稿', () => {
+  const legacy = {
+    schemaVersion: 1,
+    datasets: [],
+    preferences: {
+      weekStartsOn: 1,
+      appearance: 'system',
+      colorTheme: 'paper',
+      accentColor: '#bb3366',
+      customColors: { enabled: false, light: { '--surface': '#f0e8e0' }, dark: {} },
+    },
+  };
+  const { themes } = parseSavedState(legacy).preferences;
+  assert.equal(activeTheme(themes).palettes.light.accent, '#bb3366');
+  assert.equal(activeTheme(themes).palettes.light.surface, builtInThemes[1].palettes.light.surface);
+  assert.equal(
+    themes.custom.find((item) => item.name === '我的配色')?.palettes.light.surface,
+    '#f0e8e0',
+  );
+  assert.throws(
+    () =>
+      parseSavedState({
+        ...legacy,
+        preferences: { ...legacy.preferences, accentColor: 'red' },
+      }),
+    /本地显示设置无效/,
+  );
 });

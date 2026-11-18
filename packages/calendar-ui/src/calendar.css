@@ -163,7 +163,58 @@ a:focus-visible {
 .clock-format-error:empty {
   display: none;
 }
+.month-panel[data-theme-backdrop='true'] {
+  isolation: isolate;
+}
+.month-panel[data-theme-backdrop='true'] .calendar-grid {
+  background: var(--surface);
+}
+.theme-backdrop {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  height: 58px;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--canvas);
+  mask-image: linear-gradient(#000 45%, transparent);
+  pointer-events: none;
+}
+.theme-backdrop img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.theme-backdrop[data-dark='true'] img {
+  filter: brightness(0.68);
+}
+.theme-mini-calendar .theme-backdrop {
+  height: 52px;
+}
+.month-panel[data-theme-backdrop='true']
+  .month-toolbar
+  .calendar-button[data-appearance='icon']::before {
+  background: var(--control);
+}
+.month-panel[data-theme-backdrop='true']
+  .month-toolbar
+  .calendar-button[data-appearance='icon']:is(:hover, :focus-visible)::before {
+  background: var(--control-hover);
+}
+body[data-platform='web'] .month-panel .theme-backdrop {
+  height: 102px;
+}
+body[data-platform='web'] .month-panel[data-theme-backdrop='true'] .month-banner-title {
+  width: fit-content;
+  border-radius: 8px;
+  padding: 4px 8px;
+  background: var(--surface);
+}
 @media (min-width: 860px) {
+  body[data-platform='web'] .month-panel .theme-backdrop {
+    height: 128px;
+  }
   body[data-platform='web'] .calendar-app[data-panel='calendar'][data-show-lunar-details='false'] {
     width: min(640px, 100%);
     grid-template-columns: minmax(0, 1fr);

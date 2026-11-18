@@ -13,6 +13,19 @@ const STORAGE_KEY = 'i-calendar:state:v1';
 // 仅用于只读迁移；新数据始终写入当前名称，旧记录保留。
 const LEGACY_STORAGE_KEY = 'shiri-calendar:state:v1';
 
+async function downloadTheme(name: string, content: string) {
+  const file = new File([content], name, { type: 'application/json' });
+  const url = URL.createObjectURL(file);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  return true;
+}
+
 function nativeAppUpdater(): AppUpdater {
   return {
     async check() {
@@ -95,6 +108,7 @@ function browserPlatform(): CalendarPlatform {
     async copyText(text) {
       await navigator.clipboard.writeText(text);
     },
+    exportTheme: downloadTheme,
   };
 }
 
@@ -148,6 +162,17 @@ export async function createPlatform(): Promise<{
         const { writeText } = await import('@tauri-apps/plugin-clipboard-manager');
         await writeText(text);
       },
+      exportTheme:
+        context.kind === 'macos'
+          ? async (name, content) => {
+              await invoke('set_popup_busy', { busy: true });
+              try {
+                return await invoke<boolean>('export_theme', { name, content });
+              } finally {
+                await invoke('set_popup_busy', { busy: false }).catch(() => {});
+              }
+            }
+          : downloadTheme,
       setInteractionBusy: (busy) => invoke<void>('set_popup_busy', { busy }),
       ...(updatesEnabled ? { appUpdater: nativeAppUpdater() } : {}),
       ...(launchAtLoginAvailable

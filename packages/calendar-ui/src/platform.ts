@@ -1,10 +1,10 @@
 import type { HolidayDataset } from '@i-calendar/core';
 
 import type { AppUpdater } from './app-update.js';
-import type { ColorThemeId, CustomColors } from './color-theme.js';
 import type { LaunchAtLogin } from './launch-at-login.js';
 import type { MenuClockPreferences } from './menu-clock.js';
 import type { LocatedPoint, SunlightPreferences } from './sunlight-location.js';
+import type { ThemeLibrary } from './theme-library.js';
 
 /** 三端使用相同数据格式；存储、网络和窗口操作由宿主实现。 */
 export interface CalendarPreferences {
@@ -12,11 +12,7 @@ export interface CalendarPreferences {
   appearance: 'system' | 'light' | 'dark';
   /** 是否展示月历之外的农历详情卡片，默认开启。 */
   showLunarDetails: boolean;
-  colorTheme: ColorThemeId;
-  /** Null 使用主题默认强调色；自定义值为 #RRGGBB。 */
-  accentColor: string | null;
-  /** 高级配色按浅深色保存主色，派生颜色由主题生成；关闭时保留选色。 */
-  customColors: CustomColors;
+  themes: ThemeLibrary;
   menuClock: MenuClockPreferences;
   /** 正式 Mac 构建后台检查应用版本；安装仍需用户确认。 */
   automaticAppUpdates: boolean;
@@ -39,6 +35,8 @@ export interface CalendarPlatform {
   fetchHolidayYear(year: number, signal: AbortSignal): Promise<unknown | null>;
   openExternal(url: string): Promise<void>;
   copyText(text: string): Promise<void>;
+  /** 打开宿主的保存界面，用户取消时返回 false。 */
+  exportTheme?(name: string, content: string): Promise<boolean>;
   /** 一次性高精度定位；仅由明确启用的位置功能调用，取消时停止宿主请求。 */
   locate?(signal: AbortSignal, requestPermission: boolean): Promise<LocatedPoint>;
   /** 仅 Mac 提供，打开固定的系统定位权限面板。 */

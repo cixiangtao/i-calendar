@@ -1,4 +1,10 @@
-import { builtInThemes, isThemeColor, type ThemePalette } from './theme-package.js';
+import { compositeThemeColor } from './theme-color.js';
+import {
+  builtInThemes,
+  isThemeColor,
+  type CalendarThemePackage,
+  type ThemePalette,
+} from './theme-package.js';
 
 /** 配色仅影响共享界面，不改变历法与休班事实。 */
 export type ColorThemeId = (typeof builtInThemes)[number]['id'];
@@ -219,37 +225,43 @@ export function resolveColorTheme(
   dark: boolean,
   increasedContrast = false,
 ) {
-  const theme =
-    builtInThemes.find((item) => item.id === preferences.colorTheme) ?? builtInThemes[0];
+  const palette = legacyThemePalette(
+    preferences.colorTheme,
+    preferences.accentColor,
+    dark ? 'dark' : 'light',
+    preferences.customColors?.enabled ? preferences.customColors : undefined,
+  );
+  return { accent: palette.accent, tokens: deriveColorTokens(palette, increasedContrast, dark) };
+}
+
+/** 合并历史强调色与旧 CSS 角色覆盖，生成对应外观的完整主色。 */
+export function legacyThemePalette(
+  id: ColorThemeId,
+  accent: string | null,
+  mode: 'light' | 'dark',
+  custom?: CustomColors,
+): ThemePalette {
+  const theme = builtInThemes.find((item) => item.id === id) ?? builtInThemes[0];
   const palette: ThemePalette = {
-    ...theme.palettes[dark ? 'dark' : 'light'],
-    accent: preferences.accentColor ?? theme.palettes[dark ? 'dark' : 'light'].accent,
+    ...theme.palettes[mode],
+    accent: accent ?? theme.palettes[mode].accent,
   };
-  const custom = preferences.customColors;
-  if (custom?.enabled) {
-    const overrides = custom[dark ? 'dark' : 'light'];
+  if (custom) {
     for (const [token, key] of Object.entries(primaryPaletteKeys)) {
-      const value = overrides[token as PrimaryColor];
+      const value = custom[mode][token as PrimaryColor];
       if (value !== undefined) palette[key] = value;
     }
   }
-  return { accent: palette.accent, tokens: deriveColorTokens(palette, increasedContrast) };
+  return palette;
 }
 
-/** 为编辑器返回八个未经对比度修正的主色，不暴露生成后的内部变量。 */
-export function resolvePrimaryPalette(
-  preferences: { colorTheme: ColorThemeId; accentColor: string | null },
+/** 根据当前明暗外观生成应用和编辑器共享的渲染颜色。 */
+export function resolveThemeTokens(
+  theme: CalendarThemePackage,
   dark: boolean,
-): Record<PrimaryColor, string> {
-  const theme =
-    builtInThemes.find((item) => item.id === preferences.colorTheme) ?? builtInThemes[0];
-  const palette = theme.palettes[dark ? 'dark' : 'light'];
-  return Object.fromEntries(
-    Object.entries(primaryPaletteKeys).map(([token, key]) => [
-      token,
-      key === 'accent' ? (preferences.accentColor ?? palette.accent) : palette[key],
-    ]),
-  ) as Record<PrimaryColor, string>;
+  increasedContrast = false,
+) {
+  return deriveColorTokens(theme.palettes[dark ? 'dark' : 'light'], increasedContrast, dark);
 }
 
 /** 偏好存储兼容 CSS 角色名；主题包与生成器只使用独立于渲染技术的主色名称。 */
@@ -264,9 +276,14 @@ const primaryPaletteKeys = {
   '--purple': 'purple',
 } as const satisfies Record<PrimaryColor, keyof ThemePalette>;
 
-/** 派生规则 v1：输入仅为八个主色，主题包不需要提供任何交互或文字层级颜色。 */
-export function deriveColorTokens(palette: ThemePalette, increasedContrast = false) {
-  const { canvas, surface, ink, accent, ...semanticBases } = palette;
+/** 规则 v2 先合成背景 Alpha，再复用规则 v1 的文字层级和交互派生。 */
+export function deriveColorTokens(palette: ThemePalette, increasedContrast = false, dark = false) {
+  const { canvas: canvasColor, surface: surfaceColor, ink, accent, ...semanticBases } = palette;
+  const canvas = compositeThemeColor(
+    canvasColor,
+    builtInThemes[0].palettes[dark ? 'dark' : 'light'].canvas,
+  );
+  const surface = compositeThemeColor(surfaceColor, canvas);
   const paletteDark = contrastRatio('#ffffff', surface) > contrastRatio('#000000', surface);
   const neutralTarget = paletteDark ? '#ffffff' : '#000000';
   const nearbyCanvas = contrastRatio(surface, canvas) < 1.5;

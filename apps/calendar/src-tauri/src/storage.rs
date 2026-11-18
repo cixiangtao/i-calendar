@@ -1,7 +1,8 @@
 use serde_json::{json, Value};
 use std::{fs, io::Write, path::Path};
 
-const MAX_STATE_SIZE: u64 = 1_000_000;
+// 为主题库中的压缩图片留空间，继续限制读写的状态文件。
+const MAX_STATE_SIZE: u64 = 2_500_000;
 
 pub fn read_state(path: &Path) -> Result<Option<Value>, String> {
     if !path.exists() {

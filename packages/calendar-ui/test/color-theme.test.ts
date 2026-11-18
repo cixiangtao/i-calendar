@@ -12,6 +12,7 @@ import {
   resolveColorTheme,
 } from '../src/color-theme.js';
 import { parseSavedState } from '../src/store.js';
+import { builtInThemes } from '../src/theme-package.js';
 
 test('旧设置补齐主题默认值，新设置与无效自定义配色有明确边界', () => {
   const legacy = {
@@ -20,8 +21,7 @@ test('旧设置补齐主题默认值，新设置与无效自定义配色有明�
     datasets: [],
   };
   const restored = parseSavedState(legacy);
-  assert.equal(restored.preferences.colorTheme, 'clear');
-  assert.equal(restored.preferences.accentColor, null);
+  assert.deepEqual(restored.preferences.themes, { selectedId: 'clear', custom: [] });
   assert.equal(isAccentColor('#Aa12fF'), true);
   for (const value of ['red', '#abc', '#12345678', 'var(--ink)', '', 123])
     assert.equal(isAccentColor(value), false);
@@ -189,7 +189,11 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
         const preferences = { colorTheme: preset.id, accentColor };
         const result = resolveColorTheme(preferences, dark);
         const t = result.tokens;
-        assert.equal(result.accent, accentColor ?? preset.accent);
+        const original = builtInThemes.find((theme) => theme.id === preset.id)!;
+        assert.equal(
+          result.accent,
+          accentColor ?? original.palettes[dark ? 'dark' : 'light'].accent,
+        );
         for (const fg of [
           '--ink',
           '--secondary',

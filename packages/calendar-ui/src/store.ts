@@ -12,7 +12,6 @@ import {
 import { bundledHolidayDatasets } from '@i-calendar/core/data';
 
 import { AppUpdateController } from './app-update.js';
-import { isAccentColor, isColorTheme, parseCustomColors } from './color-theme.js';
 import { LaunchAtLoginController } from './launch-at-login.js';
 import { defaultMenuClock, parseMenuClock } from './menu-clock.js';
 import type { CalendarPlatform, CalendarPreferences, SavedCalendarState } from './platform.js';
@@ -24,6 +23,7 @@ import {
   type ManualSunlightLocation,
   type SunlightLocationState,
 } from './sunlight-location.js';
+import { migrateThemeLibrary, parseThemeLibrary } from './theme-library.js';
 
 /** 可观察的应用快照；React、测试和宿主都读取同一状态。 */
 export interface CalendarSnapshot {
@@ -49,9 +49,7 @@ const defaults: CalendarPreferences = {
   weekStartsOn: 1,
   appearance: 'system',
   showLunarDetails: true,
-  colorTheme: 'clear',
-  accentColor: null,
-  customColors: parseCustomColors(undefined),
+  themes: migrateThemeLibrary({}),
   menuClock: { ...defaultMenuClock },
   automaticAppUpdates: true,
   sunlight: parseSunlightPreferences(undefined),
@@ -74,9 +72,10 @@ export function parseSavedState(input: unknown): SavedCalendarState {
     input.preferences.showLunarDetails === undefined
       ? defaults.showLunarDetails
       : input.preferences.showLunarDetails;
-  const colorTheme = input.preferences.colorTheme ?? defaults.colorTheme;
-  const accentColor = input.preferences.accentColor ?? null;
-  const customColors = parseCustomColors(input.preferences.customColors);
+  const themes =
+    input.preferences.themes === undefined
+      ? migrateThemeLibrary(input.preferences)
+      : parseThemeLibrary(input.preferences.themes);
   const menuClock = parseMenuClock(input.preferences.menuClock);
   const sunlight = parseSunlightPreferences(input.preferences.sunlight);
   const automaticAppUpdates =
@@ -87,9 +86,7 @@ export function parseSavedState(input: unknown): SavedCalendarState {
     (weekStartsOn !== 1 && weekStartsOn !== 7) ||
     !['system', 'light', 'dark'].includes(String(appearance)) ||
     typeof showLunarDetails !== 'boolean' ||
-    typeof automaticAppUpdates !== 'boolean' ||
-    !isColorTheme(colorTheme) ||
-    (accentColor !== null && !isAccentColor(accentColor))
+    typeof automaticAppUpdates !== 'boolean'
   )
     throw new Error('本地显示设置无效');
   const datasets = input.datasets.map(parseHolidayDataset);
@@ -106,9 +103,7 @@ export function parseSavedState(input: unknown): SavedCalendarState {
       weekStartsOn,
       appearance: appearance as CalendarPreferences['appearance'],
       showLunarDetails,
-      colorTheme,
-      accentColor,
-      customColors,
+      themes,
       menuClock,
       automaticAppUpdates,
       sunlight,
@@ -164,7 +159,7 @@ export class CalendarController {
       preferences: {
         ...defaults,
         menuClock: { ...defaultMenuClock },
-        customColors: parseCustomColors(undefined),
+        themes: migrateThemeLibrary({}),
         sunlight: parseSunlightPreferences(undefined),
       },
       years: this.holidays.years,
@@ -299,15 +294,16 @@ export class CalendarController {
   setPreferences(preferences: Partial<CalendarPreferences>) {
     const next = { ...this.snapshot.preferences, ...preferences };
     next.menuClock = parseMenuClock(next.menuClock);
-    next.customColors = parseCustomColors(next.customColors);
+    next.themes =
+      preferences.themes === undefined
+        ? this.snapshot.preferences.themes
+        : parseThemeLibrary(preferences.themes);
     next.sunlight = parseSunlightPreferences(next.sunlight);
     if (
       (next.weekStartsOn !== 1 && next.weekStartsOn !== 7) ||
       !['system', 'light', 'dark'].includes(next.appearance) ||
       typeof next.showLunarDetails !== 'boolean' ||
-      typeof next.automaticAppUpdates !== 'boolean' ||
-      !isColorTheme(next.colorTheme) ||
-      (next.accentColor !== null && !isAccentColor(next.accentColor))
+      typeof next.automaticAppUpdates !== 'boolean'
     )
       throw new Error('显示设置无效');
     if (next.sunlight.mode !== this.snapshot.preferences.sunlight.mode) {
@@ -327,7 +323,6 @@ export class CalendarController {
       preferences: {
         ...this.snapshot.preferences,
         menuClock: { ...this.snapshot.preferences.menuClock },
-        customColors: parseCustomColors(this.snapshot.preferences.customColors),
         sunlight: parseSunlightPreferences(this.snapshot.preferences.sunlight),
       },
       datasets: this.holidays.export(),
@@ -338,16 +333,19 @@ export class CalendarController {
   /** 串行保存，避免快速切换设置时旧写入覆盖新状态。 */
   private persist() {
     const state = this.serialized();
-    this.saves = this.saves
-      .then(async () => {
+    const result = this.saves.then(async () => {
+      try {
         await this.platform.save(state);
         this.saveFailed = false;
-      })
-      .catch(() => {
+        return true;
+      } catch {
         this.saveFailed = true;
         this.patch({ error: '本地保存失败，本次操作仍在内存中。请检查存储空间或浏览器设置。' });
-      });
-    return this.saves;
+        return false;
+      }
+    });
+    this.saves = result.then(() => {});
+    return result;
   }
 
   async importDataset(text: string) {

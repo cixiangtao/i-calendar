@@ -92,10 +92,14 @@ async function start() {
     const sunlightVerified = smokeTest
       ? await (await import('./sunlight-smoke.js')).verifySunlight(platform)
       : undefined;
+    const themesVerified = smokeTest
+      ? await (await import('./themes-smoke.js')).verifyThemes(controller)
+      : undefined;
     const report = {
       sunlightVerified,
       calculatorVerified,
       releaseNotesVerified,
+      themesVerified,
       appUpdaterAvailable: !!platform.appUpdater,
       launchAtLoginAvailable: !!platform.launchAtLogin,
       controlGeometry: {

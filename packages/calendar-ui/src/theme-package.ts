@@ -1,4 +1,6 @@
-/** 主题只描述八个主色，不携带 CSS、代码、资源或平台行为。 */
+import { normalizeThemeColor } from './theme-color.js';
+
+/** 每种外观的八个主色。 */
 export interface ThemePalette {
   canvas: string;
   surface: string;
@@ -10,17 +12,31 @@ export interface ThemePalette {
   purple: string;
 }
 
-/** 主题格式与派生规则分别版本化，供后续主题包导入、导出和分发复用。 */
+export interface ThemeBackground {
+  /** 应用已压缩的 JPEG，使用 Base64 原文，以便单文件离线交换。 */
+  image: string;
+  /** 百分比。零表示隐藏图片。 */
+  strength: number;
+  x: number;
+  y: number;
+}
+
+/** 主题格式与派生规则分别版本化，v1 为历史纯色格式。 */
 export interface CalendarThemePackage {
-  schemaVersion: 1;
-  rulesVersion: 1;
+  schemaVersion: 1 | 2;
+  rulesVersion: 1 | 2;
   id: string;
   name: string;
   version: string;
   author?: string;
   description?: string;
   palettes: { light: ThemePalette; dark: ThemePalette };
+  background?: ThemeBackground;
 }
+
+export const maxThemeImageLength = 300_000;
+export const maxThemePackageBytes = 304_000;
+export const maxThemeImageSide = 1440;
 
 /** 仅接受完整 RGB 色值，避免主题数据注入任意 CSS。 */
 export function isThemeColor(value: unknown): value is string {
@@ -40,7 +56,54 @@ const paletteKeys = [
   'purple',
 ] as const;
 
-/** 校验外部主题包，拒绝未知字段与规则版本，返回规范化的独立数据副本。 */
+function validJpeg(value: string) {
+  if (
+    value.length < 8 ||
+    value.length > maxThemeImageLength ||
+    value.length % 4 !== 0 ||
+    !/^[A-Za-z0-9+/]+={0,2}$/.test(value)
+  )
+    return false;
+  const bytes = atob(value);
+  const byte = (offset: number) => bytes.charCodeAt(offset);
+  const word = (offset: number) => byte(offset) * 256 + byte(offset + 1);
+  if (word(0) !== 0xffd8 || word(bytes.length - 2) !== 0xffd9) return false;
+  // 在交给图片解码器前检查 JPEG 帧尺寸。浏览器编码器使用基线或渐进式 JPEG。
+  for (let offset = 2; offset + 3 < bytes.length;) {
+    if (byte(offset) !== 0xff) return false;
+    const marker = byte(++offset);
+    if (marker === 0xff) continue;
+    const length = word(offset + 1);
+    if (length < 2 || offset + 1 + length > bytes.length) return false;
+    if (marker === 0xc0 || marker === 0xc2) {
+      if (length < 8) return false;
+      const dimensions = [word(offset + 4), word(offset + 6)];
+      return dimensions.every((side) => side > 0 && side <= maxThemeImageSide);
+    }
+    if (marker === 0xda) return false;
+    offset += 1 + length;
+  }
+  return false;
+}
+
+const percent = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 100;
+
+function parseBackground(input: unknown): ThemeBackground {
+  if (
+    !record(input) ||
+    Object.keys(input).some((key) => !['image', 'strength', 'x', 'y'].includes(key)) ||
+    typeof input.image !== 'string' ||
+    !validJpeg(input.image) ||
+    !percent(input.strength) ||
+    !percent(input.x) ||
+    !percent(input.y)
+  )
+    throw new Error('背景图或裁切参数无效');
+  return { image: input.image, strength: input.strength, x: input.x, y: input.y };
+}
+
+/** 校验主题包与图片边界，返回规范化的独立数据副本。 */
 export function parseThemePackage(input: unknown): CalendarThemePackage {
   const allowed = [
     'schemaVersion',
@@ -51,11 +114,14 @@ export function parseThemePackage(input: unknown): CalendarThemePackage {
     'author',
     'description',
     'palettes',
+    'background',
   ];
   if (
     !record(input) ||
-    input.schemaVersion !== 1 ||
-    input.rulesVersion !== 1 ||
+    !(
+      (input.schemaVersion === 1 && input.rulesVersion === 1 && input.background === undefined) ||
+      (input.schemaVersion === 2 && input.rulesVersion === 2)
+    ) ||
     Object.keys(input).some((key) => !allowed.includes(key)) ||
     typeof input.id !== 'string' ||
     input.id.length > 64 ||
@@ -78,10 +144,20 @@ export function parseThemePackage(input: unknown): CalendarThemePackage {
     if (
       !record(value) ||
       Object.keys(value).length !== paletteKeys.length ||
-      paletteKeys.some((key) => !Object.hasOwn(value, key) || !isThemeColor(value[key]))
+      paletteKeys.some((key) => !Object.hasOwn(value, key))
     )
       throw new Error('主题包必须为每种外观提供八个完整主色');
-    const color = (key: keyof ThemePalette) => (value[key] as string).toLowerCase();
+    const color = (key: keyof ThemePalette) => {
+      const raw = value[key];
+      const normalized =
+        input.schemaVersion === 1
+          ? isThemeColor(raw)
+            ? raw.toLowerCase()
+            : null
+          : normalizeThemeColor(raw, key === 'canvas' || key === 'surface');
+      if (normalized === null) throw new Error('主题包中的主色无效');
+      return normalized;
+    };
     return {
       canvas: color('canvas'),
       surface: color('surface'),
@@ -94,8 +170,8 @@ export function parseThemePackage(input: unknown): CalendarThemePackage {
     };
   };
   return {
-    schemaVersion: 1,
-    rulesVersion: 1,
+    schemaVersion: input.schemaVersion,
+    rulesVersion: input.rulesVersion,
     id: input.id,
     name: input.name.trim(),
     version: input.version,
@@ -105,6 +181,7 @@ export function parseThemePackage(input: unknown): CalendarThemePackage {
       light: parsePalette(input.palettes.light),
       dark: parsePalette(input.palettes.dark),
     },
+    ...(input.background === undefined ? {} : { background: parseBackground(input.background) }),
   };
 }
 
@@ -156,6 +233,33 @@ export const builtInThemes = [
     palettes: {
       light: { ...light, canvas: '#eaf0f3', surface: '#f9fcfd', accent: '#3c7286' },
       dark: { ...dark, canvas: '#171b23', surface: '#222630', accent: '#3c7286' },
+    },
+  },
+  {
+    schemaVersion: 2,
+    rulesVersion: 2,
+    id: 'mountain',
+    name: '山雾',
+    version: '1.0.0',
+    palettes: {
+      light: {
+        ...light,
+        canvas: '#ddebe7',
+        surface: 'rgba(247, 250, 248, 0.9)',
+        accent: '#256959',
+      },
+      dark: { ...dark, canvas: '#162823', surface: 'rgba(28, 46, 40, 0.92)', accent: '#70bfa4' },
+    },
+  },
+  {
+    schemaVersion: 2,
+    rulesVersion: 2,
+    id: 'dusk',
+    name: '暮紫',
+    version: '1.0.0',
+    palettes: {
+      light: { ...light, canvas: '#eee7f5', surface: '#fcf9ff', accent: '#7045a5' },
+      dark: { ...dark, canvas: '#221c2f', surface: '#2d243c', accent: '#be9be8' },
     },
   },
 ] as const satisfies readonly CalendarThemePackage[];

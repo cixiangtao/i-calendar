@@ -12,17 +12,15 @@ import {
 } from 'react';
 
 import { version as appVersion } from '../../../package.json';
-import { AdvancedColorSettings } from './AdvancedColorSettings.js';
 import { AlmanacContent } from './Almanac.js';
 import { AppUpdateNotice, AppUpdateSection } from './AppUpdateSection.js';
 import { CalendarButton } from './CalendarButton.js';
-import { CalendarColorInput } from './CalendarColorInput.js';
 import { CalendarContextMenu } from './CalendarContextMenu.js';
 import { CalendarSegmented } from './CalendarSegmented.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import { CalendarSwitch } from './CalendarSwitch.js';
 import { CalendarTabs } from './CalendarTabs.js';
-import { colorThemes, resolveColorTheme } from './color-theme.js';
+import { resolveThemeTokens } from './color-theme.js';
 import { DateCalculator } from './DateCalculator.js';
 import { formControlVariables } from './form-theme.js';
 import { LaunchAtLoginSettings } from './LaunchAtLoginSettings.js';
@@ -30,6 +28,11 @@ import { MenuClockSettings } from './MenuClockSettings.js';
 import type { CalendarPreferences } from './platform.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 import { SunlightSettings, SunlightSummary, useSunlightLocation } from './Sunlight.js';
+import { themeBackground } from './theme-image.js';
+import { activeTheme } from './theme-library.js';
+import { builtInThemes } from './theme-package.js';
+import { ThemeBackdrop } from './ThemeBackdrop.js';
+import { ThemeSettings } from './ThemeSettings.js';
 
 import './calendar.css';
 
@@ -160,9 +163,12 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const dark =
     state.preferences.appearance === 'dark' ||
     (state.preferences.appearance === 'system' && systemDark);
+  const theme = activeTheme(state.preferences.themes);
+  const background = themeBackground(theme);
+  const uiTheme = state.panel === 'settings' ? builtInThemes[0] : theme;
   const colors = useMemo(
-    () => resolveColorTheme(state.preferences, dark, increasedContrast),
-    [state.preferences, dark, increasedContrast],
+    () => resolveThemeTokens(uiTheme, dark, increasedContrast),
+    [uiTheme, dark, increasedContrast],
   );
 
   useEffect(() => {
@@ -248,7 +254,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
-    const variables = { ...colors.tokens, ...formControlVariables };
+    const variables = { ...colors, ...formControlVariables };
     for (const [name, value] of Object.entries(variables))
       document.documentElement.style.setProperty(name, value);
     return () => {
@@ -379,9 +385,14 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
           <section
             className="month-panel tw-relative tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-bg-transparent web:desktop:tw-p-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
             aria-label="月历"
+            data-theme-backdrop={background?.strength ? true : undefined}
           >
+            <ThemeBackdrop
+              background={background}
+              dark={dark}
+            />
             {controller.platform.kind === 'web' ? (
-              <div className="tw-mb-5 tw-flex tw-items-baseline tw-gap-3 tw-px-1 compact:tw-mb-3">
+              <div className="month-banner-title tw-mb-5 tw-flex tw-items-baseline tw-gap-3 tw-px-1 compact:tw-mb-3">
                 <span
                   aria-hidden="true"
                   className="tw-text-[32px] tw-font-semibold tw-tabular-nums tw-leading-none tw-tracking-tight compact:tw-text-2xl"
@@ -867,78 +878,12 @@ function Settings({
                     />
                   </div>
                 </section>
-                <section>
-                  <h2>配色</h2>
-                  <div
-                    className="palette-choices tw-mx-0 tw-mb-4 tw-mt-3 tw-grid tw-grid-cols-[repeat(3,_minmax(0,_1fr))] tw-gap-2"
-                    role="group"
-                    aria-label="主题预设"
-                  >
-                    {colorThemes.map((preset) => (
-                      <CalendarButton
-                        key={preset.id}
-                        appearance="choice"
-                        className="palette-choice app:tw-flex app:tw-h-auto app:tw-min-h-[66px] app:tw-flex-col app:tw-gap-[7px] app:tw-px-2.5 app:tw-py-2 app:tw-text-[length:12px] app:tw-leading-[18px]"
-                        aria-pressed={state.preferences.colorTheme === preset.id}
-                        onClick={() => {
-                          void controller.setPreferences({
-                            colorTheme: preset.id,
-                            accentColor: null,
-                          });
-                        }}
-                      >
-                        <span
-                          className="palette-swatch tw-flex tw-h-5 tw-w-full tw-min-w-10 tw-items-center tw-justify-center tw-rounded-[5px] [&>i]:tw-h-[7px] [&>i]:tw-w-[22px] [&>i]:tw-rounded-[3px]"
-                          style={{ background: preset.canvas }}
-                          aria-hidden="true"
-                        >
-                          <i style={{ background: preset.accent }} />
-                        </span>
-                        {preset.name}
-                      </CalendarButton>
-                    ))}
-                  </div>
-                  <div className="accent-setting tw-flex tw-flex-wrap tw-items-center tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] tw-leading-[var(--form-line-height)] coarse:tw-min-h-11 coarse:tw-items-center [&_label]:tw-mr-auto">
-                    <label htmlFor="accent-color">强调色</label>
-                    <CalendarColorInput
-                      id="accent-color"
-                      value={
-                        state.preferences.accentColor ??
-                        colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
-                      }
-                      onChange={(event) => {
-                        void controller.setPreferences({ accentColor: event.target.value });
-                      }}
-                      onFocus={() => interact(true)}
-                      onBlur={() => interact(false)}
-                    />
-
-                    <span className="accent-value tw-tabular-nums tw-text-secondary">
-                      {(
-                        state.preferences.accentColor ??
-                        colorThemes.find((item) => item.id === state.preferences.colorTheme)!.accent
-                      ).toUpperCase()}
-                    </span>
-                    <CalendarButton
-                      appearance="text"
-                      disabled={state.preferences.accentColor === null}
-                      onClick={() => {
-                        void controller.setPreferences({ accentColor: null });
-                      }}
-                    >
-                      恢复默认
-                    </CalendarButton>
-                  </div>
-                  <p>
-                    强调色用于选中日期和操作，自动适配明暗外观。切换预设会恢复该主题的默认强调色。
-                  </p>
-                  <AdvancedColorSettings
-                    controller={controller}
-                    preferences={state.preferences}
-                    dark={dark}
-                    increasedContrast={increasedContrast}
-                  />
-                </section>
+                <ThemeSettings
+                  controller={controller}
+                  state={state}
+                  dark={dark}
+                  increasedContrast={increasedContrast}
+                />
               </div>
             ),
           },
