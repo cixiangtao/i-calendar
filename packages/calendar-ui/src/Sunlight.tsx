@@ -100,6 +100,7 @@ export function SunlightSettings({
     setSearch(false);
     manualButton.current?.focus();
   };
+  const candidate = state.sunlightLocation.candidate;
   const located =
     state.preferences.sunlight.mode === 'automatic' ? state.sunlightLocation.point : null;
   return (
@@ -199,7 +200,7 @@ export function SunlightSettings({
       ) : null}
       {state.sunlightLocation.pending ? (
         <output className="tw-mb-2 tw-block tw-text-[12px] tw-leading-[1.8] tw-text-secondary">
-          正在等待定位，可取消或手动选择城市；未出现授权提示时请检查定位权限。
+          正在等待系统返回位置。可取消定位或手动选择城市。
         </output>
       ) : null}
       {state.preferences.sunlight.mode === 'automatic' && state.sunlightLocation.error ? (
@@ -210,8 +211,24 @@ export function SunlightSettings({
           {state.sunlightLocation.error}
         </p>
       ) : null}
+      {candidate ? (
+        <div className="tw-mb-2">
+          <p>
+            系统上次记录于
+            {new Date(candidate.timestamp).toLocaleString('zh-CN', {
+              timeZone: 'Asia/Shanghai',
+              hour12: false,
+            })}
+            （北京时间），{candidate.label || '地名未知'}，精度{accuracyLabel(candidate.accuracy)}。
+          </p>
+          <CalendarButton onClick={() => controller.confirmLastKnownLocation()}>
+            使用上次位置
+          </CalendarButton>
+        </div>
+      ) : null}
       {located ? (
         <p>
+          {located.lastKnown ? '日照使用你确认的上次位置。' : ''}
           经度 {located.longitude.toFixed(5)}°，纬度 {located.latitude.toFixed(5)}°；定位精度
           {accuracyLabel(located.accuracy)}。
           {located.accuracy > 10_000 ? '当前定位较粗，可重新定位或选择更接近的地点。' : ''}

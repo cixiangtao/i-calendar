@@ -18,12 +18,15 @@ export interface LocatedPoint extends Coordinates {
   timestamp: number;
   /** 平台收到坐标的 Unix 毫秒时间；可选的地名解析可能稍后才完成。 */
   receivedAt?: number;
+  /** 系统只返回历史位置时须由用户确认后才能用于日照。 */
+  lastKnown?: boolean;
   label?: string;
 }
 
 export interface SunlightLocationState {
   pending: boolean;
   point: LocatedPoint | null;
+  candidate?: LocatedPoint;
   error: string | null;
   issue?: LocationIssue;
 }
@@ -94,14 +97,28 @@ export function parseSunlightPreferences(value: unknown): SunlightPreferences {
   return { mode: value.mode as SunlightPreferences['mode'], manualLocation };
 }
 
-/** 不接受无效精度或过期系统缓存，避免把旧位置显示成新定位。 */
-export function validLocatedPoint(point: LocatedPoint, now: number) {
+function validMeasurement(point: LocatedPoint) {
   return (
     validCoordinates(point) &&
     Number.isFinite(point.accuracy) &&
     point.accuracy >= 0 &&
-    Number.isFinite(point.timestamp) &&
-    point.timestamp >= now - 120_000 &&
-    point.timestamp <= now + 60_000
+    Number.isFinite(point.timestamp)
+  );
+}
+
+/** 实时结果只接受收到时两分钟内的位置，保留一分钟系统时钟误差。 */
+export function validLocatedPoint(point: LocatedPoint, now: number) {
+  return (
+    validMeasurement(point) && point.timestamp >= now - 120_000 && point.timestamp <= now + 60_000
+  );
+}
+
+/** 一天内的系统旧位置只能作为待确认选项。 */
+export function validLastKnownPoint(point: LocatedPoint, now: number) {
+  return (
+    point.lastKnown === true &&
+    validMeasurement(point) &&
+    point.timestamp >= now - 86_400_000 &&
+    point.timestamp < now - 120_000
   );
 }

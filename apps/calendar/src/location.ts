@@ -5,12 +5,13 @@ import { invoke } from '@tauri-apps/api/core';
 /** 地名失败时使用附近参考点标签，绝不把参考点坐标写回定位结果。 */
 async function withNearbyName(point: LocatedPoint): Promise<LocatedPoint> {
   if (point.label) return point;
+  const fallback = point.lastKnown ? '地名未知' : '当前位置';
   try {
     const { nearestSunlightPlace } = await import('@i-calendar/core/places');
     const nearby = nearestSunlightPlace(point);
-    return { ...point, label: nearby ? `${nearby.region} · ${nearby.name}附近` : '当前位置' };
+    return { ...point, label: nearby ? `${nearby.region} · ${nearby.name}附近` : fallback };
   } catch {
-    return { ...point, label: '当前位置' };
+    return { ...point, label: fallback };
   }
 }
 
@@ -109,10 +110,17 @@ export async function nativeLocate(
   const cancelled = new Promise<never>((_resolve, reject) => {
     abortReject = reject;
   });
-  const cancel = () => {
+  let stopped = false;
+  const stop = (message: string) => {
+    stopped = true;
     void invoke('cancel_sunlight_location', { requestId: id }).catch(() => {});
-    abortReject(new Error('定位已取消'));
+    abortReject(new Error(message));
   };
+  const cancel = () => stop('定位已取消');
+  const timer = window.setTimeout(
+    () => stop('定位服务响应超时，请重试或手动选择城市'),
+    requestPermission ? 70_000 : 40_000,
+  );
   signal.addEventListener('abort', cancel, { once: true });
   try {
     const work = async () => {
@@ -120,7 +128,8 @@ export async function nativeLocate(
         requestId: id,
         requestPermission,
       });
-      if (signal.aborted) throw new Error('定位已取消');
+      if (stopped) throw new Error('定位已取消');
+      if (point.lastKnown) return withNearbyName(point);
       const label = await invoke<string | null>('describe_sunlight_location', {
         requestId: id,
         latitude: point.latitude,
@@ -159,6 +168,7 @@ export async function nativeLocate(
       { cause: error },
     );
   } finally {
+    window.clearTimeout(timer);
     signal.removeEventListener('abort', cancel);
   }
 }

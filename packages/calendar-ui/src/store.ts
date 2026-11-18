@@ -20,6 +20,7 @@ import {
   parseSunlightPreferences,
   LocationRequestError,
   validLocatedPoint,
+  validLastKnownPoint,
   type ManualSunlightLocation,
   type SunlightLocationState,
 } from './sunlight-location.js';
@@ -448,6 +449,24 @@ export class CalendarController {
       this.patch({ sunlightLocation: { pending: false, point: null, error: null } });
   }
 
+  /** 用户确认仍在系统上次记录的地点后，才用该坐标计算本次会话的日照。 */
+  confirmLastKnownLocation() {
+    const { candidate } = this.snapshot.sunlightLocation;
+    if (this.disposed || this.snapshot.preferences.sunlight.mode !== 'automatic' || !candidate)
+      return;
+    if (!validLastKnownPoint(candidate, this.now().getTime())) {
+      this.patch({
+        sunlightLocation: {
+          pending: false,
+          point: null,
+          error: '上次位置已过期，请重新定位或选择城市',
+        },
+      });
+      return;
+    }
+    this.patch({ sunlightLocation: { pending: false, point: candidate, error: null } });
+  }
+
   /** 用户启用后仅在前台有界刷新；拒绝或失败后本次会话只允许主动重试。 */
   async locateSunlight(automatic = false) {
     if (this.disposed || !this.snapshot.ready || !this.platform.locate) return;
@@ -471,6 +490,7 @@ export class CalendarController {
       sunlightLocation: {
         ...this.snapshot.sunlightLocation,
         pending: true,
+        candidate: undefined,
         error: null,
         issue: undefined,
       },
@@ -485,16 +505,34 @@ export class CalendarController {
         return;
       const now = this.now().getTime();
       const receivedAt = point.receivedAt ?? now;
-      if (receivedAt < startedAt || receivedAt > now || !validLocatedPoint(point, receivedAt))
+      const lastKnown = validLastKnownPoint(point, now) && validLastKnownPoint(point, receivedAt);
+      if (
+        !Number.isFinite(receivedAt) ||
+        receivedAt < startedAt ||
+        receivedAt > now ||
+        !(lastKnown || (!point.lastKnown && validLocatedPoint(point, receivedAt)))
+      )
         throw new Error('定位结果无效或已过期，请重新定位或选择城市');
       const label =
         typeof point.label === 'string'
           ? Array.from(point.label.trim()).slice(0, 100).join('')
           : undefined;
+      const located = { ...point, label: label || undefined };
+      if (lastKnown) {
+        this.patch({
+          sunlightLocation: {
+            ...this.snapshot.sunlightLocation,
+            pending: false,
+            candidate: located,
+            error: '系统只返回了上次位置。若你仍在该地点，可以用它计算日照。',
+          },
+        });
+        return;
+      }
       this.patch({
         sunlightLocation: {
           pending: false,
-          point: { ...point, label: label || undefined },
+          point: located,
           error: null,
         },
       });

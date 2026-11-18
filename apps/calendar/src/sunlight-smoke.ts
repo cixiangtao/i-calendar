@@ -10,7 +10,7 @@ import {
   contrastRatio,
   resolveColorTheme,
 } from '../../../packages/calendar-ui/src/color-theme.js';
-import { SunlightSummary } from '../../../packages/calendar-ui/src/Sunlight.js';
+import { SunlightSummary, SunlightSettings } from '../../../packages/calendar-ui/src/Sunlight.js';
 
 const hex = (value: string) =>
   '#' +
@@ -26,7 +26,14 @@ export async function verifySunlight(platform: CalendarPlatform) {
     ...platform,
     load: async () => null,
     save: async () => {},
-    locate: undefined,
+    locate: async () => ({
+      latitude: 39.9,
+      longitude: 116.4,
+      accuracy: 50,
+      timestamp: Date.now() - 7 * 60 * 60_000,
+      lastKnown: true,
+      label: '测试参考点',
+    }),
   });
   const container = document.createElement('div');
   container.setAttribute('aria-hidden', 'true');
@@ -60,6 +67,20 @@ export async function verifySunlight(platform: CalendarPlatform) {
     render();
     if (!container.textContent?.includes('07:32') || container.textContent.includes('04:45'))
       throw new Error('日照摘要未跟随日期更新');
+    await controller.locateSunlight();
+    render();
+    if (container.querySelector('dd')) throw new Error('未确认的旧位置不应出现在首页');
+    flushSync(() =>
+      root.render(createElement(SunlightSettings, { controller, state: controller.getSnapshot() })),
+    );
+    const accept = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === '使用上次位置',
+    );
+    if (!accept || !container.textContent?.includes('测试参考点'))
+      throw new Error('设置缺少历史位置确认入口');
+    accept.click();
+    render();
+    if (container.querySelectorAll('dd').length !== 3) throw new Error('确认位置后缺少日照结果');
     let isolated = false;
     try {
       await invoke('locate_sunlight', { requestId: 999, requestPermission: false });

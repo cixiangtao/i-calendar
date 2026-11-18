@@ -260,3 +260,32 @@ test('导入设置只保留手动地点白名单，不接纳伪造的自动定�
     parseSunlightPreferences({ mode: 'manual', manualLocation: { ...place, latitude: 91 } }),
   );
 });
+
+test('系统上次位置须确认才能计算，确认保留采样时间且坐标仅留在内存', async () => {
+  const cached = { ...fix(start - 8 * 60 * 60_000), lastKnown: true, receivedAt: start };
+  const env = fixture(async () => cached);
+  await env.controller.initialize();
+  await env.controller.locateSunlight();
+  const state = env.controller.getSnapshot().sunlightLocation;
+  assert.equal(state.point, null);
+  assert.equal(state.pending, false);
+  assert.equal(state.candidate?.timestamp, cached.timestamp);
+  env.controller.confirmLastKnownLocation();
+  assert.deepEqual(env.controller.getSnapshot().sunlightLocation.point, cached);
+  assert.equal(env.controller.getSnapshot().sunlightLocation.candidate, undefined);
+  await env.controller.setPreferences({ appearance: 'dark' });
+  assert.ok(!JSON.stringify(env.saves).includes(String(cached.longitude)));
+});
+
+test('确认时已过一天或已切换手动地点，都不能启用系统上次位置', async () => {
+  const env = fixture(async () => ({ ...fix(start - 86_400_000), lastKnown: true }));
+  await env.controller.initialize();
+  await env.controller.locateSunlight();
+  env.advance(1);
+  env.controller.confirmLastKnownLocation();
+  assert.equal(env.controller.getSnapshot().sunlightLocation.point, null);
+  assert.match(env.controller.getSnapshot().sunlightLocation.error!, /已过期/);
+  await env.controller.selectSunlightPlace(place);
+  env.controller.confirmLastKnownLocation();
+  assert.equal(env.controller.getSnapshot().preferences.sunlight.mode, 'manual');
+});

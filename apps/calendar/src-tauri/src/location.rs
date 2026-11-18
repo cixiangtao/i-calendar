@@ -84,7 +84,7 @@ use std::{
     cell::{Cell, RefCell},
     collections::{BTreeMap, VecDeque},
     sync::mpsc,
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
 #[derive(Clone, Serialize)]
@@ -95,11 +95,26 @@ pub struct LocationFix {
     accuracy: f64,
     timestamp: f64,
     received_at: f64,
+    last_known: bool,
+}
+
+enum LocationEvent {
+    Started,
+    LastKnown(LocationFix),
+    Complete(Result<LocationFix, LocationFailure>),
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Recovery {
+    Initial,
+    SingleRequest,
+    Listening,
 }
 
 struct DelegateState {
-    sender: RefCell<Option<mpsc::Sender<Result<LocationFix, LocationFailure>>>>,
+    sender: RefCell<Option<mpsc::Sender<LocationEvent>>>,
     started: Cell<bool>,
+    recovery: Cell<Recovery>,
     allow_request: bool,
     permission_requested: Cell<bool>,
 }
@@ -134,18 +149,33 @@ define_class!(
                         accuracy: location.horizontalAccuracy(),
                         timestamp: location.timestamp().timeIntervalSince1970() * 1000.0,
                         received_at,
+                        last_known: false,
                     }
                 }
             });
-            if let Some(fix) = first_usable_fix(fixes) {
-                self.finish(manager, Ok(fix));
+            if let Some(fix) = select_fix(fixes) {
+                if !fix.last_known {
+                    self.finish(manager, Ok(fix));
+                    return;
+                }
+                if let Some(sender) = self.ivars().sender.borrow().as_ref() {
+                    let _ = sender.send(LocationEvent::LastKnown(fix));
+                }
             }
+            // 静止的 Mac 可能只推送一次旧样本。停止订阅后主动单次取样，两种请求不能并行。
+            self.recover_sampling(manager);
         }
 
         #[unsafe(method(locationManager:didFailWithError:))]
         fn failed(&self, manager: &CLLocationManager, error: &NSError) {
+            if self.ivars().sender.borrow().is_none() {
+                return;
+            }
             if error.code() == 0 && error.domain().to_string() == "kCLErrorDomain" {
-                // kCLErrorLocationUnknown 表示系统暂时无法定位，仍可能在时限内回调新位置。
+                // 单次请求会以此错误终止，恢复监听以接收时限内可能出现的新位置。
+                if self.ivars().started.get() {
+                    self.recover_sampling(manager);
+                }
                 return;
             }
             let status = unsafe { manager.authorizationStatus() };
@@ -175,12 +205,28 @@ define_class!(
 );
 
 impl LocationDelegate {
+    fn recover_sampling(&self, manager: &CLLocationManager) {
+        let recovery = &self.ivars().recovery;
+        match recovery.get() {
+            Recovery::Initial => unsafe {
+                recovery.set(Recovery::SingleRequest);
+                manager.stopUpdatingLocation();
+                manager.requestLocation();
+            },
+            Recovery::SingleRequest => unsafe {
+                recovery.set(Recovery::Listening);
+                manager.startUpdatingLocation();
+            },
+            Recovery::Listening => {}
+        }
+    }
+
     fn finish(&self, manager: &CLLocationManager, result: Result<LocationFix, LocationFailure>) {
         unsafe {
             manager.stopUpdatingLocation();
         }
         if let Some(sender) = self.ivars().sender.borrow_mut().take() {
-            let _ = sender.send(result);
+            let _ = sender.send(LocationEvent::Complete(result));
         }
     }
 
@@ -223,6 +269,9 @@ impl LocationDelegate {
             },
             AuthorizationAction::Locate => unsafe {
                 state.started.set(true);
+                if let Some(sender) = state.sender.borrow().as_ref() {
+                    let _ = sender.send(LocationEvent::Started);
+                }
                 manager.startUpdatingLocation();
             },
             AuthorizationAction::Wait => {}
@@ -258,39 +307,88 @@ fn was_cancelled(id: u64) -> bool {
     CANCELLED.with(|requests| requests.borrow().contains(&id))
 }
 
-fn first_usable_fix(mut newest_first: impl Iterator<Item = LocationFix>) -> Option<LocationFix> {
-    newest_first.find(valid_fix)
+fn select_fix(newest_first: impl Iterator<Item = LocationFix>) -> Option<LocationFix> {
+    let mut cached = None;
+    for mut fix in newest_first {
+        if !valid_measurement(&fix) {
+            continue;
+        }
+        let age = fix.received_at - fix.timestamp;
+        if (-60_000.0..=120_000.0).contains(&age) {
+            return Some(fix);
+        }
+        if (120_000.0..=86_400_000.0).contains(&age) && cached.is_none() {
+            fix.last_known = true;
+            cached = Some(fix);
+        }
+    }
+    cached
 }
 
-fn valid_fix(fix: &LocationFix) -> bool {
+fn valid_measurement(fix: &LocationFix) -> bool {
     fix.latitude.is_finite()
         && fix.latitude.abs() <= 90.0
         && fix.longitude.is_finite()
         && fix.longitude.abs() <= 180.0
         && fix.accuracy.is_finite()
         && fix.accuracy >= 0.0
-        && (fix.received_at - 120_000.0..=fix.received_at + 60_000.0).contains(&fix.timestamp)
 }
 
-fn begin(id: u64, allow_request: bool, sender: mpsc::Sender<Result<LocationFix, LocationFailure>>) {
+fn await_fix(
+    receiver: mpsc::Receiver<LocationEvent>,
+    timeout: Duration,
+) -> Result<LocationFix, LocationFailure> {
+    let mut deadline = Instant::now() + timeout;
+    let mut cached: Option<LocationFix> = None;
+    loop {
+        match receiver.recv_timeout(deadline.saturating_duration_since(Instant::now())) {
+            Ok(LocationEvent::Complete(result)) => return result,
+            Ok(LocationEvent::Started) => {
+                deadline = deadline.min(Instant::now() + Duration::from_secs(20));
+            }
+            Ok(LocationEvent::LastKnown(fix)) => {
+                deadline = deadline.min(Instant::now() + Duration::from_secs(8));
+                if cached
+                    .as_ref()
+                    .is_none_or(|previous| fix.timestamp > previous.timestamp)
+                {
+                    cached = Some(fix);
+                }
+            }
+            Err(mpsc::RecvTimeoutError::Timeout) => {
+                return cached.ok_or_else(|| {
+                    "定位超时，系统未提供可用的新位置。请稍后重试或手动选择城市".into()
+                })
+            }
+            Err(mpsc::RecvTimeoutError::Disconnected) => return Err("定位请求中断".into()),
+        }
+    }
+}
+
+fn begin(id: u64, allow_request: bool, sender: mpsc::Sender<LocationEvent>) {
     // IPC 的取消可能先到达主线程；保留有界取消记录，避免随后才弹出权限框。
     if was_cancelled(id) {
-        let _ = sender.send(Err("定位已取消".into()));
+        let _ = sender.send(LocationEvent::Complete(Err("定位已取消".into())));
         return;
     }
     PENDING.with(|pending| {
         if pending.borrow().is_some() {
-            let _ = sender.send(Err("正在获取位置，请稍后重试".into()));
+            let _ = sender.send(LocationEvent::Complete(Err(
+                "正在获取位置，请稍后重试".into()
+            )));
             return;
         }
         let Some(mtm) = MainThreadMarker::new() else {
-            let _ = sender.send(Err("定位服务未在主线程初始化".into()));
+            let _ = sender.send(LocationEvent::Complete(Err(
+                "定位服务未在主线程初始化".into()
+            )));
             return;
         };
         let delegate = unsafe {
             let allocated = LocationDelegate::alloc(mtm).set_ivars(DelegateState {
                 sender: RefCell::new(Some(sender)),
                 started: Cell::new(false),
+                recovery: Cell::new(Recovery::Initial),
                 allow_request,
                 permission_requested: Cell::new(false),
             });
@@ -374,13 +472,10 @@ pub async fn locate(
     app.run_on_main_thread(move || begin(id, request_permission, sender))
         .map_err(|_| "定位服务无法启动")?;
     let result = tauri::async_runtime::spawn_blocking(move || {
-        receiver
-            .recv_timeout(Duration::from_secs(if request_permission {
-                60
-            } else {
-                30
-            }))
-            .unwrap_or_else(|_| Err("定位超时，未收到有效的新位置，请重试或手动选择城市".into()))
+        await_fix(
+            receiver,
+            Duration::from_secs(if request_permission { 60 } else { 30 }),
+        )
     })
     .await
     .map_err(|_| "定位请求中断")?;
@@ -602,9 +697,7 @@ mod tests {
         let (sender, receiver) = mpsc::channel();
         begin(9101, false, sender);
         assert_eq!(
-            receiver
-                .recv()
-                .unwrap()
+            await_fix(receiver, Duration::ZERO)
                 .err()
                 .map(|error| error.message)
                 .as_deref(),
@@ -621,6 +714,7 @@ mod tests {
             accuracy: 5000.0,
             timestamp: now - 120_000.0,
             received_at: now,
+            last_known: false,
         };
         let stale = LocationFix {
             timestamp: fresh.timestamp - 1.0,
@@ -630,8 +724,45 @@ mod tests {
             timestamp: now + 60_001.0,
             ..fresh.clone()
         };
-        assert!(first_usable_fix([future.clone(), stale.clone()].into_iter()).is_none());
-        let accepted = first_usable_fix([future, fresh.clone(), stale].into_iter()).unwrap();
+        assert!(select_fix([future.clone()].into_iter()).is_none());
+        let cached = select_fix([future.clone(), stale.clone()].into_iter()).unwrap();
+        assert!(cached.last_known);
+        let (sender, receiver) = mpsc::channel();
+        sender
+            .send(LocationEvent::LastKnown(cached.clone()))
+            .unwrap();
+        assert!(await_fix(receiver, Duration::ZERO).unwrap().last_known);
+        assert!(select_fix(
+            [LocationFix {
+                timestamp: now - 86_400_001.0,
+                ..fresh.clone()
+            }]
+            .into_iter()
+        )
+        .is_none());
+        let accepted = select_fix([future, stale, fresh.clone()].into_iter()).unwrap();
+        for failure in [false, true] {
+            let (sender, receiver) = mpsc::channel();
+            sender
+                .send(LocationEvent::LastKnown(cached.clone()))
+                .unwrap();
+            let result = if failure {
+                Err(LocationFailure::permission(
+                    "permission-denied",
+                    "授权已撤回",
+                ))
+            } else {
+                Ok(accepted.clone())
+            };
+            sender.send(LocationEvent::Complete(result)).unwrap();
+            let actual = await_fix(receiver, Duration::from_secs(1));
+            if failure {
+                assert_eq!(actual.err().unwrap().code, "permission-denied");
+            } else {
+                assert!(!actual.unwrap().last_known);
+            }
+        }
+        assert!(!accepted.last_known);
         assert_eq!(accepted.timestamp, fresh.timestamp);
         assert_eq!(accepted.accuracy, fresh.accuracy);
     }
@@ -643,14 +774,15 @@ mod tests {
             accuracy: 80.0,
             timestamp: 1.0,
             received_at: 1.0,
+            last_known: false,
         };
-        assert!(valid_fix(&fix));
+        assert!(valid_measurement(&fix));
         fix.accuracy = -1.0;
-        assert!(!valid_fix(&fix));
+        assert!(!valid_measurement(&fix));
         fix.accuracy = 80.0;
         fix.latitude = f64::NAN;
-        assert!(!valid_fix(&fix));
+        assert!(!valid_measurement(&fix));
         fix.latitude = 91.0;
-        assert!(!valid_fix(&fix));
+        assert!(!valid_measurement(&fix));
     }
 }
