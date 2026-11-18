@@ -84,15 +84,17 @@ use std::{
     cell::{Cell, RefCell},
     collections::{BTreeMap, VecDeque},
     sync::mpsc,
-    time::Duration,
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 #[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LocationFix {
     latitude: f64,
     longitude: f64,
     accuracy: f64,
     timestamp: f64,
+    received_at: f64,
 }
 
 struct DelegateState {
@@ -114,29 +116,38 @@ define_class!(
     unsafe impl CLLocationManagerDelegate for LocationDelegate {
         #[unsafe(method(locationManager:didUpdateLocations:))]
         fn updated(&self, manager: &CLLocationManager, locations: &NSArray<CLLocation>) {
-            if let Some(location) = locations.lastObject() {
-                let fix = unsafe {
+            if !self.ivars().started.get() || self.ivars().sender.borrow().is_none() {
+                return;
+            }
+            let Ok(now) = SystemTime::now().duration_since(UNIX_EPOCH) else {
+                return;
+            };
+            // Core Location 按时间顺序交付一批位置，先看最新的；缓存无效时继续等下一批。
+            let received_at = now.as_millis() as f64;
+            let fixes = (0..locations.count()).rev().map(|index| {
+                let location = locations.objectAtIndex(index);
+                unsafe {
                     let coordinate = location.coordinate();
                     LocationFix {
                         latitude: coordinate.latitude,
                         longitude: coordinate.longitude,
                         accuracy: location.horizontalAccuracy(),
                         timestamp: location.timestamp().timeIntervalSince1970() * 1000.0,
+                        received_at,
                     }
-                };
-                self.finish(
-                    manager,
-                    if valid_fix(&fix) {
-                        Ok(fix)
-                    } else {
-                        Err("系统未返回有效定位，请重试或手动选择城市".into())
-                    },
-                );
+                }
+            });
+            if let Some(fix) = first_usable_fix(fixes) {
+                self.finish(manager, Ok(fix));
             }
         }
 
         #[unsafe(method(locationManager:didFailWithError:))]
         fn failed(&self, manager: &CLLocationManager, error: &NSError) {
+            if error.code() == 0 && error.domain().to_string() == "kCLErrorDomain" {
+                // kCLErrorLocationUnknown 表示系统暂时无法定位，仍可能在时限内回调新位置。
+                return;
+            }
             let status = unsafe { manager.authorizationStatus() };
             if error.code() == 1
                 && status == CLAuthorizationStatus::NotDetermined
@@ -212,7 +223,7 @@ impl LocationDelegate {
             },
             AuthorizationAction::Locate => unsafe {
                 state.started.set(true);
-                manager.requestLocation();
+                manager.startUpdatingLocation();
             },
             AuthorizationAction::Wait => {}
         }
@@ -247,6 +258,10 @@ fn was_cancelled(id: u64) -> bool {
     CANCELLED.with(|requests| requests.borrow().contains(&id))
 }
 
+fn first_usable_fix(mut newest_first: impl Iterator<Item = LocationFix>) -> Option<LocationFix> {
+    newest_first.find(valid_fix)
+}
+
 fn valid_fix(fix: &LocationFix) -> bool {
     fix.latitude.is_finite()
         && fix.latitude.abs() <= 90.0
@@ -254,7 +269,7 @@ fn valid_fix(fix: &LocationFix) -> bool {
         && fix.longitude.abs() <= 180.0
         && fix.accuracy.is_finite()
         && fix.accuracy >= 0.0
-        && fix.timestamp.is_finite()
+        && (fix.received_at - 120_000.0..=fix.received_at + 60_000.0).contains(&fix.timestamp)
 }
 
 fn begin(id: u64, allow_request: bool, sender: mpsc::Sender<Result<LocationFix, LocationFailure>>) {
@@ -365,7 +380,7 @@ pub async fn locate(
             } else {
                 30
             }))
-            .unwrap_or_else(|_| Err("定位超时，请重试或手动选择城市".into()))
+            .unwrap_or_else(|_| Err("定位超时，未收到有效的新位置，请重试或手动选择城市".into()))
     })
     .await
     .map_err(|_| "定位请求中断")?;
@@ -598,12 +613,36 @@ mod tests {
         assert!(!was_cancelled(9102));
     }
     #[test]
+    fn waits_for_fresh_samples_and_skips_unusable_entries_in_a_batch() {
+        let now = 1_800_000_000_000.0;
+        let fresh = LocationFix {
+            latitude: 30.0,
+            longitude: 110.0,
+            accuracy: 5000.0,
+            timestamp: now - 120_000.0,
+            received_at: now,
+        };
+        let stale = LocationFix {
+            timestamp: fresh.timestamp - 1.0,
+            ..fresh.clone()
+        };
+        let future = LocationFix {
+            timestamp: now + 60_001.0,
+            ..fresh.clone()
+        };
+        assert!(first_usable_fix([future.clone(), stale.clone()].into_iter()).is_none());
+        let accepted = first_usable_fix([future, fresh.clone(), stale].into_iter()).unwrap();
+        assert_eq!(accepted.timestamp, fresh.timestamp);
+        assert_eq!(accepted.accuracy, fresh.accuracy);
+    }
+    #[test]
     fn validates_system_coordinates_and_accuracy() {
         let mut fix = LocationFix {
             latitude: 39.9,
             longitude: 116.4,
             accuracy: 80.0,
             timestamp: 1.0,
+            received_at: 1.0,
         };
         assert!(valid_fix(&fix));
         fix.accuracy = -1.0;

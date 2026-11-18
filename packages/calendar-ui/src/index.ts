@@ -34,4 +34,4 @@ export { parseThemePackage, builtInThemes } from './theme-package.js';
 export type { ThemePalette, CalendarThemePackage } from './theme-package.js';
 export { deriveColorTokens } from './color-theme.js';
 export type { LocatedPoint, SunlightPreferences } from './sunlight-location.js';
-export { LocationRequestError } from './sunlight-location.js';
+export { LocationRequestError, validLocatedPoint } from './sunlight-location.js';

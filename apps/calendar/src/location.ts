@@ -1,5 +1,5 @@
 import type { LocatedPoint } from '@i-calendar/ui';
-import { LocationRequestError } from '@i-calendar/ui';
+import { LocationRequestError, validLocatedPoint } from '@i-calendar/ui';
 import { invoke } from '@tauri-apps/api/core';
 
 /** 地名失败时使用附近参考点标签，绝不把参考点坐标写回定位结果。 */
@@ -64,13 +64,17 @@ export async function browserLocate(
     watch = navigator.geolocation.watchPosition(
       (position) => {
         if (done) return;
-        cleanup();
-        void withNearbyName({
+        const receivedAt = Date.now();
+        const point = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
           timestamp: position.timestamp,
-        }).then(resolve, reject);
+          receivedAt,
+        };
+        if (!validLocatedPoint(point, receivedAt)) return;
+        cleanup();
+        void withNearbyName(point).then(resolve, reject);
       },
       (error) => {
         if (done) return;

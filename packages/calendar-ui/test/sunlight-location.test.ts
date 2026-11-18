@@ -215,6 +215,20 @@ test('过期缓存、负精度和无效坐标不能显示为新定位', async ()
   }
 });
 
+test('以收到坐标的时间判断新鲜度，地名等待及过长标签不影响有效位置', async () => {
+  const env = fixture(async () => {
+    const point = { ...fix(start - 119_000), receivedAt: env.now(), label: '区'.repeat(120) };
+    env.advance(6_000);
+    return point;
+  });
+  await env.controller.initialize();
+  await env.controller.locateSunlight();
+  const state = env.controller.getSnapshot().sunlightLocation;
+  assert.equal(state.error, null);
+  assert.equal(state.point?.timestamp, start - 119_000);
+  assert.equal(state.point?.label?.length, 100);
+});
+
 test('刷新失败保留上次有效位置并明确错误，关闭后清除会话位置', async () => {
   let requests = 0;
   const { controller } = fixture(async () => {

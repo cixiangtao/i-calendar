@@ -465,7 +465,8 @@ export class CalendarController {
       });
     const abort = new AbortController();
     this.locationAbort = abort;
-    this.locationAttempt = this.now().getTime();
+    const startedAt = this.now().getTime();
+    this.locationAttempt = startedAt;
     this.patch({
       sunlightLocation: {
         ...this.snapshot.sunlightLocation,
@@ -482,9 +483,21 @@ export class CalendarController {
         this.snapshot.preferences.sunlight.mode !== 'automatic'
       )
         return;
-      if (!validLocatedPoint(point, this.now().getTime()))
+      const now = this.now().getTime();
+      const receivedAt = point.receivedAt ?? now;
+      if (receivedAt < startedAt || receivedAt > now || !validLocatedPoint(point, receivedAt))
         throw new Error('定位结果无效或已过期，请重新定位或选择城市');
-      this.patch({ sunlightLocation: { pending: false, point: { ...point }, error: null } });
+      const label =
+        typeof point.label === 'string'
+          ? Array.from(point.label.trim()).slice(0, 100).join('')
+          : undefined;
+      this.patch({
+        sunlightLocation: {
+          pending: false,
+          point: { ...point, label: label || undefined },
+          error: null,
+        },
+      });
     } catch (error) {
       if (!abort.signal.aborted && !this.disposed)
         this.patch({

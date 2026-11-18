@@ -16,6 +16,8 @@ export interface SunlightPreferences {
 export interface LocatedPoint extends Coordinates {
   accuracy: number;
   timestamp: number;
+  /** 平台收到坐标的 Unix 毫秒时间；可选的地名解析可能稍后才完成。 */
+  receivedAt?: number;
   label?: string;
 }
 
@@ -100,7 +102,6 @@ export function validLocatedPoint(point: LocatedPoint, now: number) {
     point.accuracy >= 0 &&
     Number.isFinite(point.timestamp) &&
     point.timestamp >= now - 120_000 &&
-    point.timestamp <= now + 60_000 &&
-    (point.label === undefined || (typeof point.label === 'string' && point.label.length <= 100))
+    point.timestamp <= now + 60_000
   );
 }
