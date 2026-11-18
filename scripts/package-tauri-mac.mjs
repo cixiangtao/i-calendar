@@ -1,4 +1,4 @@
-import { execFile, spawn } from 'node:child_process';
+import { execFile, execFileSync, spawn } from 'node:child_process';
 import { mkdir, cp, rm, readFile, mkdtemp, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -63,6 +63,15 @@ await mkdir(path.dirname(app), { recursive: true });
 await rm(app, { recursive: true, force: true });
 await cp(source, app, { recursive: true });
 await run('codesign', ['--verify', '--deep', '--strict', app]);
+const { stdout: signedPlist } = await run('codesign', ['-d', '--entitlements', '-', '--xml', app]);
+const entitlements = JSON.parse(
+  execFileSync('plutil', ['-convert', 'json', '-o', '-', '-'], {
+    input: signedPlist,
+    encoding: 'utf8',
+  }),
+);
+if (entitlements['com.apple.security.personal-information.location'] !== true)
+  throw new Error('Mac 签名缺少系统定位能力');
 const archive = path.join(root, `outputs/i日历-${version}-mac-${process.arch}.zip`);
 await rm(archive, { force: true });
 await run('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', app, archive]);
