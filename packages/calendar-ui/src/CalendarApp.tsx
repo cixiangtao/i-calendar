@@ -33,9 +33,21 @@ import { SunlightSettings, SunlightSummary, useSunlightLocation } from './Sunlig
 
 import './calendar.css';
 
-type IconName = 'settings' | 'left' | 'right' | 'external' | 'close';
+type IconName = 'calculator' | 'settings' | 'left' | 'right' | 'external' | 'close';
 function Icon({ name, ...props }: SVGProps<SVGSVGElement> & { name: IconName }) {
   const paths: Record<IconName, ReactNode> = {
+    calculator: (
+      <>
+        <rect
+          x="4.5"
+          y="2.5"
+          width="15"
+          height="19"
+          rx="3"
+        />
+        <path d="M8 7.5h8M8.5 12h1m4 0h1m-6 4h1m4 0h1" />
+      </>
+    ),
     settings: (
       <>
         <path d="m9 3-.5 2.2-2 .9-2-.7L2 10l1.7 1.5v2L2 15l2.5 4.5 2-.7 2 .9L9 22h6l.5-2.3 2-.9 2 .7L22 15l-1.7-1.5v-2L22 10l-2.5-4.6-2 .7-2-.9L15 3Z" />
@@ -365,7 +377,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       ) : (
         <>
           <section
-            className="month-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-bg-transparent web:desktop:tw-p-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
+            className="month-panel tw-relative tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-bg-transparent web:desktop:tw-p-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
             aria-label="月历"
           >
             {controller.platform.kind === 'web' ? (
@@ -381,7 +393,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 </span>
               </div>
             ) : null}
-            <div className="month-toolbar tw-mb-3 tw-flex tw-items-center tw-justify-between tw-gap-2 tw-text-[length:13px] tw-font-medium tiny:coarse:tw-gap-0 [&_svg]:tw-h-[13px] [&_svg]:tw-w-[13px]">
+            <div className="month-toolbar tw-mb-3 tw-flex tw-items-center tw-justify-between tw-gap-2 tw-text-[length:13px] tw-font-medium compact:coarse:tw-flex-wrap tiny:coarse:tw-gap-0 [&_svg]:tw-h-[13px] [&_svg]:tw-w-[13px]">
               <h1
                 className="sr-only"
                 id="month-title"
@@ -437,14 +449,31 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   />
                 </nav>
               </div>
-              <CalendarButton
-                appearance="accent"
-                className="today-button app:tw-relative app:tw-h-7 app:tw-w-11 app:tw-min-w-11 app:tw-shrink-0 app:tw-whitespace-nowrap app:tw-rounded-[8px] app:tw-border-0 app:tw-bg-transparent app:tw-p-0 app:tw-text-[length:13px] app:tw-font-medium app:tw-leading-[20px] app:tw-text-action app:tw-shadow-none coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
-                onClick={() => controller.goToday()}
-                title="回到今天（T）"
-              >
-                今天
-              </CalendarButton>
+              <div className="tw-ml-auto tw-flex tw-shrink-0 tw-items-center tw-gap-1 web:compact:coarse:tw-absolute web:compact:coarse:tw-right-3 web:compact:coarse:tw-top-2 tiny:coarse:tw-gap-0">
+                <CalendarButton
+                  appearance="accent"
+                  className="today-button app:tw-relative app:tw-h-7 app:tw-w-11 app:tw-min-w-11 app:tw-shrink-0 app:tw-whitespace-nowrap app:tw-rounded-[8px] app:tw-border-0 app:tw-bg-transparent app:tw-p-0 app:tw-text-[length:13px] app:tw-font-medium app:tw-leading-[20px] app:tw-text-action app:tw-shadow-none coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
+                  onClick={() => controller.goToday()}
+                  title="回到今天（T）"
+                >
+                  今天
+                </CalendarButton>
+                <CalendarButton
+                  ref={calculator}
+                  appearance="icon"
+                  className="app:tw-w-7 coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
+                  aria-label="日期计算"
+                  title="日期计算"
+                  disabled={!state.ready}
+                  onClick={() => controller.showCalculator()}
+                  icon={
+                    <Icon
+                      name="calculator"
+                      className="!tw-h-4 !tw-w-4"
+                    />
+                  }
+                />
+              </div>
             </div>
             <div
               className="calendar-grid"
@@ -701,25 +730,15 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 <span>i日历</span>
               </div>
             )}
-            <div className="tw-flex tw-shrink-0 tw-items-center tw-gap-2">
-              <CalendarButton
-                ref={calculator}
-                appearance="text"
-                disabled={!state.ready}
-                onClick={() => controller.showCalculator()}
-              >
-                日期计算
-              </CalendarButton>
-              <CalendarButton
-                ref={gear}
-                appearance="icon"
-                className="icon-button app:tw-inline-flex app:tw-h-7 app:tw-w-7 app:tw-shrink-0 app:tw-items-center app:tw-justify-center app:tw-rounded-[var(--form-radius)] app:tw-p-[5px] app:tw-text-secondary coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
-                aria-label="设置与调休数据"
-                title="设置与调休数据"
-                onClick={() => controller.showSettings()}
-                icon={<Icon name="settings" />}
-              />
-            </div>
+            <CalendarButton
+              ref={gear}
+              appearance="icon"
+              className="icon-button app:tw-inline-flex app:tw-h-7 app:tw-w-7 app:tw-shrink-0 app:tw-items-center app:tw-justify-center app:tw-rounded-[var(--form-radius)] app:tw-p-[5px] app:tw-text-secondary coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
+              aria-label="设置与调休数据"
+              title="设置与调休数据"
+              onClick={() => controller.showSettings()}
+              icon={<Icon name="settings" />}
+            />
           </footer>
         </>
       )}
