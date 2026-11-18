@@ -30,7 +30,6 @@ import type { CalendarController, CalendarSnapshot } from './store.js';
 import { SunlightSettings, SunlightSummary, useSunlightLocation } from './Sunlight.js';
 import { themeBackground } from './theme-image.js';
 import { activeTheme } from './theme-library.js';
-import { builtInThemes } from './theme-package.js';
 import { ThemeBackdrop } from './ThemeBackdrop.js';
 import { ThemeSettings } from './ThemeSettings.js';
 
@@ -164,11 +163,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
     state.preferences.appearance === 'dark' ||
     (state.preferences.appearance === 'system' && systemDark);
   const theme = activeTheme(state.preferences.themes);
-  const background = themeBackground(theme);
-  const uiTheme = state.panel === 'settings' ? builtInThemes[0] : theme;
+  const background = controller.platform.kind === 'web' ? undefined : themeBackground(theme);
   const colors = useMemo(
-    () => resolveThemeTokens(uiTheme, dark, increasedContrast),
-    [uiTheme, dark, increasedContrast],
+    () => resolveThemeTokens(theme, dark, increasedContrast),
+    [theme, dark, increasedContrast],
   );
 
   useEffect(() => {
@@ -356,11 +354,16 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       ref={container}
       className="calendar-app tw-grid tw-w-[min(400px,_100%)] tw-min-w-0 tw-max-w-full tw-gap-3 tw-text-[length:13px] tw-text-ink mac:tw-max-h-[100vh] mac:tw-w-full mac:tw-content-start mac:tw-gap-2 mac:tw-overflow-y-auto mac:tw-p-2 web:tw-relative web:tw-isolate web:tw-mx-auto web:tw-w-full web:tw-gap-0 web:tw-rounded-[22px] web:tw-border-0 web:tw-bg-surface web:desktop:tw-grid-cols-[minmax(0,_1fr)_304px]"
       data-panel={state.panel}
+      data-theme-photo={background?.strength ? true : undefined}
       data-show-lunar-details={state.preferences.showLunarDetails}
       aria-label="i日历"
       aria-busy={!state.ready}
       data-platform={controller.platform.kind}
     >
+      <ThemeBackdrop
+        background={background}
+        dark={dark}
+      />
       {state.panel === 'settings' ? (
         <Settings
           controller={controller}
@@ -385,12 +388,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
           <section
             className="month-panel tw-relative tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-bg-transparent web:desktop:tw-p-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
             aria-label="月历"
-            data-theme-backdrop={background?.strength ? true : undefined}
           >
-            <ThemeBackdrop
-              background={background}
-              dark={dark}
-            />
             {controller.platform.kind === 'web' ? (
               <div className="month-banner-title tw-mb-5 tw-flex tw-items-baseline tw-gap-3 tw-px-1 compact:tw-mb-3">
                 <span

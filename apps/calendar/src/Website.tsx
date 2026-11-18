@@ -1,4 +1,11 @@
-import { CalendarApp, CalendarButton, type CalendarController } from '@i-calendar/ui';
+import {
+  activeTheme,
+  CalendarApp,
+  CalendarButton,
+  themeBackground,
+  ThemeBackdrop,
+  type CalendarController,
+} from '@i-calendar/ui';
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 
 import { version } from '../../../package.json';
@@ -53,6 +60,8 @@ export function Website({ controller }: { controller: CalendarController }) {
     return () => preference.removeEventListener('change', changed);
   }, []);
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const background = themeBackground(activeTheme(state.preferences.themes));
+  const hasPhoto = Boolean(background?.strength);
   return (
     <div className="website tw-text-ink">
       <a
@@ -62,16 +71,23 @@ export function Website({ controller }: { controller: CalendarController }) {
         跳到日历
       </a>
       <main>
-        <div className="tw-relative tw-isolate tw-overflow-hidden">
-          <AmbientOrbit
-            enabled={motion}
-            date={state.selected.date}
-          />
+        <div
+          className="site-workspace tw-relative tw-isolate tw-overflow-hidden"
+          data-theme-photo={hasPhoto || undefined}
+        >
+          {hasPhoto ? (
+            <ThemeBackdrop background={background} />
+          ) : (
+            <AmbientOrbit
+              enabled={motion}
+              date={state.selected.date}
+            />
+          )}
           <header className="tw-relative tw-mx-auto tw-flex tw-w-full tw-max-w-[1168px] tw-items-center tw-justify-between tw-gap-4 tw-px-6 tw-py-6 compact:tw-px-4 compact:tw-py-5">
             <a
               href="#calendar"
               aria-label="i日历，回到日历"
-              className="tw-flex tw-items-center tw-gap-3 tw-text-ink tw-no-underline"
+              className="site-theme-chrome tw-flex tw-items-center tw-gap-3 tw-text-ink tw-no-underline"
             >
               <img
                 src={logo}
@@ -88,18 +104,20 @@ export function Website({ controller }: { controller: CalendarController }) {
               aria-label="官网导航"
               className="tw-flex tw-items-center tw-gap-6 tw-text-xs"
             >
-              <CalendarButton
-                appearance="text"
-                aria-pressed={motion && !reduced}
-                disabled={reduced}
-                onClick={() => setMotion((value) => !value)}
-                title="系统减少动态效果时自动保持静态"
-              >
-                {reduced ? '静态光轨' : motion ? '暂停光轨' : '播放光轨'}
-              </CalendarButton>
+              {!hasPhoto ? (
+                <CalendarButton
+                  appearance="text"
+                  aria-pressed={motion && !reduced}
+                  disabled={reduced}
+                  onClick={() => setMotion((value) => !value)}
+                  title="系统减少动态效果时自动保持静态"
+                >
+                  {reduced ? '静态光轨' : motion ? '暂停光轨' : '播放光轨'}
+                </CalendarButton>
+              ) : null}
               <a
                 href="#about"
-                className="tw-inline-flex tw-min-h-11 tw-items-center tw-gap-2 tw-text-ink tw-no-underline hover:tw-text-action"
+                className="site-theme-chrome tw-inline-flex tw-min-h-11 tw-items-center tw-gap-2 tw-text-ink tw-no-underline hover:tw-text-action"
               >
                 关于与下载 <Arrow down />
               </a>
@@ -113,7 +131,7 @@ export function Website({ controller }: { controller: CalendarController }) {
               className="site-calendar tw-mx-auto tw-w-full tw-max-w-[1168px] tw-scroll-mt-4 tw-px-6 tw-pb-10 tw-pt-5 compact:tw-px-3 compact:tw-pb-6 compact:tw-pt-2"
             >
               <div className="tw-mb-8 tw-flex tw-items-end tw-justify-between tw-gap-4 tw-px-1 compact:tw-mb-5">
-                <div>
+                <div className="site-theme-chrome">
                   <h1 className="tw-m-0 tw-text-[40px] tw-font-semibold tw-leading-tight tw-tracking-[-0.035em] compact:tw-text-[28px]">
                     时间，触手可及。
                   </h1>
@@ -121,16 +139,18 @@ export function Website({ controller }: { controller: CalendarController }) {
                     公历与农历 · 节气与休班
                   </p>
                 </div>
-                <span className="tw-hidden tw-pb-1 tw-text-xs tw-text-ink sm:tw-inline">
+                <span className="site-theme-chrome tw-hidden tw-pb-1 tw-text-xs tw-text-ink sm:tw-inline">
                   北京时间 · 本地计算
                 </span>
               </div>
               <CalendarApp controller={controller} />
               <p className="tw-mb-0 tw-mt-4 tw-text-center tw-text-[11px] tw-leading-5 tw-text-ink">
-                点击日期查看详情
-                <span className="tw-hidden desktop:tw-inline">
-                  {' '}
-                  · 方向键选日 · PageUp / PageDown 切月 · T 回到今天
+                <span className="site-theme-chrome">
+                  点击日期查看详情
+                  <span className="tw-hidden desktop:tw-inline">
+                    {' '}
+                    · 方向键选日 · PageUp / PageDown 切月 · T 回到今天
+                  </span>
                 </span>
               </p>
             </section>

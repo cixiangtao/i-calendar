@@ -1,13 +1,14 @@
 import { themeImageUrl } from './theme-image.js';
 import type { ThemeBackground } from './theme-package.js';
 
-/** 月份工具栏及编辑预览共用图片层，阅读区由实色主题底承载。 */
+/** 应用画布和主题预览共享可裁切的装饰图片层。 */
 export function ThemeBackdrop({
   background,
   dark,
 }: {
   background: ThemeBackground | undefined;
-  dark: boolean;
+  /** 预览可单独指定明暗，应用画布默认使用当前外观。 */
+  dark?: boolean;
 }) {
   if (!background || !background.strength) return null;
   return (

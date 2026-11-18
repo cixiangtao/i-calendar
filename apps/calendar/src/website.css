@@ -2,6 +2,23 @@
 .site-calendar > .calendar-app {
   animation: calendar-resolve 480ms var(--motion-ease) both;
 }
+.site-workspace[data-theme-photo='true'] > .theme-backdrop::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--canvas),
+    transparent 24%,
+    transparent 78%,
+    var(--canvas)
+  );
+  content: '';
+}
+.site-workspace[data-theme-photo='true'] .site-theme-chrome {
+  border-radius: 12px;
+  padding: 8px 12px;
+  background: var(--surface);
+}
 @keyframes calendar-resolve {
   from {
     clip-path: inset(0 0 0 0 round 8px);

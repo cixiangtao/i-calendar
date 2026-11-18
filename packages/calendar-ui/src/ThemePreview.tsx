@@ -34,73 +34,77 @@ export function ThemePreview({
   const selectedIndex = state.month.cells.findIndex((day) => day?.date === state.selected.date);
   const weekStart = Math.max(0, Math.floor(selectedIndex / 7) * 7);
   const week = state.month.cells.slice(weekStart, weekStart + 7);
+  const background = themeBackground(theme);
   return (
     <div className="tw-grid tw-gap-1.5">
       <div
         className="theme-mini-calendar tw-relative tw-isolate tw-overflow-hidden tw-rounded-xl tw-bg-surface tw-text-ink"
+        data-theme-photo={background?.strength ? true : undefined}
         style={{ ...tokens, colorScheme: mode }}
         aria-label="月历配色预览"
       >
         <ThemeBackdrop
-          background={themeBackground(theme)}
+          background={background}
           dark={mode === 'dark'}
         />
-        <div className="tw-relative tw-flex tw-min-h-12 tw-items-center tw-justify-between tw-gap-2 tw-px-2.5">
-          <strong className="tw-rounded-lg tw-bg-control tw-px-2 tw-py-1 tw-text-xs tw-font-semibold">
-            {state.year} 年 {state.monthNumber} 月
-          </strong>
-          <span className="tw-rounded-lg tw-bg-action-soft tw-px-2 tw-py-1 tw-text-xs tw-text-action">
-            今天
-          </span>
-        </div>
-        <div className="tw-relative tw-grid tw-grid-cols-7 tw-gap-0.5 tw-bg-surface tw-p-1.5">
-          {week.map((day, index) => {
-            if (!day) return <span key={index} />;
-            const today = day.date === state.today;
-            const selected = day.date === state.selected.date;
-            const holiday = day.schedule.kind === 'holiday';
-            const rest = holiday || day.schedule.kind === 'weekend';
-            return (
-              <div
-                key={day.date}
-                className={
-                  'tw-grid tw-min-h-9 tw-min-w-0 tw-content-center tw-justify-items-center tw-rounded-lg tw-px-0.5 ' +
-                  (today
-                    ? 'tw-bg-leaf tw-text-[var(--leaf-ink)]'
-                    : selected
-                      ? 'tw-bg-[var(--selected-bg)]'
-                      : holiday
-                        ? 'tw-bg-red-soft'
-                        : '')
-                }
-              >
-                <b
+        <div className="tw-relative tw-overflow-hidden tw-rounded-lg tw-bg-surface">
+          <div className="tw-flex tw-min-h-11 tw-items-center tw-justify-between tw-gap-2 tw-px-2.5">
+            <strong className="tw-rounded-lg tw-bg-control tw-px-2 tw-py-1 tw-text-xs tw-font-semibold">
+              {state.year} 年 {state.monthNumber} 月
+            </strong>
+            <span className="tw-rounded-lg tw-bg-action-soft tw-px-2 tw-py-1 tw-text-xs tw-text-action">
+              今天
+            </span>
+          </div>
+          <div className="tw-relative tw-grid tw-grid-cols-7 tw-gap-0.5 tw-bg-surface tw-p-1.5">
+            {week.map((day, index) => {
+              if (!day) return <span key={index} />;
+              const today = day.date === state.today;
+              const selected = day.date === state.selected.date;
+              const holiday = day.schedule.kind === 'holiday';
+              const rest = holiday || day.schedule.kind === 'weekend';
+              return (
+                <div
+                  key={day.date}
                   className={
-                    'tw-text-sm tw-tabular-nums ' +
-                    (today ? '' : rest ? 'tw-text-red' : selected ? 'tw-text-action' : '')
-                  }
-                >
-                  {day.day}
-                </b>
-                <span
-                  className={
-                    'tw-w-full tw-truncate tw-text-center tw-text-[11px] ' +
+                    'tw-grid tw-min-h-9 tw-min-w-0 tw-content-center tw-justify-items-center tw-rounded-lg tw-px-0.5 ' +
                     (today
-                      ? ''
-                      : day.festivals.length
-                        ? 'tw-text-[var(--purple)]'
-                        : day.solarTerm
-                          ? 'tw-text-green'
-                          : selected
-                            ? 'tw-text-[var(--selected-ink)]'
-                            : 'tw-text-[var(--lunar-ink)]')
+                      ? 'tw-bg-leaf tw-text-[var(--leaf-ink)]'
+                      : selected
+                        ? 'tw-bg-[var(--selected-bg)]'
+                        : holiday
+                          ? 'tw-bg-red-soft'
+                          : '')
                   }
                 >
-                  {caption(day)}
-                </span>
-              </div>
-            );
-          })}
+                  <b
+                    className={
+                      'tw-text-sm tw-tabular-nums ' +
+                      (today ? '' : rest ? 'tw-text-red' : selected ? 'tw-text-action' : '')
+                    }
+                  >
+                    {day.day}
+                  </b>
+                  <span
+                    className={
+                      'tw-w-full tw-truncate tw-text-center tw-text-[11px] ' +
+                      (today
+                        ? ''
+                        : day.festivals.length
+                          ? 'tw-text-[var(--purple)]'
+                          : day.solarTerm
+                            ? 'tw-text-green'
+                            : selected
+                              ? 'tw-text-[var(--selected-ink)]'
+                              : 'tw-text-[var(--lunar-ink)]')
+                    }
+                  >
+                    {caption(day)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
       {issues.length ? (

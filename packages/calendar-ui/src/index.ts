@@ -33,6 +33,9 @@ export { CalendarColorInput } from './CalendarColorInput.js';
 
 export { parseThemePackage, builtInThemes } from './theme-package.js';
 export type { ThemePalette, CalendarThemePackage } from './theme-package.js';
+export { activeTheme } from './theme-library.js';
+export { themeBackground } from './theme-image.js';
+export { ThemeBackdrop } from './ThemeBackdrop.js';
 export { deriveColorTokens } from './color-theme.js';
 export type { LocatedPoint, SunlightPreferences } from './sunlight-location.js';
 export { LocationRequestError, validLocatedPoint } from './sunlight-location.js';
