@@ -48,6 +48,7 @@ export const colorTokenGroups = [
     items: [
       { key: '--blue', label: '操作与选中强调色' },
       { key: '--blue-soft', label: '选中与操作底色' },
+      { key: '--selected-bg', label: '选中日期底色' },
       { key: '--selected-ink', label: '选中日期农历文字' },
     ],
   },
@@ -280,6 +281,12 @@ export function deriveColorTokens(palette: ThemePalette, increasedContrast = fal
       ? mix(surface, canvas, 0.55)
       : mix(surface, neutralTarget, 0.025);
   const soft = mix(surface, accent, paletteDark ? 0.14 : 0.08);
+  // 先校正与卡片同色的极端强调色，去掉描边后日期仍有独立的选中底色。
+  const selectedBg = mix(
+    surface,
+    readable(accent, [surface], paletteDark),
+    paletteDark ? 0.24 : 0.16,
+  );
   const controlHover = mix(control, neutralTarget, paletteDark ? 0.1 : 0.06);
   const controlActive = mix(control, neutralTarget, paletteDark ? 0.16 : 0.1);
   const textSeed = (amount: number) => mix(ink, surface, amount);
@@ -300,7 +307,7 @@ export function deriveColorTokens(palette: ThemePalette, increasedContrast = fal
   );
   const action = readable(
     accent,
-    [surface, soft, control, hover, controlHover, controlActive],
+    [surface, soft, selectedBg, control, hover, controlHover, controlActive],
     paletteDark,
     increasedContrast ? 7 : 4.5,
   );
@@ -325,7 +332,7 @@ export function deriveColorTokens(palette: ThemePalette, increasedContrast = fal
     const tint = mix(surface, base, paletteDark ? 0.16 : 0.07);
     const foreground = readable(
       base,
-      [surface, ...semanticSurfaces, control, soft],
+      [surface, ...semanticSurfaces, control, soft, selectedBg],
       paletteDark,
       minimum,
     );
@@ -361,7 +368,8 @@ export function deriveColorTokens(palette: ThemePalette, increasedContrast = fal
     '--lunar-ink': lunar,
     '--weekday-ink': weekday,
     '--hint-ink': hint,
-    '--selected-ink': readable(ink, [soft], paletteDark, minimum),
+    '--selected-bg': selectedBg,
+    '--selected-ink': readable(ink, [soft, selectedBg], paletteDark, minimum),
     '--line': mix(surface, neutralTarget, increasedContrast ? 0.5 : paletteDark ? 0.18 : 0.12),
     '--control': control,
     '--control-hover': controlHover,
@@ -415,10 +423,17 @@ export function colorContrastIssues(tokens: Record<ColorToken, string>, increase
     { foreground: '--hint-ink', backgrounds: ['--surface', '--canvas', '--control'], minimum },
     {
       foreground: '--blue',
-      backgrounds: ['--surface', '--blue-soft', '--control', '--control-hover', '--control-active'],
+      backgrounds: [
+        '--surface',
+        '--blue-soft',
+        '--selected-bg',
+        '--control',
+        '--control-hover',
+        '--control-active',
+      ],
       minimum,
     },
-    { foreground: '--selected-ink', backgrounds: ['--blue-soft'], minimum },
+    { foreground: '--selected-ink', backgrounds: ['--selected-bg'], minimum },
     { foreground: '--leaf-ink', backgrounds: ['--leaf'], minimum: 4.5 },
     {
       foreground: '--switch-thumb',
@@ -434,7 +449,13 @@ export function colorContrastIssues(tokens: Record<ColorToken, string>, increase
     },
     ...(['red', 'green', 'yellow', 'purple'] as const).map((role) => ({
       foreground: `--${role}` as ColorToken,
-      backgrounds: ['--surface', '--control', '--blue-soft', `--${role}-soft`] as ColorToken[],
+      backgrounds: [
+        '--surface',
+        '--control',
+        '--blue-soft',
+        '--selected-bg',
+        `--${role}-soft`,
+      ] as ColorToken[],
       minimum,
     })),
     ...(

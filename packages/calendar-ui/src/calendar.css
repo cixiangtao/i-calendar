@@ -70,9 +70,7 @@ a:focus-visible {
   padding: 0;
 }
 .day-cell {
-  transition:
-    background-color var(--motion-feedback) var(--motion-ease),
-    box-shadow var(--motion-feedback) var(--motion-ease);
+  transition: background-color var(--motion-feedback) var(--motion-ease);
 }
 .solar-day,
 .lunar-day {
@@ -103,8 +101,7 @@ a:focus-visible {
   color: var(--outside-purple);
 }
 .day-cell.selected:not(.is-today) {
-  background: var(--blue-soft);
-  box-shadow: inset 0 0 0 2px var(--blue);
+  background: var(--selected-bg);
 }
 .day-cell.selected .solar-day {
   color: var(--blue);

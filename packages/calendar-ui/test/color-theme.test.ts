@@ -221,7 +221,10 @@ test('预设与极端强调色在明暗模式均满足文字对比，原始选�
             assert.ok(contrastRatio(t[fg], t[bg]) >= 4.5, `${preset.id}/${dark}/${fg}/${bg}`);
         assert.notEqual(t['--control'], t['--control-hover']);
         assert.notEqual(t['--control-hover'], t['--control-active']);
-        assert.ok(contrastRatio(t['--selected-ink'], t['--blue-soft']) >= 4.5);
+        assert.notEqual(t['--selected-bg'], t['--surface']);
+        assert.notEqual(t['--selected-bg'], t['--control']);
+        for (const fg of ['--blue', '--selected-ink', '--green', '--purple'] as const)
+          assert.ok(contrastRatio(t[fg], t['--selected-bg']) >= 4.5);
         assert.notEqual(t['--outside-ink'], t['--lunar-ink']);
         assert.ok(
           contrastRatio(t['--outside-ink'], t['--surface']) <
