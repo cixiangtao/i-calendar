@@ -161,7 +161,7 @@ export function ThemeEditor({
           >
             <CalendarInput
               id={id + key}
-              className="tw-tabular-nums"
+              className={'tw-tabular-nums' + (format !== 'hex' ? ' compact:tw-text-xs' : '')}
               spellCheck={false}
               autoComplete="off"
               value={value}

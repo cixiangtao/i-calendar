@@ -103,7 +103,9 @@ export function formatThemeColor(color: ThemeColor, format: ThemeColorFormat): s
   }
   const hue = decimal((angle * 60 + 360) % 360, 3);
   const parts = [hue, decimal(saturation * 100, 3) + '%', decimal(lightness * 100, 3) + '%'];
-  return (alpha === 1 ? 'hsl(' : 'hsla(') + parts.join(', ') + suffix;
+  return (
+    (alpha === 1 ? 'hsl(' : 'hsla(') + parts.join(',') + (alpha === 1 ? ')' : ',' + opacity + ')')
+  );
 }
 
 /** 只允许背景色有 Alpha。透明度保留六位小数，实色输出六位 HEX。 */
