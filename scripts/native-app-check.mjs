@@ -49,6 +49,18 @@ export async function checkNativeApp({
     await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
   };
   const defer = async (reason, failure) => {
+    // 尚未实际重跑时保留上次的部分结果与错误，避免反复锁屏覆盖原始证据。
+    if (!failure && !report.results.length) {
+      try {
+        const previous = JSON.parse(await readFile(reportPath, 'utf8'));
+        if (previous.status === 'pending') {
+          console.log(`仍待验：${reason}；保留原记录 ${reportPath}。`);
+          return previous;
+        }
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+    }
     report.reason = reason;
     if (failure)
       report.lastFailure = {

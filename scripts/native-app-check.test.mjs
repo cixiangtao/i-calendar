@@ -67,6 +67,8 @@ test('运行中锁屏保留失败证据并标记待验，不声称通过', async
   assert.equal(result.status, 'pending');
   assert.equal(result.lastFailure.stderr, '保留原断言');
   assert.equal((await f.report()).lastFailure.message, '窗口轨迹失败');
+  await resumeNativeChecks({ ...f, session: locked });
+  assert.equal((await f.report()).lastFailure.stderr, '保留原断言');
 });
 
 test('桌面可用时的失败和不完整通过标记仍然阻止检查', async (t) => {
