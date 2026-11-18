@@ -23,6 +23,7 @@
 - 功能修改执行适用的类型检查、测试和构建；纯文档修改检查内容与链接即可。
 - 公共核心修改后运行 `pnpm run build`，验证 ESM 与共享前端构建；涉及原生行为时运行 `pnpm run check:native`、`pnpm run build:mac` 和 `pnpm run check:mac`。`dist/`、`target/` 等构建目录不跟踪。
 - 任务结束报告提交记录和验证结果，并确认工作区状态。
+- 本机锁屏或桌面不可用只延后真实窗口验收，继续执行测试、构建、签名、发布及官网检查，不反复要求用户解锁。本地使用 `pnpm run check:mac --defer-unavailable` 记录待验，桌面可用后用 `pnpm run check:mac --resume` 复用原产物补验；待验不记为通过。CI 仍严格执行窗口检查，真实失败继续阻断，不修改锁屏设置或降低断言。
 
 ## 产品与架构
 
