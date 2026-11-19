@@ -109,7 +109,7 @@ test('拒绝损坏、未知路径、缺图和超大小限制的 ZIP', async () =
   const { layout, theme } = await localTheme();
   const data = manifest(plain);
   const damaged = await makeZip([['theme.json', data]]);
-  const configOffset = damaged.indexOf('{'.charCodeAt(0));
+  const configOffset = Buffer.from(damaged).indexOf(data);
   assert.ok(configOffset > 0);
   damaged[configOffset + 2] ^= 1;
 
