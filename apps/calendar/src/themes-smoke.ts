@@ -19,7 +19,7 @@ function verifyPanelAlpha(selector: string, alpha: number) {
 }
 
 /** 在隔离 WKWebView 内校验默认外观、带图主题文件、挂载和复原。 */
-export async function verifyThemes(controller: CalendarController) {
+export async function verifyThemes(controller: CalendarController, trace: (stage: string) => void) {
   const previous = controller.getSnapshot().preferences.themes;
   if (backdropImage()) throw new Error('默认清爽白含有背景图片');
   verifyPanelAlpha('.month-panel', 1);
@@ -34,11 +34,14 @@ export async function verifyThemes(controller: CalendarController) {
     },
     background: themeBackground(mountain),
   };
+  trace('开始旧主题包解码');
   const legacy = await readThemeFile(new File([JSON.stringify(content)], 'legacy.icaltheme'));
+  trace('开始 ZIP 往返');
   const imported = await readThemeFile(new File([await encodeThemeArchive(legacy)], 'smoke.zip'));
   if (!legacy.background?.image || imported.background?.image !== legacy.background.image)
     throw new Error('本地背景主题 ZIP 往返后图片不同');
 
+  trace('开始在线背景地址往返');
   const url = 'https://example.invalid/theme-photo.jpg';
   const onlineTheme = parseThemePackage({
     ...content,
@@ -51,6 +54,7 @@ export async function verifyThemes(controller: CalendarController) {
   if (online.background?.url !== url || online.background.image !== undefined)
     throw new Error('在线背景主题导入未保留原链接');
   try {
+    trace('开始应用并解码背景');
     const saved = await flushSync(() =>
       controller.setPreferences({ themes: { selectedId: imported.id, custom: [imported] } }),
     );
@@ -58,6 +62,7 @@ export async function verifyThemes(controller: CalendarController) {
     if (!saved || !loaded) throw new Error('带图主题未应用');
     await loaded.decode();
     if (loaded.naturalWidth <= 0) throw new Error('带图主题未正常解码');
+    trace('开始检查透明卡片');
     verifyPanelAlpha('.month-panel', 0);
     verifyPanelAlpha('.detail-panel', 0);
     const surface = document.documentElement.style.getPropertyValue('--surface');
@@ -81,6 +86,7 @@ export async function verifyThemes(controller: CalendarController) {
   }
   if (backdropImage()) throw new Error('恢复清爽白后仍有背景图片');
   verifyPanelAlpha('.month-panel', 1);
+  trace('开始检查实时草稿');
   const appearance = document.documentElement.dataset.theme;
   const previewAppearance = appearance === 'dark' ? 'light' : 'dark';
   flushSync(() => {
@@ -93,6 +99,7 @@ export async function verifyThemes(controller: CalendarController) {
     if (!field || !preview || document.documentElement.dataset.theme !== previewAppearance)
       throw new Error('编辑主题时未实时预览所选明暗外观');
     verifyPanelAlpha('.settings-panel', 0);
+    trace('开始切换到真实月历');
     flushSync(() => preview.click());
     if (field.getClientRects().length || !field.isConnected)
       throw new Error('查看月历时未保留编辑表单');
@@ -101,6 +108,7 @@ export async function verifyThemes(controller: CalendarController) {
       (button) => button.textContent.trim() === '继续编辑',
     );
     if (!resume) throw new Error('预览月历时缺少继续编辑入口');
+    trace('开始恢复编辑表单');
     flushSync(() => resume.click());
     if (!field.getClientRects().length) throw new Error('继续编辑后未恢复原表单');
     flushSync(() => controller.cancelThemeEdit());

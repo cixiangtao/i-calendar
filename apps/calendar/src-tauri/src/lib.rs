@@ -295,6 +295,12 @@ fn quit_calendar(app: tauri::AppHandle) {
 
 #[tauri::command]
 async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), String> {
+    if std::env::args().any(|argument| argument == "--smoke-test") {
+        if let Some(message) = report.get("diagnostic").and_then(Value::as_str) {
+            eprintln!("WebView：{message}");
+            return Ok(());
+        }
+    }
     #[cfg(target_os = "macos")]
     {
         let arguments: Vec<_> = std::env::args().collect();
