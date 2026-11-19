@@ -14,8 +14,16 @@ const backdropImage = () =>
 
 function verifyPanelAlpha(selector: string, alpha: number) {
   const panel = document.querySelector(selector);
-  const background = panel && parseThemeColor(getComputedStyle(panel).backgroundColor);
-  if (background?.alpha !== alpha) throw new Error(`主题卡片的透明度不正确：${selector}`);
+  const styles = panel && getComputedStyle(panel);
+  const color = styles?.backgroundColor || '';
+  const background = parseThemeColor(color);
+  if (background?.alpha !== alpha)
+    throw new Error(
+      `主题卡片的透明度不正确：${selector}，期望 ${alpha}，实际 ${JSON.stringify(color)}，` +
+        `卡片变量 ${JSON.stringify(styles?.getPropertyValue('--panel-background'))}，` +
+        `根变量 ${JSON.stringify(document.documentElement.style.getPropertyValue('--panel-background'))}，` +
+        `主题 ${document.documentElement.dataset.theme}，平台 ${document.body.dataset.platform}`,
+    );
 }
 
 /** 在隔离 WKWebView 内校验默认外观、带图主题文件、挂载和复原。 */
