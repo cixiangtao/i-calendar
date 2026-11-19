@@ -1,4 +1,4 @@
-name: 诊断 2.1.0 原生窗口检查
+name: 检查 WKWebView 背景色刷新
 
 on:
   push:
@@ -8,35 +8,15 @@ permissions:
   contents: read
 
 jobs:
-  smoke:
-    name: 记录卡片计算出的背景色
+  probe:
+    name: 隐藏 WKWebView 背景色
     runs-on: macos-15
-    timeout-minutes: 40
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: '24'
-          package-manager-cache: false
-      - name: 准备锁定工具链并构建
+      - name: 用系统 WKWebView 执行最小复现
         run: |
-          test "$(uname -m)" = arm64
           sw_vers
-          npm install --global corepack@0.35.0 --force
-          corepack enable
-          corepack install
-          rustup toolchain install 1.99.1 --profile minimal
-          pnpm install --frozen-lockfile
-          export I_CALENDAR_UPDATE_ENDPOINT="$(node -p 'require("./release/config.json").updateEndpoint')"
-          export I_CALENDAR_UPDATE_PUBKEY="$(node -p 'require("./release/config.json").publicKey')"
-          pnpm run tauri build --ci --bundles app
-      - name: 运行普通启动和后台启动
-        env:
-          I_CALENDAR_SMOKE_SETTLED_ONLY: '1'
-        run: |
-          executable="apps/calendar/src-tauri/target/release/bundle/macos/i日历.app/Contents/MacOS/i-calendar"
-          "$executable" --smoke-test
-          "$executable" --smoke-test --autostart
+          swift scripts/theme-webview-probe.swift
