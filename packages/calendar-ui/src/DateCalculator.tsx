@@ -19,6 +19,7 @@ interface DateCalculatorProps {
   holidays: HolidayStore;
   selectedDate: DateKey;
   today: DateKey;
+  panelBackground: string;
   onBack: () => void;
   onViewDate: (date: DateKey) => void;
 }
@@ -77,6 +78,7 @@ export function DateCalculator({
   holidays,
   selectedDate,
   today,
+  panelBackground,
   onBack,
   onViewDate,
 }: DateCalculatorProps) {
@@ -149,7 +151,8 @@ export function DateCalculator({
 
   return (
     <section
-      className="tw-flex tw-h-[min(640px,_calc(100svh_-_64px))] tw-min-h-0 tw-min-w-0 tw-flex-col tw-overflow-hidden tw-rounded-[22px] tw-bg-panel tw-p-5 mac:tw-h-full mac:tw-rounded-[18px] mac:tw-p-3 compact:tw-h-[calc(100svh_-_24px)] mac:compact:tw-h-full"
+      className="tw-flex tw-h-[min(640px,_calc(100svh_-_64px))] tw-min-h-0 tw-min-w-0 tw-flex-col tw-overflow-hidden tw-rounded-[22px] tw-p-5 mac:tw-h-full mac:tw-rounded-[18px] mac:tw-p-3 compact:tw-h-[calc(100svh_-_24px)] mac:compact:tw-h-full"
+      style={{ backgroundColor: panelBackground }}
       aria-labelledby="calculator-title"
     >
       <header className="tw-mb-5 tw-flex tw-min-h-[30px] tw-shrink-0 tw-items-center tw-justify-between tw-gap-3">

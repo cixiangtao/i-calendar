@@ -30,15 +30,8 @@ class AppBoundary extends Component<{ children: ReactNode }, { failed: boolean }
   }
 }
 
-let nativeSmoke = false;
-function traceSmoke(diagnostic: string) {
-  if (nativeSmoke) void invoke('frontend_ready', { report: { diagnostic } });
-}
-
 async function start() {
   const { platform, smokeTest } = await createPlatform();
-  nativeSmoke = smokeTest && platform.kind === 'macos';
-  traceSmoke('已建立平台连接');
   document.body.dataset.platform = platform.kind;
   const controller = new CalendarController(platform);
   await controller.initialize();
@@ -99,7 +92,6 @@ async function start() {
       });
     }
     // 原生冒烟测试经真实 WebView 调用共享核心，再把结果传回 Rust。
-    traceSmoke('开始计算器、版本说明和日照检查');
     const calculatorVerified = smokeTest
       ? (await import('./calculator-smoke.js')).verifyDateCalculator(controller)
       : undefined;
@@ -109,11 +101,9 @@ async function start() {
     const sunlightVerified = smokeTest
       ? await (await import('./sunlight-smoke.js')).verifySunlight(platform)
       : undefined;
-    traceSmoke('开始主题检查');
     const themesVerified = smokeTest
-      ? await (await import('./themes-smoke.js')).verifyThemes(controller, traceSmoke)
+      ? await (await import('./themes-smoke.js')).verifyThemes(controller).catch(String)
       : undefined;
-    traceSmoke('主题通过，开始原生窗口检查');
     const report = {
       sunlightVerified,
       calculatorVerified,
@@ -156,7 +146,6 @@ async function start() {
 
 void start().catch((error: unknown) => {
   console.error('i日历启动失败', error);
-  traceSmoke(error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error));
   const root = document.getElementById('root');
   if (root) {
     root.replaceChildren();
