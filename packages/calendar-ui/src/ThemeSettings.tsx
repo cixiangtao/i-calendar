@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
+import { encodeThemeArchive } from './theme-archive.js';
 import { readThemeFile, themeBackground } from './theme-image.js';
 import { activeTheme, copyTheme, isBuiltInTheme, type ThemeLibrary } from './theme-library.js';
-import { builtInThemes, parseThemePackage, type CalendarThemePackage } from './theme-package.js';
+import { builtInThemes, type CalendarThemePackage } from './theme-package.js';
 import { ThemeBackgroundImage } from './ThemeBackdrop.js';
 import { ThemeEditor } from './ThemeEditor.js';
 import { ThemeFilePicker } from './ThemeFilePicker.js';
@@ -177,13 +178,13 @@ export function ThemeSettings({
     setOperation('export');
     setFeedback(null);
     try {
-      const theme = parseThemePackage(packageWithImage(selected));
+      const theme = packageWithImage(selected);
       const filename = theme.name
         .replace(/[\p{Cc}\\/:*?"<>|]/gu, '-')
         .replace(/^[. ]+|[. ]+$/g, '');
       const exported = await controller.platform.exportTheme?.(
         (filename || 'i日历主题') + '.icaltheme',
-        JSON.stringify(theme, null, 2) + '\n',
+        await encodeThemeArchive(theme),
       );
       if (exported) setFeedback({ message: '主题已导出。', error: false });
     } catch (error) {
@@ -343,7 +344,7 @@ export function ThemeSettings({
               </CalendarButton>
               <ThemeFilePicker
                 platform={controller.platform}
-                accept=".icaltheme,.json,application/json"
+                accept=".icaltheme,.zip,.json,application/zip,application/json"
                 label="导入主题…"
                 disabled={!state.ready || operation !== null}
                 loading={operation === 'import'}

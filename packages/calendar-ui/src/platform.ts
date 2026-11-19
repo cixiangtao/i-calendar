@@ -36,7 +36,7 @@ export interface CalendarPlatform {
   openExternal(url: string): Promise<void>;
   copyText(text: string): Promise<void>;
   /** 打开宿主的保存界面，用户取消时返回 false。 */
-  exportTheme?(name: string, content: string): Promise<boolean>;
+  exportTheme?(name: string, content: Uint8Array<ArrayBuffer>): Promise<boolean>;
   /** 一次性高精度定位；仅由明确启用的位置功能调用，取消时停止宿主请求。 */
   locate?(signal: AbortSignal, requestPermission: boolean): Promise<LocatedPoint>;
   /** 仅 Mac 提供，打开固定的系统定位权限面板。 */

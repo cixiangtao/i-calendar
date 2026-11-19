@@ -13,8 +13,8 @@ const STORAGE_KEY = 'i-calendar:state:v1';
 // 仅用于只读迁移；新数据始终写入当前名称，旧记录保留。
 const LEGACY_STORAGE_KEY = 'shiri-calendar:state:v1';
 
-async function downloadTheme(name: string, content: string) {
-  const file = new File([content], name, { type: 'application/json' });
+async function downloadTheme(name: string, content: Uint8Array<ArrayBuffer>) {
+  const file = new File([content], name, { type: 'application/zip' });
   const url = URL.createObjectURL(file);
   const link = document.createElement('a');
   link.href = url;
@@ -167,7 +167,10 @@ export async function createPlatform(): Promise<{
           ? async (name, content) => {
               await invoke('set_popup_busy', { busy: true });
               try {
-                return await invoke<boolean>('export_theme', { name, content });
+                return await invoke<boolean>('export_theme', {
+                  name,
+                  content: Array.from(content),
+                });
               } finally {
                 await invoke('set_popup_busy', { busy: false }).catch(() => {});
               }

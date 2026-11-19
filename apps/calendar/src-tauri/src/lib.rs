@@ -217,7 +217,7 @@ async fn save_state(
 async fn export_theme(
     app: tauri::AppHandle,
     name: String,
-    content: String,
+    content: Vec<u8>,
 ) -> Result<bool, String> {
     #[cfg(target_os = "macos")]
     return theme_export::save(app, name, content).await;

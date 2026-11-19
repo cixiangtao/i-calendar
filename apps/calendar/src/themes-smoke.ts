@@ -1,8 +1,12 @@
 import type { CalendarController } from '@i-calendar/ui';
 import { flushSync } from 'react-dom';
 
+import { encodeThemeArchive } from '../../../packages/calendar-ui/src/theme-archive.js';
 import { readThemeFile, themeBackground } from '../../../packages/calendar-ui/src/theme-image.js';
-import { builtInThemes } from '../../../packages/calendar-ui/src/theme-package.js';
+import {
+  builtInThemes,
+  parseThemePackage,
+} from '../../../packages/calendar-ui/src/theme-package.js';
 
 const backdropImage = () =>
   document.querySelector<HTMLImageElement>('.calendar-app > .theme-backdrop img');
@@ -17,21 +21,21 @@ export async function verifyThemes(controller: CalendarController) {
     id: 'smoke-theme',
     background: themeBackground(mountain),
   };
+  const legacy = await readThemeFile(new File([JSON.stringify(content)], 'legacy.icaltheme'));
   const imported = await readThemeFile(
-    new File([JSON.stringify(content)], 'smoke.icaltheme', { type: 'application/json' }),
+    new File([await encodeThemeArchive(legacy)], 'smoke.icaltheme'),
   );
+  if (!legacy.background?.image || imported.background?.image !== legacy.background.image)
+    throw new Error('本地背景主题 ZIP 往返后图片不同');
+
   const url = 'https://example.invalid/theme-photo.jpg';
+  const onlineTheme = parseThemePackage({
+    ...content,
+    schemaVersion: 3,
+    background: { url, strength: 78, x: 50, y: 50 },
+  });
   const online = await readThemeFile(
-    new File(
-      [
-        JSON.stringify({
-          ...content,
-          schemaVersion: 3,
-          background: { url, strength: 78, x: 50, y: 50 },
-        }),
-      ],
-      'online.icaltheme',
-    ),
+    new File([await encodeThemeArchive(onlineTheme)], 'online.icaltheme'),
   );
   if (online.background?.url !== url || online.background.image !== undefined)
     throw new Error('在线背景主题导入未保留原链接');

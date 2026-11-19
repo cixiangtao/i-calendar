@@ -5,8 +5,8 @@ use objc2_foundation::{NSData, NSString};
 const MAX_THEME_BYTES: usize = 304_000;
 
 /// 将文件写入用户通过系统保存面板确认的位置。
-pub async fn save(app: tauri::AppHandle, name: String, content: String) -> Result<bool, String> {
-    if content.is_empty()
+pub async fn save(app: tauri::AppHandle, name: String, content: Vec<u8>) -> Result<bool, String> {
+    if !content.starts_with(b"PK\x03\x04")
         || content.len() > MAX_THEME_BYTES
         || name.chars().count() > 80
         || !name.ends_with(".icaltheme")
@@ -27,7 +27,7 @@ pub async fn save(app: tauri::AppHandle, name: String, content: String) -> Resul
                 response if response == NSModalResponseCancel => Ok(false),
                 response if response == NSModalResponseOK => {
                     let url = panel.URL().ok_or("无法获取保存位置")?;
-                    let data = NSData::with_bytes(content.as_bytes());
+                    let data = NSData::with_bytes(&content);
                     if data.writeToURL_atomically(&url, true) {
                         Ok(true)
                     } else {

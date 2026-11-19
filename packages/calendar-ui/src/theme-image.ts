@@ -1,9 +1,9 @@
 import mountain from './assets/theme-mountain.jpg?inline';
+import { decodeThemeFile } from './theme-archive.js';
 import {
   maxThemeImageLength,
   maxThemeImageSide,
   maxThemePackageBytes,
-  parseThemePackage,
   type CalendarThemePackage,
   type ThemeBackground,
 } from './theme-package.js';
@@ -78,13 +78,7 @@ export async function prepareThemeImage(file: File) {
 /** 读取并校验主题包及其背景，完成后才交给导入预览。 */
 export async function readThemeFile(file: File) {
   if (!file.size || file.size > maxThemePackageBytes) throw new Error('主题文件为空或超过大小限制');
-  let value: unknown;
-  try {
-    value = JSON.parse(await file.text());
-  } catch {
-    throw new Error('主题文件无法读取，请选择有效的 .icaltheme 或旧版 JSON');
-  }
-  const theme = parseThemePackage(value);
+  const theme = await decodeThemeFile(new Uint8Array(await file.arrayBuffer()));
   if (theme.background?.image) await decodeImage(themeImageUrl(theme.background));
   return theme;
 }
