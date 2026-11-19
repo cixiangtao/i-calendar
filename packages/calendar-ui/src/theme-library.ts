@@ -44,7 +44,7 @@ export function parseThemeLibrary(input: unknown): ThemeLibrary {
   )
     throw new Error('主题标识重复或当前主题不存在');
   const imageLength = themes.reduce(
-    (total, theme) => total + (theme.background?.image.length ?? 0),
+    (total, theme) => total + (theme.background?.image?.length ?? 0),
     0,
   );
   if (imageLength > maxLibraryImageLength)

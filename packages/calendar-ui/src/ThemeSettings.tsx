@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
-import { readThemeFile, themeBackground, themeImageUrl } from './theme-image.js';
+import { readThemeFile, themeBackground } from './theme-image.js';
 import { activeTheme, copyTheme, isBuiltInTheme, type ThemeLibrary } from './theme-library.js';
 import { builtInThemes, parseThemePackage, type CalendarThemePackage } from './theme-package.js';
+import { ThemeBackgroundImage } from './ThemeBackdrop.js';
 import { ThemeEditor } from './ThemeEditor.js';
 import { ThemeFilePicker } from './ThemeFilePicker.js';
 import { ThemePreview } from './ThemePreview.js';
@@ -19,6 +20,7 @@ type Workflow =
     };
 
 function packageWithImage(theme: CalendarThemePackage): CalendarThemePackage {
+  if (theme.background) return theme;
   const background = themeBackground(theme);
   return background ? { ...theme, schemaVersion: 2, rulesVersion: 2, background } : theme;
 }
@@ -61,14 +63,10 @@ function ThemeChoices({
               aria-hidden="true"
             >
               {background?.strength ? (
-                <img
-                  src={themeImageUrl(background)}
-                  alt=""
+                <ThemeBackgroundImage
+                  background={background}
+                  loading="lazy"
                   className="tw-absolute tw-inset-0 tw-h-full tw-w-full tw-object-cover"
-                  style={{
-                    opacity: background.strength / 100,
-                    objectPosition: background.x + '% ' + background.y + '%',
-                  }}
                 />
               ) : null}
               <span
@@ -111,7 +109,10 @@ export function ThemeSettings({
   function startEditing() {
     setFeedback(null);
     const shared = packageWithImage(selected);
-    const theme = { ...shared, schemaVersion: 2, rulesVersion: 2 } as const;
+    const theme =
+      shared.schemaVersion === 1
+        ? ({ ...shared, schemaVersion: 2, rulesVersion: 2 } as const)
+        : shared;
     setWorkflow({
       kind: 'edit',
       theme: isBuiltInTheme(theme.id) ? copyTheme({ ...theme, name: theme.name + '副本' }) : theme,

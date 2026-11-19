@@ -12,18 +12,20 @@ export interface ThemePalette {
   purple: string;
 }
 
-export interface ThemeBackground {
-  /** 应用已压缩的 JPEG，使用 Base64 原文，以便单文件离线交换。 */
-  image: string;
+interface ThemeBackgroundLayout {
   /** 百分比。零表示隐藏图片。 */
   strength: number;
   x: number;
   y: number;
 }
 
+/** 本地图嵌入 Base64 JPEG，在线图引用 HTTPS 地址。 */
+export type ThemeBackground = ThemeBackgroundLayout &
+  ({ image: string; url?: never } | { url: string; image?: never });
+
 /** 主题格式与派生规则分别版本化，v1 为历史纯色格式。 */
 export interface CalendarThemePackage {
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   rulesVersion: 1 | 2;
   id: string;
   name: string;
@@ -37,6 +39,7 @@ export interface CalendarThemePackage {
 export const maxThemeImageLength = 300_000;
 export const maxThemePackageBytes = 304_000;
 export const maxThemeImageSide = 1440;
+export const maxThemeImageUrlLength = 4096;
 
 /** 仅接受完整 RGB 色值，避免主题数据注入任意 CSS。 */
 export function isThemeColor(value: unknown): value is string {
@@ -89,18 +92,45 @@ function validJpeg(value: string) {
 const percent = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 100;
 
-function parseBackground(input: unknown): ThemeBackground {
+/** 校验在线图地址，保留查询参数和原链接写法。 */
+export function parseThemeImageUrl(input: unknown): string | null {
+  if (typeof input !== 'string') return null;
+  const value = input.trim();
+  if (value.length > maxThemeImageUrlLength || !/^https:\/\//i.test(value) || /\s/.test(value))
+    return null;
+  try {
+    const url = new URL(value);
+    if (!url.username && !url.password) return value;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function parseBackground(
+  input: unknown,
+  schemaVersion: CalendarThemePackage['schemaVersion'],
+): ThemeBackground {
   if (
     !record(input) ||
-    Object.keys(input).some((key) => !['image', 'strength', 'x', 'y'].includes(key)) ||
-    typeof input.image !== 'string' ||
-    !validJpeg(input.image) ||
+    Object.keys(input).some((key) => !['image', 'url', 'strength', 'x', 'y'].includes(key)) ||
     !percent(input.strength) ||
     !percent(input.x) ||
     !percent(input.y)
   )
     throw new Error('背景图或裁切参数无效');
-  return { image: input.image, strength: input.strength, x: input.x, y: input.y };
+  const { strength, x, y } = input;
+  if (schemaVersion === 3) {
+    const url = parseThemeImageUrl(input.url);
+    if (url && !Object.hasOwn(input, 'image')) return { url, strength, x, y };
+  } else if (
+    !Object.hasOwn(input, 'url') &&
+    typeof input.image === 'string' &&
+    validJpeg(input.image)
+  ) {
+    return { image: input.image, strength, x, y };
+  }
+  throw new Error('背景图或裁切参数无效');
 }
 
 /** 校验主题包与图片边界，返回规范化的独立数据副本。 */
@@ -120,7 +150,8 @@ export function parseThemePackage(input: unknown): CalendarThemePackage {
     !record(input) ||
     !(
       (input.schemaVersion === 1 && input.rulesVersion === 1 && input.background === undefined) ||
-      (input.schemaVersion === 2 && input.rulesVersion === 2)
+      (input.schemaVersion === 2 && input.rulesVersion === 2) ||
+      (input.schemaVersion === 3 && input.rulesVersion === 2 && input.background !== undefined)
     ) ||
     Object.keys(input).some((key) => !allowed.includes(key)) ||
     typeof input.id !== 'string' ||
@@ -181,7 +212,9 @@ export function parseThemePackage(input: unknown): CalendarThemePackage {
       light: parsePalette(input.palettes.light),
       dark: parsePalette(input.palettes.dark),
     },
-    ...(input.background === undefined ? {} : { background: parseBackground(input.background) }),
+    ...(input.background === undefined
+      ? {}
+      : { background: parseBackground(input.background, input.schemaVersion) }),
   };
 }
 

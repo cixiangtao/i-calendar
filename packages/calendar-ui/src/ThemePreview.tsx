@@ -1,5 +1,5 @@
 import type { CalendarDay } from '@i-calendar/core';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { colorContrastIssues, resolveThemeTokens } from './color-theme.js';
 import type { CalendarSnapshot } from './store.js';
@@ -35,6 +35,7 @@ export function ThemePreview({
   const weekStart = Math.max(0, Math.floor(selectedIndex / 7) * 7);
   const week = state.month.cells.slice(weekStart, weekStart + 7);
   const background = themeBackground(theme);
+  const [failedImage, setFailedImage] = useState('');
   return (
     <div className="tw-grid tw-gap-1.5">
       <div
@@ -46,6 +47,7 @@ export function ThemePreview({
         <ThemeBackdrop
           background={background}
           dark={mode === 'dark'}
+          onImageStatus={(source, loaded) => setFailedImage(loaded ? '' : source)}
         />
         <div className="tw-relative tw-overflow-hidden tw-rounded-lg tw-bg-surface">
           <div className="tw-flex tw-min-h-11 tw-items-center tw-justify-between tw-gap-2 tw-px-2.5">
@@ -107,6 +109,11 @@ export function ThemePreview({
           </div>
         </div>
       </div>
+      {background?.strength && background.url && failedImage === background.url ? (
+        <output className="tw-text-xs tw-text-secondary">
+          在线图片暂时无法加载，预览显示主题底色。
+        </output>
+      ) : null}
       {issues.length ? (
         <output className="tw-text-xs tw-text-yellow">
           部分色彩组合的对比度较低，可调整底色或主要文字颜色。

@@ -16,7 +16,13 @@ import {
   type ThemeColorFormat,
 } from './theme-color.js';
 import { prepareThemeImage } from './theme-image.js';
-import type { CalendarThemePackage, ThemeBackground, ThemePalette } from './theme-package.js';
+import {
+  maxThemeImageUrlLength,
+  parseThemeImageUrl,
+  type CalendarThemePackage,
+  type ThemeBackground,
+  type ThemePalette,
+} from './theme-package.js';
 import { ThemeFilePicker } from './ThemeFilePicker.js';
 import { ThemePreview } from './ThemePreview.js';
 
@@ -45,6 +51,18 @@ type ColorKey = keyof ThemePalette;
 const supportsAlpha = (key: ColorKey) => key === 'canvas' || key === 'surface';
 type TextInputs = Partial<Record<Mode, Partial<Record<ColorKey, string>>>>;
 
+function withBackground(
+  theme: CalendarThemePackage,
+  source?: { image: string } | { url: string },
+): CalendarThemePackage {
+  return {
+    ...theme,
+    schemaVersion: source && 'url' in source ? 3 : 2,
+    rulesVersion: 2,
+    background: source && { ...source, strength: theme.background?.strength ?? 78, x: 50, y: 50 },
+  };
+}
+
 /** 在本地草稿中编辑主题，保存前只改变预览。 */
 export function ThemeEditor({
   initial,
@@ -72,6 +90,8 @@ export function ThemeEditor({
   const [inputs, setInputs] = useState<TextInputs>({});
   const [readingImage, setReadingImage] = useState(false);
   const [imageError, setImageError] = useState('');
+  const [imageLink, setImageLink] = useState(initial.background?.url ?? '');
+  const [invalidLink, setInvalidLink] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
   const { background } = draft;
@@ -188,22 +208,37 @@ export function ThemeEditor({
       </div>
     );
   }
-  function updateBackground(changes: Partial<ThemeBackground>) {
+  function updateBackground(changes: Partial<Pick<ThemeBackground, 'strength' | 'x' | 'y'>>) {
     setDraft((current) =>
       current.background
         ? { ...current, background: { ...current.background, ...changes } }
         : current,
     );
   }
+  function applyImageLink(theme: CalendarThemePackage) {
+    const entered = imageLink.trim();
+    if (entered === (theme.background?.url ?? '')) return theme;
+    if (!entered) return withBackground(theme);
+    const url = parseThemeImageUrl(entered);
+    if (!url) {
+      setInvalidLink(true);
+      return null;
+    }
+    setImageError('');
+    return withBackground(theme, { url });
+  }
+  function previewImageLink() {
+    const next = applyImageLink(draft);
+    if (next) setDraft(next);
+  }
   async function chooseImage(file: File) {
     setReadingImage(true);
     setImageError('');
     try {
       const image = await prepareThemeImage(file);
-      setDraft((current) => ({
-        ...current,
-        background: { strength: current.background?.strength ?? 78, x: 50, y: 50, image },
-      }));
+      setDraft((current) => withBackground(current, { image }));
+      setImageLink('');
+      setInvalidLink(false);
     } catch (error) {
       setImageError(error instanceof Error ? error.message : '无法读取背景图');
     } finally {
@@ -216,7 +251,9 @@ export function ThemeEditor({
       className="tw-grid tw-gap-3"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!invalid && draft.name.trim() && !readingImage && !saving) onSave(previewTheme);
+        if (invalid || !draft.name.trim() || readingImage || saving) return;
+        const next = applyImageLink(previewTheme);
+        if (next) onSave(next);
       }}
     >
       <div className="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-2">
@@ -293,13 +330,64 @@ export function ThemeEditor({
                 disabled={readingImage}
                 onClick={() => {
                   setImageError('');
-                  setDraft((current) => ({ ...current, background: undefined }));
+                  setImageLink('');
+                  setInvalidLink(false);
+                  setDraft((current) => withBackground(current));
                 }}
               >
                 移除图片
               </CalendarButton>
             ) : null}
           </div>
+        </div>
+        <div className="tw-grid tw-gap-1">
+          <label
+            htmlFor={id + '-image-link'}
+            className="tw-text-xs tw-font-medium"
+          >
+            在线图片链接
+          </label>
+          <div className="tw-flex tw-min-w-0 tw-items-center tw-gap-1.5">
+            <CalendarInput
+              id={id + '-image-link'}
+              inputMode="url"
+              autoCapitalize="none"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="https://…"
+              maxLength={maxThemeImageUrlLength}
+              value={imageLink}
+              disabled={readingImage || saving}
+              status={invalidLink ? 'error' : undefined}
+              aria-invalid={invalidLink || undefined}
+              aria-describedby={invalidLink ? id + '-image-link-error' : undefined}
+              onChange={(event) => {
+                setImageLink(event.currentTarget.value);
+                setInvalidLink(false);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                  event.preventDefault();
+                  previewImageLink();
+                }
+              }}
+            />
+            <CalendarButton
+              disabled={readingImage || saving || imageLink.trim() === (background?.url ?? '')}
+              onClick={previewImageLink}
+            >
+              预览图片
+            </CalendarButton>
+          </div>
+          {invalidLink ? (
+            <p
+              id={id + '-image-link-error'}
+              role="alert"
+              className="!tw-m-0 tw-text-xs !tw-text-red"
+            >
+              请输入可直接打开的 HTTPS 图片链接。
+            </p>
+          ) : null}
         </div>
         {imageError ? (
           <p

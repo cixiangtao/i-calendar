@@ -20,6 +20,21 @@ export async function verifyThemes(controller: CalendarController) {
   const imported = await readThemeFile(
     new File([JSON.stringify(content)], 'smoke.icaltheme', { type: 'application/json' }),
   );
+  const url = 'https://example.invalid/theme-photo.jpg';
+  const online = await readThemeFile(
+    new File(
+      [
+        JSON.stringify({
+          ...content,
+          schemaVersion: 3,
+          background: { url, strength: 78, x: 50, y: 50 },
+        }),
+      ],
+      'online.icaltheme',
+    ),
+  );
+  if (online.background?.url !== url || online.background.image !== undefined)
+    throw new Error('在线背景主题导入未保留原链接');
   try {
     const saved = await flushSync(() =>
       controller.setPreferences({ themes: { selectedId: imported.id, custom: [imported] } }),

@@ -12,7 +12,7 @@ import {
   normalizeThemeColorField,
   parseThemeColor,
 } from '../src/theme-color.js';
-import { activeTheme, migrateThemeLibrary } from '../src/theme-library.js';
+import { activeTheme, migrateThemeLibrary, parseThemeLibrary } from '../src/theme-library.js';
 import { builtInThemes, parseThemePackage } from '../src/theme-package.js';
 
 test('新装默认沿用清爽白的浅深配色，主题本身不含背景图', () => {
@@ -95,7 +95,7 @@ test('RGBA 编辑栏紧凑显示四通道，粘贴或编辑后仍保留 Alpha �
   assert.equal(normalizeThemeColorField('37,105,89,', true), null);
 });
 
-test('带图主题包往返保留图片与裁切，拒绝外链、无效图像和越界参数', async () => {
+test('v2 带图主题包往返保留内嵌图片与裁切，拒绝无效图像和越界参数', async () => {
   const image = await readFile(
     new URL('../src/assets/theme-mountain.jpg', import.meta.url),
     'base64',
@@ -115,6 +115,32 @@ test('带图主题包往返保留图片与裁切，拒绝外链、无效图像�
   ]) {
     assert.throws(() => parseThemePackage({ ...theme, background }), /背景图或裁切参数无效/);
   }
+});
+
+test('v3 在线背景保留原链接和裁切，主题库读取不依赖网络', () => {
+  const url = 'https://images.example.org/photo?width=1440&signature=a%2Fb';
+  const theme = {
+    ...builtInThemes[3],
+    id: 'online-photo',
+    schemaVersion: 3,
+    background: { url, strength: 65, x: 37, y: 70 },
+  };
+  assert.deepEqual(parseThemePackage(JSON.parse(JSON.stringify(theme))), theme);
+  const library = parseThemeLibrary({ selectedId: theme.id, custom: [theme] });
+  assert.deepEqual(activeTheme(library), theme);
+  for (const background of [
+    { ...theme.background, url: 'http://images.example.org/photo' },
+    { ...theme.background, url: '//images.example.org/photo' },
+    { ...theme.background, url: 'https://user:pass@images.example.org/photo' },
+    { ...theme.background, url: 'javascript:alert(1)' },
+    { ...theme.background, url: 'https://images.example.org/' + 'a'.repeat(4096) },
+    { ...theme.background, image: 'extra' },
+    { ...theme.background, strength: 101 },
+  ]) {
+    assert.throws(() => parseThemePackage({ ...theme, background }), /背景图或裁切参数无效/);
+  }
+  assert.throws(() => parseThemePackage({ ...theme, schemaVersion: 2 }), /背景图或裁切参数无效/);
+  assert.throws(() => parseThemePackage({ ...theme, background: undefined }), /主题包格式/);
 });
 
 test('主题包拒绝未知版本、派生色、非法颜色与附带代码，不接受缺失的主色', () => {

@@ -20,7 +20,8 @@ export function themeBackground(theme: CalendarThemePackage) {
   return theme.background ?? (theme.id === 'mountain' ? mountainBackground : undefined);
 }
 
-export const themeImageUrl = (background: ThemeBackground) => jpegPrefix + background.image;
+export const themeImageUrl = (background: ThemeBackground) =>
+  background.url ?? jpegPrefix + background.image;
 
 async function decodeImage(url: string) {
   const image = new Image();
@@ -84,6 +85,6 @@ export async function readThemeFile(file: File) {
     throw new Error('主题文件无法读取，请选择有效的 .icaltheme 或旧版 JSON');
   }
   const theme = parseThemePackage(value);
-  if (theme.background) await decodeImage(themeImageUrl(theme.background));
+  if (theme.background?.image) await decodeImage(themeImageUrl(theme.background));
   return theme;
 }
