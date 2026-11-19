@@ -210,11 +210,10 @@ a:focus-visible {
 body[data-platform] .calendar-app[data-theme-photo='true'] {
   position: relative;
   isolation: isolate;
-  padding-top: 38px;
 }
-.calendar-app[data-theme-photo='true'] .app-footer {
-  border-radius: 10px;
-  background: var(--surface);
+/* 只在文字与齿轮的轮廓加对比保护，图片仍铺在底栏后方。 */
+.calendar-app[data-theme-photo='true'] > .app-footer :is(.brand span, .icon-button svg) {
+  filter: drop-shadow(0 0 1px var(--surface)) drop-shadow(0 0 2px var(--surface));
 }
 .theme-backdrop {
   position: absolute;
