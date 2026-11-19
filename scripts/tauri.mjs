@@ -4,6 +4,9 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const args = process.argv.slice(2);
+if (args[0] === 'dev' && process.platform === 'darwin') {
+  args.splice(1, 0, '--config', 'src-tauri/tauri.macos.dev.conf.json');
+}
 if (args[0] === 'ios') {
   try {
     execFileSync('xcrun', ['--sdk', 'iphoneos', '--show-sdk-path'], { stdio: 'ignore' });

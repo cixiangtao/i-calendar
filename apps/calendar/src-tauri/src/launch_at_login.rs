@@ -1,6 +1,8 @@
 use std::path::Path;
 use tauri_plugin_autostart::ManagerExt;
 
+use crate::RELEASE_IDENTIFIER;
+
 pub const ARGUMENT: &str = "--autostart";
 
 pub fn background_start<'a>(arguments: impl IntoIterator<Item = &'a str>) -> bool {
@@ -20,29 +22,30 @@ fn bundled_executable(path: &Path) -> bool {
         })
 }
 
-pub fn available() -> bool {
-    !cfg!(debug_assertions)
+pub fn available(identifier: &str) -> bool {
+    identifier == RELEASE_IDENTIFIER
+        && !cfg!(debug_assertions)
         && !std::env::args().any(|argument| argument == "--smoke-test")
         && std::env::current_exe().is_ok_and(|path| bundled_executable(&path))
 }
 
-fn require_available() -> Result<(), String> {
-    if available() {
+fn require_available(app: &tauri::AppHandle) -> Result<(), String> {
+    if available(&app.config().identifier) {
         Ok(())
     } else {
-        Err("请在打包后的 Mac 应用中设置开机自启".into())
+        Err("请在正式版 Mac 应用中设置开机自启".into())
     }
 }
 
 pub fn get(app: &tauri::AppHandle) -> Result<bool, String> {
-    require_available()?;
+    require_available(app)?;
     app.autolaunch()
         .is_enabled()
         .map_err(|_| "无法读取开机自启状态".into())
 }
 
 pub fn set(app: &tauri::AppHandle, enabled: bool) -> Result<bool, String> {
-    require_available()?;
+    require_available(app)?;
     // 上游 LaunchAgent 使用 XML 文本记录路径，拒绝不能安全表示的路径。
     if enabled {
         let executable = std::env::current_exe()
@@ -83,6 +86,9 @@ mod tests {
             "/tmp/target/debug/i-calendar"
         )));
         assert!(!bundled_executable(Path::new("/tmp/i日历.app/i-calendar")));
-        assert!(!available(), "开发与隔离测试不能注册系统启动项");
+        assert!(
+            !available(RELEASE_IDENTIFIER),
+            "开发与隔离测试不能注册系统启动项"
+        );
     }
 }

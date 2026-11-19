@@ -29,6 +29,7 @@
     "build:icons": "node scripts/build-icons.mjs",
     "build:ios": "node scripts/tauri.mjs ios build",
     "build:mac": "node scripts/package-tauri-mac.mjs",
+    "build:mac:dev": "node scripts/package-tauri-mac.mjs --dev",
     "build:mac:update": "node scripts/package-tauri-mac.mjs --updater",
     "build:web": "node scripts/license-notices.mjs --web && vite build --config apps/calendar/vite.config.ts",
     "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm test && pnpm run build",

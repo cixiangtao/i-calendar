@@ -11,6 +11,8 @@ use std::{
 use tauri::{ipc::Channel, Manager};
 use tauri_plugin_updater::{Error as UpdateError, Update, UpdaterExt};
 
+use crate::RELEASE_IDENTIFIER;
+
 #[derive(Default)]
 pub struct AppUpdates {
     busy: AtomicBool,
@@ -70,8 +72,9 @@ fn configured() -> Result<Option<(reqwest::Url, String)>, String> {
     )
 }
 
-pub fn available() -> bool {
-    !cfg!(debug_assertions)
+pub fn available(identifier: &str) -> bool {
+    identifier == RELEASE_IDENTIFIER
+        && !cfg!(debug_assertions)
         && !std::env::args().any(|arg| arg == "--smoke-test")
         && matches!(configured(), Ok(Some(_)))
 }
@@ -80,7 +83,7 @@ fn updater(
     app: &tauri::AppHandle,
     timeout: Duration,
 ) -> Result<tauri_plugin_updater::Updater, String> {
-    if !available() {
+    if !available(&app.config().identifier) {
         return Err("自动更新将在正式发布后启用".into());
     }
     let (endpoint, key) = configured()?.ok_or("尚未配置应用更新")?;
@@ -175,7 +178,7 @@ pub async fn download(
     version: String,
     progress: Channel<serde_json::Value>,
 ) -> Result<(), String> {
-    if !available() {
+    if !available(&app.config().identifier) {
         return Err("自动更新将在正式发布后启用".into());
     }
     let state = app.state::<AppUpdates>();
@@ -208,7 +211,7 @@ pub async fn download(
 }
 
 pub async fn install(app: tauri::AppHandle, version: String) -> Result<(), String> {
-    if !available() {
+    if !available(&app.config().identifier) {
         return Err("自动更新将在正式发布后启用".into());
     }
     let state = app.state::<AppUpdates>();
@@ -257,7 +260,10 @@ mod tests {
         }
         assert!(configuration(Some("https://example.com"), None).is_err());
         assert!(configuration(None, Some("public-key")).is_err());
-        assert!(!available(), "开发与隔离冒烟构建不自动请求更新");
+        assert!(
+            !available(RELEASE_IDENTIFIER),
+            "开发与隔离冒烟构建不自动请求更新"
+        );
     }
     #[test]
     fn truncated_manifest_retries_but_invalid_json_and_signature_stop() {

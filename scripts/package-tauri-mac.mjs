@@ -9,11 +9,18 @@ import { signedPlatform, updateConfiguration, verifyUpdate } from './update-rele
 if (process.platform !== 'darwin') throw new Error('Mac 应用需要在 macOS 上构建。');
 const run = promisify(execFile);
 const root = fileURLToPath(new URL('../', import.meta.url));
+const native = path.join(root, 'apps/calendar/src-tauri');
 const { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-const withUpdater = process.argv.includes('--updater');
-if (process.argv.slice(2).some((arg) => arg !== '--updater'))
+const [mode, ...extraArgs] = process.argv.slice(2);
+if (extraArgs.length || (mode !== undefined && mode !== '--dev' && mode !== '--updater'))
   throw new Error('未知的 Mac 打包参数。');
-const configuration = updateConfiguration();
+const development = mode === '--dev';
+const withUpdater = mode === '--updater';
+const devConfig = path.join(native, 'tauri.macos.dev.conf.json');
+const productName = development
+  ? JSON.parse(await readFile(devConfig, 'utf8')).productName
+  : 'i日历';
+const configuration = development ? null : updateConfiguration();
 if (configuration && !withUpdater)
   throw new Error('已配置更新源，请使用 pnpm run build:mac:update 生成并验证签名更新包。');
 if (withUpdater && (!configuration || !process.env.TAURI_SIGNING_PRIVATE_KEY))
@@ -21,7 +28,13 @@ if (withUpdater && (!configuration || !process.env.TAURI_SIGNING_PRIVATE_KEY))
 await mkdir(path.join(root, 'work'), { recursive: true });
 const temporary = await mkdtemp(path.join(root, 'work/update-build-'));
 const args = [path.join(root, 'scripts/tauri.mjs'), 'build', '--ci', '--bundles', 'app'];
+const env = { ...process.env };
 try {
+  if (development) {
+    args.push('--config', devConfig);
+    delete env.I_CALENDAR_UPDATE_ENDPOINT;
+    delete env.I_CALENDAR_UPDATE_PUBKEY;
+  }
   if (withUpdater) {
     const config = path.join(temporary, 'updater.conf.json');
     await writeFile(
@@ -34,20 +47,14 @@ try {
       }),
     );
     args.push('--config', config);
+    env.I_CALENDAR_UPDATE_ENDPOINT = configuration.endpoint;
+    env.I_CALENDAR_UPDATE_PUBKEY = configuration.publicKey;
   }
   await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, args, {
       cwd: root,
       stdio: 'inherit',
-      env: {
-        ...process.env,
-        ...(configuration
-          ? {
-              I_CALENDAR_UPDATE_ENDPOINT: configuration.endpoint,
-              I_CALENDAR_UPDATE_PUBKEY: configuration.publicKey,
-            }
-          : {}),
-      },
+      env,
     });
     child.on('error', reject);
     child.on('exit', (code) =>
@@ -57,8 +64,8 @@ try {
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }
-const source = path.join(root, 'apps/calendar/src-tauri/target/release/bundle/macos/i日历.app');
-const app = path.join(root, 'outputs/mac/i日历.app');
+const source = path.join(native, 'target/release/bundle/macos', `${productName}.app`);
+const app = path.join(root, 'outputs', development ? 'mac-dev' : 'mac', `${productName}.app`);
 await mkdir(path.dirname(app), { recursive: true });
 await rm(app, { recursive: true, force: true });
 await cp(source, app, { recursive: true });
@@ -72,7 +79,7 @@ const entitlements = JSON.parse(
 );
 if (entitlements['com.apple.security.personal-information.location'] !== true)
   throw new Error('Mac 签名缺少系统定位能力');
-const archive = path.join(root, `outputs/i日历-${version}-mac-${process.arch}.zip`);
+const archive = path.join(root, `outputs/${productName}-${version}-mac-${process.arch}.zip`);
 await rm(archive, { force: true });
 await run('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', app, archive]);
 if (withUpdater) {

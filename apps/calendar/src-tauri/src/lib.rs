@@ -22,6 +22,9 @@ use std::{
 };
 use tauri::Manager;
 
+#[cfg(target_os = "macos")]
+const RELEASE_IDENTIFIER: &str = "local.icalendar.app";
+
 #[derive(Default)]
 struct RuntimeState {
     popup_busy: AtomicBool,
@@ -78,19 +81,25 @@ async fn describe_sunlight_location(
 }
 
 #[tauri::command]
-fn app_update_available() -> bool {
+fn app_update_available(app: tauri::AppHandle) -> bool {
     #[cfg(target_os = "macos")]
-    return app_update::available();
+    return app_update::available(&app.config().identifier);
     #[cfg(not(target_os = "macos"))]
-    false
+    {
+        let _ = app;
+        false
+    }
 }
 
 #[tauri::command]
-fn launch_at_login_available() -> bool {
+fn launch_at_login_available(app: tauri::AppHandle) -> bool {
     #[cfg(target_os = "macos")]
-    return launch_at_login::available();
+    return launch_at_login::available(&app.config().identifier);
     #[cfg(not(target_os = "macos"))]
-    false
+    {
+        let _ = app;
+        false
+    }
 }
 
 #[tauri::command]
@@ -172,12 +181,11 @@ fn read_saved_state(app: &tauri::AppHandle) -> Result<Option<Value>, String> {
         .map_err(|_| "无法获取日历数据目录")?
         .join("calendar-state.json");
     #[cfg(target_os = "macos")]
-    {
+    if app.config().identifier == RELEASE_IDENTIFIER {
         let directory = app.path().data_dir().map_err(|_| "无法获取旧版数据目录")?;
         let home = app.path().home_dir().map_err(|_| "无法获取用户目录")?;
         return storage::load_with_legacy(&path, &directory, &home);
     }
-    #[cfg(not(target_os = "macos"))]
     storage::read_state(&path)
 }
 
@@ -397,7 +405,7 @@ pub fn run() {
         .plugin(
             tauri_plugin_autostart::Builder::new()
                 .macos_launcher(tauri_plugin_autostart::MacosLauncher::LaunchAgent)
-                .app_name("local.icalendar.app")
+                .app_name(RELEASE_IDENTIFIER)
                 .args([launch_at_login::ARGUMENT])
                 .build(),
         )
