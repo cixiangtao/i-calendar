@@ -56,8 +56,15 @@ jobs:
           rustup toolchain install 1.99.1 --profile minimal
       - run: pnpm install --frozen-lockfile
         if: ${{ !github.event.inputs.artifact_run }}
-      - run: pnpm run check
+      - name: 检查源码与运行测试
         if: ${{ !github.event.inputs.artifact_run }}
+        run: |
+          if node -e 'process.exit(require("./package.json").scripts["check:source"] ? 0 : 1)'; then
+            pnpm run check:source
+          else
+            # 恢复旧标签时使用该提交自带的检查入口。
+            pnpm run check
+          fi
       - name: 构建并验证签名更新包
         if: ${{ !github.event.inputs.artifact_run }}
         env:
