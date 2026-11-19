@@ -557,8 +557,15 @@ fn layout_popup(app: &tauri::AppHandle) -> tauri::Result<Option<PopupLayout>> {
         })
     } else {
         None
-    }
-    .or(window.current_monitor()?);
+    };
+    let monitor = match monitor {
+        Some(monitor) => Some(monitor),
+        None => match window.current_monitor()? {
+            Some(monitor) => Some(monitor),
+            // 菜单栏入口不可见且窗体已滑出屏幕时，仍需选一个屏幕重新展开。
+            None => window.primary_monitor()?,
+        },
+    };
     let Some(monitor) = monitor else {
         return Ok(None);
     };
