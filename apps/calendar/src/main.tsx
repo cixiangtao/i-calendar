@@ -102,7 +102,7 @@ async function start() {
       ? await (await import('./sunlight-smoke.js')).verifySunlight(platform)
       : undefined;
     const themesVerified = smokeTest
-      ? await (await import('./themes-smoke.js')).verifyThemes(controller)
+      ? await (await import('./themes-smoke.js')).verifyThemes(controller).catch(String)
       : undefined;
     const report = {
       sunlightVerified,

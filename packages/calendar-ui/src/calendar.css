@@ -318,7 +318,8 @@ body[data-platform='macos'] .calendar-app[data-panel='calculator'] {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+    /* 只设置时长会启动默认的 all 过渡，让隐藏窗口暂时读到旧主题色。 */
+    transition: none !important;
     scroll-behavior: auto !important;
   }
 }

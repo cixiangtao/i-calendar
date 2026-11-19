@@ -14,8 +14,11 @@ const backdropImage = () =>
 
 function verifyPanelAlpha(selector: string, alpha: number) {
   const panel = document.querySelector(selector);
-  const background = panel && parseThemeColor(getComputedStyle(panel).backgroundColor);
-  if (background?.alpha !== alpha) throw new Error(`主题卡片的透明度不正确：${selector}`);
+  const color = panel && getComputedStyle(panel).backgroundColor;
+  if (parseThemeColor(color)?.alpha !== alpha)
+    throw new Error(
+      `主题卡片的透明度不正确：${selector}，期望 ${alpha}，读到 ${color ?? '缺少卡片'}`,
+    );
 }
 
 /** 在隔离 WKWebView 内校验默认外观、带图主题文件、挂载和复原。 */
