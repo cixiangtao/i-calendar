@@ -50,7 +50,8 @@
 - 发布到 `cixiangtao/i-calendar` 公开仓库，项目主许可证为 MIT；应用正式版交付 GitHub Release、Mac 下载与更新源，可同步官网；官网独立部署与应用版本分开管理。
 - 首发 Mac 为 arm64、本地 ad-hoc 签名、未通过 Apple 公证，必须明确披露。长期驻留、真实登录、最低系统与手机真机等未完成项继续如实记录，不宣称已通过。
 - 应用正式发布统一由 `.github/workflows/release.yml` 执行；本地负责校验、提交与明确的版本标签推送。官网独立部署采用单独的 Pages 流程，接入状态见 `docs/发布约定.md`；独立部署能力未接入时先完善部署入口，不得以应用发版代替。更新私钥只存仓库外受保护目录及 GitHub Secret，公钥与地址位于 `release/config.json`。
-- 收到 IKUN 同学对当次应用发版的明确同意后，以同一个 SemVer 级别运行 `pnpm run release:dry` 和 `pnpm run release`，使用 release-it 统一同步版本、执行检查、提交与原子推送；不手工逐处改版本或并行使用其他本地发布入口。中文版本说明须预先提交，预演不执行质量门禁，失败现场按发布约定核实后恢复。
+- 完成本地检查后运行 `pnpm run release:dry`，由 release-it 按最近公开正式标签以来的提交计算建议版本并列出依据。提交范围 `web` 专用于官网，`release`、`dev`、`ci` 专用于内部流程和工具维护。涉及已交付应用的改动使用对应的应用范围，公开契约不兼容时在提交中标记 `!` 或 `BREAKING CHANGE`。
+- 收到 IKUN 同学对当次应用发版的明确同意后，预先提交中文版本说明，以预演的目标版本运行 `pnpm run release <版本>`。release-it 重新计算并核对目标，统一同步各端版本、执行检查、提交与原子推送。失败现场按发布约定核实后恢复。
 - 应用版本发布与官网部署按照 `docs/版本规划.md` 和 `docs/发布约定.md` 执行。
 - 发布时项目介绍、README、版本说明和 Release Notes 使用中文。
 
