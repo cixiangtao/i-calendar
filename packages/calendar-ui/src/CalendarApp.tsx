@@ -12,6 +12,7 @@ import {
 } from 'react';
 
 import { version as appVersion } from '../../../package.json';
+import { website as appWebsite } from '../../../release/config.json';
 import { AlmanacContent } from './Almanac.js';
 import { AppUpdateNotice, AppUpdateSection } from './AppUpdateSection.js';
 import { CalendarButton } from './CalendarButton.js';
@@ -1024,6 +1025,24 @@ function Settings({
                     </div>
                   </div>
                   <p>免费、无广告的公农历日历。</p>
+                  <p>
+                    官网{' '}
+                    <a
+                      href={appWebsite}
+                      className="tw-text-action tw-underline tw-underline-offset-2 tw-overflow-anywhere"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        void controller.openSource(appWebsite);
+                      }}
+                      onAuxClick={(event) => {
+                        if (event.button !== 1) return;
+                        event.preventDefault();
+                        void controller.openSource(appWebsite);
+                      }}
+                    >
+                      {appWebsite}
+                    </a>
+                  </p>
                 </section>
                 {controller.platform.kind === 'macos' ? (
                   <AppUpdateSection
