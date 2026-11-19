@@ -25,6 +25,8 @@ import {
 } from './sunlight-location.js';
 import { migrateThemeLibrary, parseThemeLibrary } from './theme-library.js';
 
+export type SettingsTab = 'general' | 'appearance' | 'sunlight' | 'menu-bar' | 'data' | 'about';
+
 /** 可观察的应用快照；React、测试和宿主都读取同一状态。 */
 export interface CalendarSnapshot {
   ready: boolean;
@@ -37,7 +39,7 @@ export interface CalendarSnapshot {
   preferences: CalendarPreferences;
   years: number[];
   panel: 'calendar' | 'settings' | 'calculator';
-  settingsTab: 'general' | 'about';
+  settingsTab: SettingsTab;
   updating: boolean;
   error: string | null;
   notice: string | null;
@@ -279,8 +281,12 @@ export class CalendarController {
     this.moveSelection((end ? 6 : 0) - offset);
   }
 
-  showSettings(show = true, settingsTab: 'general' | 'about' = 'general') {
+  showSettings(show = true, settingsTab: SettingsTab = 'general') {
     this.patch({ panel: show ? 'settings' : 'calendar', settingsTab });
+  }
+
+  selectSettingsTab(settingsTab: SettingsTab) {
+    this.patch({ settingsTab });
   }
 
   /** 日期计算仅切换视图，不写入偏好或更改所选日期。 */

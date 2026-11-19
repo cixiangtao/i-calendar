@@ -3,15 +3,25 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
 import { cn, controlFocus } from './ui-utils.js';
 
-export interface CalendarTabsProps {
-  defaultValue: string;
-  items: readonly { key: string; label: string; children: ReactNode }[];
+export interface CalendarTabsProps<Key extends string = string> {
+  defaultValue: Key;
+  value?: Key;
+  onValueChange?: (value: Key) => void;
+  items: readonly { key: Key; label: string; children: ReactNode }[];
   className?: string;
 }
 /** 标签页首次访问才挂载，访问后保留草稿；隐藏页从布局及无障碍树中移除。 */
-export function CalendarTabs({ defaultValue, items, className }: CalendarTabsProps) {
-  const [value, setValue] = useState(defaultValue);
-  const [visited, setVisited] = useState(() => new Set([defaultValue]));
+export function CalendarTabs<Key extends string>({
+  defaultValue,
+  value: selected,
+  onValueChange,
+  items,
+  className,
+}: CalendarTabsProps<Key>) {
+  const [localValue, setLocalValue] = useState(defaultValue);
+  const value = selected ?? localValue;
+  const [visited, setVisited] = useState(() => new Set([value]));
+  if (!visited.has(value)) setVisited(new Set(visited).add(value));
   const [pointerFocus, setPointerFocus] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const [indicatorLeft, setIndicatorLeft] = useState<number>();
@@ -42,8 +52,10 @@ export function CalendarTabs({ defaultValue, items, className }: CalendarTabsPro
     <Tabs.Root
       value={value}
       onValueChange={(next) => {
-        setValue(next);
-        setVisited((old) => new Set([...old, next]));
+        const key = items.find((item) => item.key === next)?.key;
+        if (key === undefined) return;
+        if (selected === undefined) setLocalValue(key);
+        onValueChange?.(key);
       }}
       className={cn(
         'settings-tabs tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-font-sans tw-text-[13px] tw-leading-5',

@@ -27,7 +27,7 @@ const click = (selector: string, text?: string) => {
 export function verifyDateCalculator(controller: CalendarController) {
   const originalDate = controller.getSnapshot().selected.date;
   try {
-    click('.month-toolbar button[aria-label="日期计算"]');
+    flushSync(() => controller.showCalculator());
     fill('calculator-start', '2024-02-28');
     fill('calculator-end', '2024-03-01');
     requireResult('相隔 2 天');
@@ -41,7 +41,7 @@ export function verifyDateCalculator(controller: CalendarController) {
       controller.getSnapshot().selected.date !== '2027-02-25'
     )
       throw new Error('日期工具未跳转到计算结果');
-    click('.month-toolbar button[aria-label="日期计算"]');
+    flushSync(() => controller.showCalculator());
     click('[role="radio"]', '工作日');
     fill('calculator-start', '2026-02-13');
     fill('calculator-end', '2026-02-14');

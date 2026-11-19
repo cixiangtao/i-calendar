@@ -58,8 +58,13 @@ async function start() {
   bindPageLifecycle(controller, window);
   if (platform.kind !== 'web') {
     const { emit, listen } = await import('@tauri-apps/api/event');
-    await listen('calendar:settings', () => flushSync(() => controller.showSettings()));
     if (platform.kind === 'macos') {
+      await listen<'settings' | 'about' | 'calculator'>('calendar:navigate', ({ payload }) => {
+        flushSync(() => {
+          if (payload === 'calculator') controller.showCalculator();
+          else controller.showSettings(true, payload === 'about' ? 'about' : 'general');
+        });
+      });
       await listen('calendar:closed', () => {
         flushSync(() => controller.showSettings(false));
         // 隐藏时 requestAnimationFrame 可能暂停，立即提交日历高度供下次入场使用。
@@ -77,6 +82,7 @@ async function start() {
       await listen('calendar:smoke-state-request', () => {
         void emit('calendar:smoke-state', {
           panel: document.querySelector('.calendar-app')?.getAttribute('data-panel'),
+          settingsTab: document.querySelector('[role="tab"][aria-selected="true"]')?.textContent,
           selectedDate: controller.getSnapshot().selected.date,
           preferences: controller.getSnapshot().preferences,
         });

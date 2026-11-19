@@ -35,6 +35,8 @@ struct RuntimeState {
     save_lock: Mutex<()>,
     #[cfg(target_os = "macos")]
     menu_clock: menu_clock::MenuClock,
+    #[cfg(target_os = "macos")]
+    tray_navigation: Mutex<desktop::TrayNavigation>,
 }
 
 #[tauri::command]
@@ -297,9 +299,7 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
     {
         let arguments: Vec<_> = std::env::args().collect();
         let background = launch_at_login::background_start(arguments.iter().map(String::as_str));
-        if !background {
-            desktop::show_calendar(&app);
-        }
+        desktop::frontend_ready(&app, background);
         if std::env::args().any(|argument| argument == "--smoke-test") {
             if report.get("calculatorVerified").and_then(Value::as_bool) != Some(true)
                 || report.get("releaseNotesVerified").and_then(Value::as_bool) != Some(true)

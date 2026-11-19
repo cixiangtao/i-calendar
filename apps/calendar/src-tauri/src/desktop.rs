@@ -9,7 +9,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tauri::{
-    menu::{Menu, MenuItem},
+    menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Listener, Manager, WindowEvent,
 };
@@ -17,6 +17,70 @@ use tauri::{
 const POPUP_CORNER_RADIUS: f64 = 20.0;
 const POPUP_ENTER_SECONDS: f64 = 0.28;
 const POPUP_EXIT_SECONDS: f64 = 0.18;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+enum TrayDestination {
+    Settings,
+    Calculator,
+    About,
+}
+
+/// 在 WebView 注册导航事件前保存最后一次菜单选择。
+#[derive(Default)]
+pub struct TrayNavigation {
+    ready: bool,
+    pending: Option<TrayDestination>,
+}
+
+impl TrayNavigation {
+    fn request(&mut self, destination: TrayDestination) -> Option<TrayDestination> {
+        if self.ready {
+            Some(destination)
+        } else {
+            self.pending = Some(destination);
+            None
+        }
+    }
+
+    fn finish_startup(&mut self) -> Option<TrayDestination> {
+        self.ready = true;
+        self.pending.take()
+    }
+}
+
+fn open_tray_destination(app: &tauri::AppHandle, destination: TrayDestination) {
+    show_calendar(app);
+    if let Err(error) = app.emit_to("main", "calendar:navigate", destination) {
+        eprintln!("无法打开菜单栏页面：{error}");
+    }
+}
+
+pub fn frontend_ready(app: &tauri::AppHandle, background: bool) {
+    let state = app.state::<RuntimeState>();
+    let pending = state.tray_navigation.lock().unwrap().finish_startup();
+    if let Some(destination) = pending {
+        open_tray_destination(app, destination);
+    } else if !background {
+        show_calendar(app);
+    }
+}
+
+fn handle_tray_menu(app: &tauri::AppHandle, id: &str) {
+    let destination = match id {
+        "settings" => TrayDestination::Settings,
+        "calculator" => TrayDestination::Calculator,
+        "about" => TrayDestination::About,
+        "open" => return show_calendar(app),
+        "quit" => return app.exit(0),
+        _ => return,
+    };
+    let state = app.state::<RuntimeState>();
+    let requested = state.tray_navigation.lock().unwrap().request(destination);
+    if let Some(destination) = requested {
+        open_tray_destination(app, destination);
+    }
+}
 
 #[derive(Default)]
 pub struct PopupMotion {
@@ -501,11 +565,19 @@ async fn frontend_snapshot(app: &tauri::AppHandle) -> Result<serde_json::Value, 
 
 pub async fn verify_popup_reset(app: &tauri::AppHandle) -> Result<(), String> {
     let window = app.get_webview_window("main").ok_or("主界面不存在")?;
-    app.emit("calendar:settings", ())
-        .map_err(|error| error.to_string())?;
+    handle_tray_menu(app, "settings");
     let before = frontend_snapshot(app).await?;
-    if before["panel"] != "settings" {
+    if before["panel"] != "settings" || before["settingsTab"] != "常规" {
         return Err("未进入真实设置页面".into());
+    }
+    handle_tray_menu(app, "about");
+    let about = frontend_snapshot(app).await?;
+    if about["panel"] != "settings" || about["settingsTab"] != "关于" {
+        return Err("关于菜单未切换已打开的设置面板".into());
+    }
+    handle_tray_menu(app, "settings");
+    if frontend_snapshot(app).await?["settingsTab"] != "常规" {
+        return Err("设置菜单未回到常规标签".into());
     }
     hide_calendar(&window).map_err(|error| error.to_string())?;
     show_calendar(app);
@@ -530,6 +602,19 @@ pub async fn verify_popup_reset(app: &tauri::AppHandle) -> Result<(), String> {
     }
     verify_content_height(app)?;
     println!("PASS：设置页退场打断保留原页，关闭后恢复日历，重开页面及高度正确且保留日期与偏好");
+    hide_calendar(&window).map_err(|error| error.to_string())?;
+    wait_for_motion_settle(app).await?;
+    handle_tray_menu(app, "calculator");
+    wait_for_motion_settle(app).await?;
+    let calculator = frontend_snapshot(app).await?;
+    if !window.is_visible().unwrap_or(false)
+        || calculator["panel"] != "calculator"
+        || calculator["selectedDate"] != before["selectedDate"]
+    {
+        return Err("日期计算菜单未从隐藏窗口直接打开工具或改变了所选日期".into());
+    }
+    verify_content_height(app)?;
+    println!("PASS：菜单栏设置与关于直达对应标签，日期计算从隐藏窗口直接打开");
     Ok(())
 }
 
@@ -704,10 +789,16 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
         Err(error) => eprintln!("菜单栏时钟采用默认设置：{error}"),
     }
     let name = &app.package_info().name;
-    let open = MenuItem::with_id(app, "open", format!("打开{name}"), true, None::<&str>)?;
-    let settings = MenuItem::with_id(app, "settings", "设置与调休数据…", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", format!("退出{name}"), true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&open, &settings, &quit])?;
+    let open = MenuItem::with_id(app, "open", "打开", true, None::<&str>)?;
+    let settings = MenuItem::with_id(app, "settings", "设置", true, None::<&str>)?;
+    let calculator = MenuItem::with_id(app, "calculator", "日期计算", true, None::<&str>)?;
+    let about = MenuItem::with_id(app, "about", format!("关于 {name}"), true, None::<&str>)?;
+    let separator = PredefinedMenuItem::separator(app)?;
+    let quit = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
+    let menu = Menu::with_items(
+        app,
+        &[&open, &settings, &calculator, &about, &separator, &quit],
+    )?;
     let _tray = TrayIconBuilder::with_id("calendar")
         .icon(tauri::image::Image::from_bytes(include_bytes!(
             "../icons/tray.png"
@@ -716,15 +807,7 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
         .tooltip(format!("{name} · 公农历与放假调休"))
         .menu(&menu)
         .show_menu_on_left_click(false)
-        .on_menu_event(|app, event| match event.id.as_ref() {
-            "open" => show_calendar(app),
-            "settings" => {
-                show_calendar(app);
-                let _ = app.emit("calendar:settings", ());
-            }
-            "quit" => app.exit(0),
-            _ => {}
-        })
+        .on_menu_event(|app, event| handle_tray_menu(app, event.id.as_ref()))
         .on_tray_icon_event(|tray, event| {
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
@@ -795,7 +878,19 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{fitted_height, popup_position, PopupMotion};
+    use super::{fitted_height, popup_position, PopupMotion, TrayDestination, TrayNavigation};
+    #[test]
+    fn tray_navigation_preserves_the_latest_startup_selection() {
+        let mut navigation = TrayNavigation::default();
+        assert_eq!(navigation.request(TrayDestination::Settings), None);
+        assert_eq!(navigation.request(TrayDestination::About), None);
+        assert_eq!(navigation.finish_startup(), Some(TrayDestination::About));
+        assert_eq!(navigation.finish_startup(), None);
+        assert_eq!(
+            navigation.request(TrayDestination::Calculator),
+            Some(TrayDestination::Calculator)
+        );
+    }
     #[test]
     fn stale_exit_completion_cannot_hide_reopened_or_newly_closing_popup() {
         let motion = PopupMotion::default();

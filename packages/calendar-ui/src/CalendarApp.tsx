@@ -26,7 +26,7 @@ import { formControlVariables } from './form-theme.js';
 import { LaunchAtLoginSettings } from './LaunchAtLoginSettings.js';
 import { MenuClockSettings } from './MenuClockSettings.js';
 import type { CalendarPreferences } from './platform.js';
-import type { CalendarController, CalendarSnapshot } from './store.js';
+import type { CalendarController, CalendarSnapshot, SettingsTab } from './store.js';
 import { SunlightSettings, SunlightSummary, useSunlightLocation } from './Sunlight.js';
 import { themeBackground } from './theme-image.js';
 import { activeTheme } from './theme-library.js';
@@ -145,6 +145,7 @@ function Feedback({
 /** 三端共用日历视图；平台壳不复制月历、节日或设置界面。 */
 export function CalendarApp({ controller }: { controller: CalendarController }) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const isMac = controller.platform.kind === 'macos';
   useSunlightLocation(controller, state.ready, state.preferences.sunlight.mode);
   const [systemDark, setSystemDark] = useState(
     () => window.matchMedia('(prefers-color-scheme: dark)').matches,
@@ -278,8 +279,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
 
   useEffect(() => {
     if (state.panel === 'calendar' && previousPanel.current !== 'calendar') {
-      if (previousPanel.current === 'calculator') calculator.current?.focus();
-      else gear.current?.focus();
+      const entry = previousPanel.current === 'calculator' ? calculator.current : gear.current;
+      (entry ?? gear.current)?.focus();
     }
     previousPanel.current = state.panel;
   }, [state.panel]);
@@ -348,6 +349,17 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
 
   const displayedWeekdays =
     state.preferences.weekStartsOn === 1 ? weekdays : ['日', ...weekdays.slice(0, 6)];
+  const settingsButton = (
+    <CalendarButton
+      ref={gear}
+      appearance="icon"
+      className="icon-button app:tw-inline-flex app:tw-h-7 app:tw-w-7 app:tw-shrink-0 app:tw-items-center app:tw-justify-center app:tw-rounded-[var(--form-radius)] app:tw-p-[5px] app:tw-text-secondary coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
+      aria-label="设置与调休数据"
+      title="设置与调休数据"
+      onClick={() => controller.showSettings()}
+      icon={<Icon name="settings" />}
+    />
+  );
 
   return (
     <article
@@ -467,21 +479,25 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 >
                   今天
                 </CalendarButton>
-                <CalendarButton
-                  ref={calculator}
-                  appearance="icon"
-                  className="app:tw-w-7 coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
-                  aria-label="日期计算"
-                  title="日期计算"
-                  disabled={!state.ready}
-                  onClick={() => controller.showCalculator()}
-                  icon={
-                    <Icon
-                      name="calculator"
-                      className="!tw-h-4 !tw-w-4"
-                    />
-                  }
-                />
+                {isMac ? (
+                  settingsButton
+                ) : (
+                  <CalendarButton
+                    ref={calculator}
+                    appearance="icon"
+                    className="app:tw-w-7 coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
+                    aria-label="日期计算"
+                    title="日期计算"
+                    disabled={!state.ready}
+                    onClick={() => controller.showCalculator()}
+                    icon={
+                      <Icon
+                        name="calculator"
+                        className="!tw-h-4 !tw-w-4"
+                      />
+                    }
+                  />
+                )}
               </div>
             </div>
             <div
@@ -703,52 +719,46 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
             </aside>
           ) : null}
           <AppUpdateNotice controller={controller} />
-          <footer className="app-footer tw-col-[1_/_-1] tw-flex tw-min-h-7 tw-items-center tw-justify-between tw-gap-3 tw-px-3 tw-py-0 web:tw-border-0 web:tw-border-t web:tw-border-solid web:tw-border-line web:tw-px-5 web:tw-py-2">
-            {controller.platform.kind === 'web' ? (
-              <ul
-                aria-label="日历颜色说明"
-                className="tw-m-0 tw-flex tw-list-none tw-flex-wrap tw-gap-x-4 tw-gap-y-1 tw-p-0 tw-text-[11px] tw-text-secondary compact:tw-gap-x-2"
-              >
-                {[
-                  ['tw-bg-action', '今天 / 选中'],
-                  ['tw-bg-red', '休假'],
-                  ['tw-bg-green', '节气'],
-                  ['tw-bg-yellow', '补班'],
-                  ['tw-bg-[var(--purple)]', '节日'],
-                ].map(([color, label]) => (
-                  <li
-                    key={label}
-                    className="tw-flex tw-items-center tw-gap-1.5"
-                  >
-                    <span
-                      className={`tw-h-1.5 tw-w-1.5 tw-rounded-full ${color}`}
-                      aria-hidden="true"
-                    />
-                    {label}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="brand tw-flex tw-items-center tw-gap-[7px] tw-text-[length:13px] tw-font-semibold tw-tracking-[0.02em] web:desktop:tw-text-[length:14px] [&_img]:tw-block [&_img]:tw-h-[19px] [&_img]:tw-w-[19px]">
-                <img
-                  src={new URL('./assets/logo.svg', import.meta.url).href}
-                  width="19"
-                  height="19"
-                  alt=""
-                />
-                <span>i日历</span>
-              </div>
-            )}
-            <CalendarButton
-              ref={gear}
-              appearance="icon"
-              className="icon-button app:tw-inline-flex app:tw-h-7 app:tw-w-7 app:tw-shrink-0 app:tw-items-center app:tw-justify-center app:tw-rounded-[var(--form-radius)] app:tw-p-[5px] app:tw-text-secondary coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
-              aria-label="设置与调休数据"
-              title="设置与调休数据"
-              onClick={() => controller.showSettings()}
-              icon={<Icon name="settings" />}
-            />
-          </footer>
+          {!isMac ? (
+            <footer className="app-footer tw-col-[1_/_-1] tw-flex tw-min-h-7 tw-items-center tw-justify-between tw-gap-3 tw-px-3 tw-py-0 web:tw-border-0 web:tw-border-t web:tw-border-solid web:tw-border-line web:tw-px-5 web:tw-py-2">
+              {controller.platform.kind === 'web' ? (
+                <ul
+                  aria-label="日历颜色说明"
+                  className="tw-m-0 tw-flex tw-list-none tw-flex-wrap tw-gap-x-4 tw-gap-y-1 tw-p-0 tw-text-[11px] tw-text-secondary compact:tw-gap-x-2"
+                >
+                  {[
+                    ['tw-bg-action', '今天 / 选中'],
+                    ['tw-bg-red', '休假'],
+                    ['tw-bg-green', '节气'],
+                    ['tw-bg-yellow', '补班'],
+                    ['tw-bg-[var(--purple)]', '节日'],
+                  ].map(([color, label]) => (
+                    <li
+                      key={label}
+                      className="tw-flex tw-items-center tw-gap-1.5"
+                    >
+                      <span
+                        className={`tw-h-1.5 tw-w-1.5 tw-rounded-full ${color}`}
+                        aria-hidden="true"
+                      />
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="brand tw-flex tw-items-center tw-gap-[7px] tw-text-[length:13px] tw-font-semibold tw-tracking-[0.02em] web:desktop:tw-text-[length:14px] [&_img]:tw-block [&_img]:tw-h-[19px] [&_img]:tw-w-[19px]">
+                  <img
+                    src={new URL('./assets/logo.svg', import.meta.url).href}
+                    width="19"
+                    height="19"
+                    alt=""
+                  />
+                  <span>i日历</span>
+                </div>
+              )}
+              {settingsButton}
+            </footer>
+          ) : null}
         </>
       )}
     </article>
@@ -806,9 +816,11 @@ function Settings({
         </CalendarButton>
         <h1 id="settings-title">设置</h1>
       </header>
-      <CalendarTabs
+      <CalendarTabs<SettingsTab>
         className="settings-tabs"
-        defaultValue={state.settingsTab}
+        defaultValue="general"
+        value={state.settingsTab}
+        onValueChange={(tab) => controller.selectSettingsTab(tab)}
         items={[
           {
             key: 'general',
@@ -900,7 +912,7 @@ function Settings({
           ...(controller.platform.kind === 'macos'
             ? [
                 {
-                  key: 'menu-bar',
+                  key: 'menu-bar' as const,
                   label: '菜单栏',
                   children: (
                     <div className={settingsScroll}>
@@ -966,8 +978,18 @@ function Settings({
             children: (
               <div className={settingsScroll}>
                 <section>
-                  <h2>i日历</h2>
-                  <p>版本 {appVersion}</p>
+                  <div className="tw-mb-2 tw-flex tw-items-center tw-gap-2.5">
+                    <img
+                      src={new URL('./assets/logo.svg', import.meta.url).href}
+                      width="28"
+                      height="28"
+                      alt=""
+                    />
+                    <div>
+                      <h2 className="!tw-m-0">i日历</h2>
+                      <p className="!tw-m-0">版本 {appVersion}</p>
+                    </div>
+                  </div>
                   <p>免费、无广告的公农历日历。</p>
                 </section>
                 {controller.platform.kind === 'macos' ? (
