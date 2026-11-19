@@ -28,6 +28,15 @@ export function activeTheme(library: ThemeLibrary): CalendarThemePackage {
   );
 }
 
+/** 将编辑或导入的主题放回原位置，或作为新主题追加，并选中它。 */
+export function upsertTheme(library: ThemeLibrary, theme: CalendarThemePackage): ThemeLibrary {
+  const index = library.custom.findIndex((item) => item.id === theme.id);
+  const custom = library.custom.slice();
+  if (index < 0) custom.push(theme);
+  else custom[index] = theme;
+  return { selectedId: theme.id, custom };
+}
+
 /** 校验整次写入，避免失败导入留下部分主题或失效选择。 */
 export function parseThemeLibrary(input: unknown): ThemeLibrary {
   if (typeof input !== 'object' || input === null || Array.isArray(input))

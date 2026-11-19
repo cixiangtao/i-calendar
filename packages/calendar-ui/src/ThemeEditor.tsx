@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
 import { CalendarColorInput } from './CalendarColorInput.js';
@@ -6,8 +6,8 @@ import { CalendarInput } from './CalendarInput.js';
 import { CalendarSegmented } from './CalendarSegmented.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import { CalendarSlider } from './CalendarSlider.js';
+import { colorContrastIssues, deriveColorTokens } from './color-theme.js';
 import type { CalendarPlatform } from './platform.js';
-import type { CalendarSnapshot } from './store.js';
 import {
   formatThemeColor,
   formatThemeColorField,
@@ -24,7 +24,6 @@ import {
   type ThemePalette,
 } from './theme-package.js';
 import { ThemeFilePicker } from './ThemeFilePicker.js';
-import { ThemePreview } from './ThemePreview.js';
 
 const appearanceOptions = [
   { label: '浅色', value: 'light' },
@@ -66,20 +65,22 @@ function withBackground(
 /** 在本地草稿中编辑主题，保存前只改变预览。 */
 export function ThemeEditor({
   initial,
-  state,
   dark,
   increasedContrast,
   platform,
   saving,
+  imageFailed,
+  onPreview,
   onCancel,
   onSave,
 }: {
   initial: CalendarThemePackage;
-  state: CalendarSnapshot;
   dark: boolean;
   increasedContrast: boolean;
   platform: CalendarPlatform;
   saving: boolean;
+  imageFailed: boolean;
+  onPreview: (theme: CalendarThemePackage, appearance: Mode) => void;
   onCancel: () => void;
   onSave: (theme: CalendarThemePackage) => void;
 }) {
@@ -106,6 +107,16 @@ export function ThemeEditor({
     }
     return { ...draft, palettes: { ...draft.palettes, [mode]: palette } };
   }, [draft, inputs, mode]);
+  useLayoutEffect(() => onPreview(previewTheme, mode), [mode, onPreview, previewTheme]);
+  const palette = previewTheme.palettes[mode];
+  const hasLowContrast = useMemo(
+    () =>
+      colorContrastIssues(
+        deriveColorTokens(palette, increasedContrast, mode === 'dark'),
+        increasedContrast,
+      ).length > 0,
+    [increasedContrast, mode, palette],
+  );
   const invalid = (['light', 'dark'] as const).some((look) =>
     Object.entries(inputs[look] ?? {}).some(
       ([key, value]) =>
@@ -164,7 +175,7 @@ export function ThemeEditor({
                 }
               }}
               onKeyDown={(event) => {
-                if (event.key === 'Escape') {
+                if (event.key === 'Escape' && inputs[mode]?.[key] !== undefined) {
                   event.stopPropagation();
                   discardInput(key);
                 }
@@ -271,12 +282,11 @@ export function ThemeEditor({
           onChange={(value) => setMode(value as Mode)}
         />
       </div>
-      <ThemePreview
-        theme={previewTheme}
-        mode={mode}
-        state={state}
-        increasedContrast={increasedContrast}
-      />
+      {hasLowContrast ? (
+        <output className="tw-text-xs tw-text-yellow">
+          部分色彩组合的对比度较低，可调整底色或主要文字颜色。
+        </output>
+      ) : null}
       <div className="tw-flex tw-items-center tw-gap-1.5">
         <label
           htmlFor={id + '-name'}
@@ -396,6 +406,11 @@ export function ThemeEditor({
           >
             {imageError}
           </p>
+        ) : null}
+        {background?.strength && background.url && imageFailed ? (
+          <output className="tw-text-xs tw-text-secondary">
+            在线图片暂时无法加载，当前显示主题底色。
+          </output>
         ) : null}
         {background ? (
           <>

@@ -66,7 +66,10 @@ async function start() {
         });
       });
       await listen('calendar:closed', () => {
-        flushSync(() => controller.showSettings(false));
+        flushSync(() => {
+          if (controller.getSnapshot().themeEdit) controller.showThemeCalendar();
+          else controller.showSettings(false);
+        });
         // 隐藏时 requestAnimationFrame 可能暂停，立即提交日历高度供下次入场使用。
         const content = document.querySelector<HTMLElement>('.calendar-app');
         if (content)

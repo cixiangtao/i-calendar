@@ -60,7 +60,9 @@ export function Website({ controller }: { controller: CalendarController }) {
     return () => preference.removeEventListener('change', changed);
   }, []);
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
-  const background = themeBackground(activeTheme(state.preferences.themes));
+  const background = themeBackground(
+    state.themeEdit?.theme ?? activeTheme(state.preferences.themes),
+  );
   const hasPhoto = Boolean(background?.strength);
   return (
     <div className="website tw-text-ink">
@@ -76,7 +78,10 @@ export function Website({ controller }: { controller: CalendarController }) {
           data-theme-photo={hasPhoto || undefined}
         >
           {hasPhoto ? (
-            <ThemeBackdrop background={background} />
+            <ThemeBackdrop
+              background={background}
+              onImageStatus={controller.reportThemeImageStatus}
+            />
           ) : (
             <AmbientOrbit
               enabled={motion}

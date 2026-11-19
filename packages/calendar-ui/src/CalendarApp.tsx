@@ -20,7 +20,7 @@ import { CalendarSegmented } from './CalendarSegmented.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import { CalendarSwitch } from './CalendarSwitch.js';
 import { CalendarTabs } from './CalendarTabs.js';
-import { resolveThemeTokens } from './color-theme.js';
+import { deriveColorTokens } from './color-theme.js';
 import { DateCalculator } from './DateCalculator.js';
 import { formControlVariables } from './form-theme.js';
 import { LaunchAtLoginSettings } from './LaunchAtLoginSettings.js';
@@ -160,14 +160,15 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const calculator = useRef<HTMLButtonElement>(null);
   const previousPanel = useRef(state.panel);
   const container = useRef<HTMLElement>(null);
-  const dark =
-    state.preferences.appearance === 'dark' ||
-    (state.preferences.appearance === 'system' && systemDark);
-  const theme = activeTheme(state.preferences.themes);
+  const editingTheme = state.themeEdit !== null;
+  const appearance = state.themeEdit?.appearance ?? state.preferences.appearance;
+  const dark = appearance === 'dark' || (appearance === 'system' && systemDark);
+  const theme = state.themeEdit?.theme ?? activeTheme(state.preferences.themes);
+  const palette = theme.palettes[dark ? 'dark' : 'light'];
   const background = controller.platform.kind === 'web' ? undefined : themeBackground(theme);
   const colors = useMemo(
-    () => resolveThemeTokens(theme, dark, increasedContrast),
-    [theme, dark, increasedContrast],
+    () => deriveColorTokens(palette, increasedContrast, dark),
+    [palette, dark, increasedContrast],
   );
 
   useEffect(() => {
@@ -280,10 +281,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   useEffect(() => {
     if (state.panel === 'calendar' && previousPanel.current !== 'calendar') {
       const entry = previousPanel.current === 'calculator' ? calculator.current : gear.current;
-      (entry ?? gear.current)?.focus();
+      (entry ?? gear.current)?.focus({ preventScroll: editingTheme });
     }
     previousPanel.current = state.panel;
-  }, [state.panel]);
+  }, [editingTheme, state.panel]);
 
   useEffect(() => {
     if (focusAfterNavigation.current) {
@@ -310,7 +311,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       )
         return;
       if (event.key === 'Escape') {
-        if (state.panel !== 'calendar') {
+        if (editingTheme) {
+          if (state.panel === 'calendar') controller.resumeThemeEdit();
+          else controller.cancelThemeEdit();
+        } else if (state.panel !== 'calendar') {
           controller.showSettings(false);
         } else void controller.platform.close?.();
       } else if (state.panel === 'calendar') {
@@ -327,7 +331,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
     };
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
-  }, [controller, state.panel]);
+  }, [controller, editingTheme, state.panel]);
 
   function moveInGrid(event: KeyboardEvent<HTMLButtonElement>) {
     const directions: Record<string, number> = {
@@ -349,7 +353,16 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
 
   const displayedWeekdays =
     state.preferences.weekStartsOn === 1 ? weekdays : ['日', ...weekdays.slice(0, 6)];
-  const settingsButton = (
+  const settingsButton = editingTheme ? (
+    <CalendarButton
+      ref={gear}
+      appearance="text"
+      className="app:tw-shrink-0 app:tw-whitespace-nowrap app:tw-text-xs"
+      onClick={() => controller.resumeThemeEdit()}
+    >
+      继续编辑
+    </CalendarButton>
+  ) : (
     <CalendarButton
       ref={gear}
       appearance="icon"
@@ -375,15 +388,17 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       <ThemeBackdrop
         background={background}
         dark={dark}
+        onImageStatus={controller.reportThemeImageStatus}
       />
-      {state.panel === 'settings' ? (
+      {state.panel === 'settings' || editingTheme ? (
         <Settings
           controller={controller}
           state={state}
           dark={dark}
           increasedContrast={increasedContrast}
         />
-      ) : state.panel === 'calculator' ? (
+      ) : null}
+      {state.panel === 'calculator' ? (
         <DateCalculator
           holidays={controller.holidays}
           selectedDate={state.selected.date}
@@ -395,7 +410,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
             controller.showCalculator(false);
           }}
         />
-      ) : (
+      ) : state.panel === 'calendar' ? (
         <>
           <section
             className="month-panel tw-relative tw-min-w-0 tw-rounded-[22px] tw-bg-panel tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-bg-transparent web:desktop:tw-p-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
@@ -479,7 +494,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 >
                   今天
                 </CalendarButton>
-                {isMac ? (
+                {isMac || editingTheme ? (
                   settingsButton
                 ) : (
                   <CalendarButton
@@ -756,11 +771,11 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   <span>i日历</span>
                 </div>
               )}
-              {settingsButton}
+              {editingTheme ? null : settingsButton}
             </footer>
           ) : null}
         </>
-      )}
+      ) : null}
     </article>
   );
 }
@@ -781,13 +796,18 @@ function Settings({
 }) {
   const file = useRef<HTMLInputElement>(null);
   const back = useRef<HTMLButtonElement>(null);
+  const appearanceScroll = useRef<HTMLDivElement>(null);
+  const editScrollTop = useRef(0);
+  const visible = state.panel === 'settings';
   const appUpdate = useSyncExternalStore(
     controller.appUpdates.subscribe,
     controller.appUpdates.getSnapshot,
   );
-  useEffect(() => {
-    back.current?.focus();
-  }, []);
+  useLayoutEffect(() => {
+    if (!visible) return;
+    back.current?.focus({ preventScroll: true });
+    if (appearanceScroll.current) appearanceScroll.current.scrollTop = editScrollTop.current;
+  }, [visible]);
   useEffect(() => {
     const input = file.current;
     const cancelled = () => {
@@ -802,7 +822,7 @@ function Settings({
   };
   return (
     <section
-      className="settings-panel tw-flex tw-h-[min(640px,_calc(100svh_-_64px))] tw-min-h-0 tw-min-w-0 tw-flex-col tw-overflow-hidden tw-rounded-[22px] tw-bg-panel tw-p-5 mac:tw-h-full mac:tw-min-h-0 mac:tw-overflow-hidden mac:tw-rounded-[18px] mac:tw-p-3 compact:tw-h-[calc(100svh_-_24px)] mac:compact:tw-h-full"
+      className={`settings-panel ${visible ? 'tw-flex' : 'tw-hidden'} tw-h-[min(640px,_calc(100svh_-_64px))] tw-min-h-0 tw-min-w-0 tw-flex-col tw-overflow-hidden tw-rounded-[22px] tw-bg-panel tw-p-5 mac:tw-h-full mac:tw-min-h-0 mac:tw-overflow-hidden mac:tw-rounded-[18px] mac:tw-p-3 compact:tw-h-[calc(100svh_-_24px)] mac:compact:tw-h-full`}
       aria-labelledby="settings-title"
     >
       <header className="settings-header tw-mb-3.5 tw-flex tw-min-h-[30px] tw-items-center tw-justify-between [&>.calendar-button]:tw-pl-0 [&>.calendar-button]:tw-text-action [&_h1]:tw-m-0 [&_h1]:tw-text-[length:15px] [&_h1]:tw-font-semibold">
@@ -810,9 +830,15 @@ function Settings({
           ref={back}
           appearance="text"
           icon={<Icon name="left" />}
-          onClick={() => controller.showSettings(false)}
+          disabled={state.themeEdit?.saving}
+          onClick={() => {
+            if (state.themeEdit) {
+              editScrollTop.current = appearanceScroll.current?.scrollTop ?? 0;
+              controller.showThemeCalendar();
+            } else controller.showSettings(false);
+          }}
         >
-          返回日历
+          {state.themeEdit ? '查看月历' : '返回日历'}
         </CalendarButton>
         <h1 id="settings-title">设置</h1>
       </header>
@@ -868,8 +894,15 @@ function Settings({
             key: 'appearance',
             label: '外观',
             children: (
-              <div className={settingsScroll}>
-                <section>
+              <div
+                className={settingsScroll}
+                ref={appearanceScroll}
+                onScroll={(event) => {
+                  if (visible && state.themeEdit)
+                    editScrollTop.current = event.currentTarget.scrollTop;
+                }}
+              >
+                <section className={state.themeEdit ? 'tw-hidden' : undefined}>
                   <div className="setting-label tw-mb-3 tw-flex tw-min-h-[var(--form-height)] tw-items-center tw-justify-between tw-gap-[var(--form-gap)] tw-text-[length:var(--form-font-size)] coarse:tw-min-h-11">
                     <h2 className="!tw-mb-0">明暗模式</h2>
                     <CalendarSegmented

@@ -23,9 +23,23 @@ import {
   type ManualSunlightLocation,
   type SunlightLocationState,
 } from './sunlight-location.js';
-import { migrateThemeLibrary, parseThemeLibrary } from './theme-library.js';
+import {
+  migrateThemeLibrary,
+  parseThemeLibrary,
+  upsertTheme,
+  type ThemeLibrary,
+} from './theme-library.js';
+import type { CalendarThemePackage } from './theme-package.js';
 
 export type SettingsTab = 'general' | 'appearance' | 'sunlight' | 'menu-bar' | 'data' | 'about';
+
+interface ThemeEdit {
+  initial: CalendarThemePackage;
+  theme: CalendarThemePackage;
+  appearance: 'light' | 'dark';
+  imageFailed: boolean;
+  saving: boolean;
+}
 
 /** 可观察的应用快照；React、测试和宿主都读取同一状态。 */
 export interface CalendarSnapshot {
@@ -40,6 +54,7 @@ export interface CalendarSnapshot {
   years: number[];
   panel: 'calendar' | 'settings' | 'calculator';
   settingsTab: SettingsTab;
+  themeEdit: ThemeEdit | null;
   updating: boolean;
   error: string | null;
   notice: string | null;
@@ -130,6 +145,7 @@ export class CalendarController {
   private updateAbort?: AbortController;
   private disposed = false;
   private saveFailed = false;
+  private failedThemeImage = '';
   private locationAbort?: AbortController;
   private locationAttempt = -Infinity;
   readonly appUpdates: AppUpdateController;
@@ -167,6 +183,7 @@ export class CalendarController {
       years: this.holidays.years,
       panel: 'calendar',
       settingsTab: 'general',
+      themeEdit: null,
       updating: false,
       error: null,
       notice: null,
@@ -282,17 +299,74 @@ export class CalendarController {
   }
 
   showSettings(show = true, settingsTab: SettingsTab = 'general') {
-    this.patch({ panel: show ? 'settings' : 'calendar', settingsTab });
+    this.patch({ panel: show ? 'settings' : 'calendar', settingsTab, themeEdit: null });
   }
 
   selectSettingsTab(settingsTab: SettingsTab) {
-    this.patch({ settingsTab });
+    this.patch({
+      settingsTab,
+      themeEdit: settingsTab === 'appearance' ? this.snapshot.themeEdit : null,
+    });
   }
 
   /** 日期计算仅切换视图，不写入偏好或更改所选日期。 */
   showCalculator(show = true) {
-    this.patch({ panel: show ? 'calculator' : 'calendar' });
+    this.patch({ panel: show ? 'calculator' : 'calendar', themeEdit: null });
   }
+
+  /** 主题草稿只影响当前窗口，独立于已应用主题和外观偏好。 */
+  beginThemeEdit(theme: CalendarThemePackage, appearance: ThemeEdit['appearance']) {
+    this.patch({
+      themeEdit: {
+        initial: theme,
+        theme,
+        appearance,
+        imageFailed: theme.background?.url === this.failedThemeImage,
+        saving: false,
+      },
+    });
+  }
+
+  readonly previewTheme = (theme: CalendarThemePackage, appearance: ThemeEdit['appearance']) => {
+    const edit = this.snapshot.themeEdit;
+    if (!edit || edit.saving || (edit.theme === theme && edit.appearance === appearance)) return;
+    const imageFailed = edit.theme.background?.url === theme.background?.url && edit.imageFailed;
+    this.patch({ themeEdit: { ...edit, theme, appearance, imageFailed } });
+  };
+
+  readonly reportThemeImageStatus = (source: string, loaded: boolean) => {
+    this.failedThemeImage = loaded ? '' : source;
+    const edit = this.snapshot.themeEdit;
+    if (!edit || edit.theme.background?.url !== source || edit.imageFailed === !loaded) return;
+    this.patch({ themeEdit: { ...edit, imageFailed: !loaded } });
+  };
+
+  showThemeCalendar() {
+    if (this.snapshot.themeEdit && !this.snapshot.themeEdit.saving)
+      this.patch({ panel: 'calendar' });
+  }
+
+  resumeThemeEdit() {
+    if (this.snapshot.themeEdit) this.patch({ panel: 'settings', settingsTab: 'appearance' });
+  }
+
+  cancelThemeEdit() {
+    if (!this.snapshot.themeEdit?.saving) this.patch({ themeEdit: null });
+  }
+
+  async saveThemeEdit(theme: CalendarThemePackage) {
+    const edit = this.snapshot.themeEdit;
+    if (!edit || edit.saving) return false;
+    const previous = this.snapshot.preferences.themes;
+    const themes = parseThemeLibrary(upsertTheme(previous, theme));
+    this.patch({ themeEdit: { ...edit, saving: true } });
+    const saved = await this.persist({ previous, themes });
+    const active = this.snapshot.themeEdit;
+    if (active?.initial === edit.initial)
+      this.patch({ themeEdit: saved ? null : { ...active, saving: false } });
+    return saved;
+  }
+
   dismissError() {
     this.patch({ error: null, notice: null });
   }
@@ -336,17 +410,22 @@ export class CalendarController {
     };
   }
 
-  /** 串行保存，避免快速切换设置时旧写入覆盖新状态。 */
-  private persist() {
-    const state = this.serialized();
+  /** 在写入时读取最新快照，避免主题提交被后续保存的旧主题覆盖。 */
+  private persist(themeEdit?: { previous: ThemeLibrary; themes: ThemeLibrary }) {
     const result = this.saves.then(async () => {
       try {
+        const state = this.serialized();
+        if (themeEdit) state.preferences.themes = themeEdit.themes;
         await this.platform.save(state);
         this.saveFailed = false;
+        if (themeEdit && this.snapshot.preferences.themes === themeEdit.previous)
+          this.patch({ preferences: { ...this.snapshot.preferences, themes: themeEdit.themes } });
         return true;
       } catch {
-        this.saveFailed = true;
-        this.patch({ error: '本地保存失败，本次操作仍在内存中。请检查存储空间或浏览器设置。' });
+        if (!themeEdit) {
+          this.saveFailed = true;
+          this.patch({ error: '本地保存失败，本次操作仍在内存中。请检查存储空间或浏览器设置。' });
+        }
         return false;
       }
     });

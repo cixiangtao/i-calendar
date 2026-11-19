@@ -244,6 +244,66 @@ test('快速修改设置串行写入，保存失败有可恢复提示', async ()
   assert.match(broken.getSnapshot().error!, /保存失败/);
 });
 
+test('主题草稿只跟随窗口，跨页面预览和取消均不写入配色或外观偏好', async () => {
+  const { controller, saves } = fixture();
+  await controller.initialize();
+  const before = controller.getSnapshot().preferences;
+  const draft = copyTheme(builtInThemes[0]);
+  controller.showSettings(true, 'appearance');
+  controller.beginThemeEdit(draft, 'light');
+  const preview = { ...draft, name: '实时主题' };
+  controller.previewTheme(preview, 'dark');
+  controller.showThemeCalendar();
+  assert.equal(controller.getSnapshot().panel, 'calendar');
+  assert.equal(controller.getSnapshot().themeEdit?.theme, preview);
+  assert.equal(controller.getSnapshot().themeEdit?.appearance, 'dark');
+  assert.equal(controller.getSnapshot().preferences, before);
+  assert.equal(saves.length, 0);
+  await controller.setPreferences({ weekStartsOn: 7 });
+  assert.deepEqual(saves.at(-1)?.preferences.themes, before.themes);
+  assert.equal(saves.at(-1)?.preferences.appearance, 'system');
+  controller.resumeThemeEdit();
+  assert.equal(controller.getSnapshot().panel, 'settings');
+  assert.equal(controller.getSnapshot().settingsTab, 'appearance');
+  controller.cancelThemeEdit();
+  assert.equal(controller.getSnapshot().themeEdit, null);
+  assert.deepEqual(controller.getSnapshot().preferences.themes, before.themes);
+  assert.equal(saves.length, 1);
+});
+
+test('主题草稿保存失败可取消或重试，成功后才更新已应用主题', async () => {
+  const writes: SavedCalendarState[] = [];
+  let reject = true;
+  const { controller } = fixture({
+    save: async (state) => {
+      if (reject) throw new Error('full');
+      writes.push(structuredClone(state));
+    },
+  });
+  await controller.initialize();
+  const draft = copyTheme(builtInThemes[0]);
+  controller.beginThemeEdit(draft, 'dark');
+  assert.equal(await controller.saveThemeEdit(draft), false);
+  assert.equal(controller.getSnapshot().themeEdit?.theme, draft);
+  assert.equal(controller.getSnapshot().themeEdit?.saving, false);
+  assert.equal(controller.getSnapshot().preferences.themes.selectedId, 'clear');
+  controller.cancelThemeEdit();
+  assert.equal(controller.getSnapshot().themeEdit, null);
+
+  controller.beginThemeEdit(draft, 'dark');
+  reject = false;
+  const save = controller.saveThemeEdit(draft);
+  assert.equal(controller.getSnapshot().preferences.themes.selectedId, 'clear');
+  assert.equal(controller.getSnapshot().themeEdit?.saving, true);
+  const saveWeekStart = controller.setPreferences({ weekStartsOn: 7 });
+  assert.equal(await save, true);
+  assert.equal(await saveWeekStart, true);
+  assert.equal(controller.getSnapshot().themeEdit, null);
+  assert.equal(writes.at(-1)?.preferences.themes.selectedId, draft.id);
+  assert.equal(writes.at(-1)?.preferences.appearance, 'system');
+  assert.equal(writes.at(-1)?.preferences.weekStartsOn, 7);
+});
+
 test('跨北京时间午夜：跟随今天继续跟随，手动浏览不会被重置', async () => {
   let now = new Date('2026-11-11T15:59:00Z');
   const { controller: first } = fixture();

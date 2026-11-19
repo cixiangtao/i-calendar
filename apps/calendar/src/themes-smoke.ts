@@ -81,5 +81,33 @@ export async function verifyThemes(controller: CalendarController) {
   }
   if (backdropImage()) throw new Error('恢复清爽白后仍有背景图片');
   verifyPanelAlpha('.month-panel', 1);
+  const appearance = document.documentElement.dataset.theme;
+  const previewAppearance = appearance === 'dark' ? 'light' : 'dark';
+  flushSync(() => {
+    controller.showSettings(true, 'appearance');
+    controller.beginThemeEdit(imported, previewAppearance);
+  });
+  try {
+    const field = document.querySelector<HTMLInputElement>('.settings-panel input[id$="-name"]');
+    const preview = document.querySelector<HTMLButtonElement>('.settings-header button');
+    if (!field || !preview || document.documentElement.dataset.theme !== previewAppearance)
+      throw new Error('编辑主题时未实时预览所选明暗外观');
+    verifyPanelAlpha('.settings-panel', 0);
+    flushSync(() => preview.click());
+    if (field.getClientRects().length || !field.isConnected)
+      throw new Error('查看月历时未保留编辑表单');
+    verifyPanelAlpha('.month-panel', 0);
+    const resume = [...document.querySelectorAll<HTMLButtonElement>('.month-panel button')].find(
+      (button) => button.textContent.trim() === '继续编辑',
+    );
+    if (!resume) throw new Error('预览月历时缺少继续编辑入口');
+    flushSync(() => resume.click());
+    if (!field.getClientRects().length) throw new Error('继续编辑后未恢复原表单');
+    flushSync(() => controller.cancelThemeEdit());
+    if (backdropImage() || document.documentElement.dataset.theme !== appearance)
+      throw new Error('取消草稿后未恢复已应用外观');
+  } finally {
+    flushSync(() => controller.showSettings(false));
+  }
   return true;
 }

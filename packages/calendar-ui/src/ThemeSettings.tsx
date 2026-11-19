@@ -4,21 +4,24 @@ import { CalendarButton } from './CalendarButton.js';
 import type { CalendarController, CalendarSnapshot } from './store.js';
 import { encodeThemeArchive } from './theme-archive.js';
 import { readThemeFile, themeBackground } from './theme-image.js';
-import { activeTheme, copyTheme, isBuiltInTheme, type ThemeLibrary } from './theme-library.js';
+import {
+  activeTheme,
+  copyTheme,
+  isBuiltInTheme,
+  upsertTheme,
+  type ThemeLibrary,
+} from './theme-library.js';
 import { builtInThemes, type CalendarThemePackage } from './theme-package.js';
 import { ThemeBackgroundImage } from './ThemeBackdrop.js';
 import { ThemeEditor } from './ThemeEditor.js';
 import { ThemeFilePicker } from './ThemeFilePicker.js';
 import { ThemePreview } from './ThemePreview.js';
 
-type Workflow =
-  | { kind: 'edit'; theme: CalendarThemePackage }
-  | {
-      kind: 'import';
-      theme: CalendarThemePackage;
-      copy: CalendarThemePackage;
-      collision: 'built-in' | 'custom' | null;
-    };
+interface PendingImport {
+  theme: CalendarThemePackage;
+  copy: CalendarThemePackage;
+  collision: 'built-in' | 'custom' | null;
+}
 
 function packageWithImage(theme: CalendarThemePackage): CalendarThemePackage {
   if (theme.background) return theme;
@@ -97,12 +100,12 @@ export function ThemeSettings({
 }) {
   const library = state.preferences.themes;
   const selected = activeTheme(library);
-  const [workflow, setWorkflow] = useState<Workflow | null>(null);
+  const [workflow, setWorkflow] = useState<PendingImport | null>(null);
   const [removing, setRemoving] = useState<CalendarThemePackage | null>(null);
   const [operation, setOperation] = useState<'save' | 'import' | 'export' | null>(null);
   const [feedback, setFeedback] = useState<{ message: string; error: boolean } | null>(null);
   const importHeading = useRef<HTMLHeadingElement>(null);
-  const importPreview = workflow?.kind === 'import';
+  const importPreview = workflow !== null;
   useEffect(() => {
     if (importPreview) importHeading.current?.focus();
   }, [importPreview]);
@@ -114,10 +117,24 @@ export function ThemeSettings({
       shared.schemaVersion === 1
         ? ({ ...shared, schemaVersion: 2, rulesVersion: 2 } as const)
         : shared;
-    setWorkflow({
-      kind: 'edit',
-      theme: isBuiltInTheme(theme.id) ? copyTheme({ ...theme, name: theme.name + '副本' }) : theme,
-    });
+    const initial = isBuiltInTheme(theme.id)
+      ? copyTheme({ ...theme, name: theme.name + '副本' })
+      : theme;
+    controller.beginThemeEdit(initial, dark ? 'dark' : 'light');
+  }
+
+  async function saveEdit(theme: CalendarThemePackage) {
+    setFeedback(null);
+    try {
+      if (await controller.saveThemeEdit(theme))
+        setFeedback({ message: '主题已保存并应用。', error: false });
+      else setFeedback({ message: '主题保存失败，编辑内容仍在草稿中。', error: true });
+    } catch (error) {
+      setFeedback({
+        message: error instanceof Error ? error.message : '主题无法保存',
+        error: true,
+      });
+    }
   }
 
   async function updateLibrary(next: (library: ThemeLibrary) => ThemeLibrary, message: string) {
@@ -142,13 +159,7 @@ export function ThemeSettings({
   }
 
   function applyTheme(theme: CalendarThemePackage, message: string) {
-    void updateLibrary((current) => {
-      const index = current.custom.findIndex((item) => item.id === theme.id);
-      const custom = current.custom.slice();
-      if (index < 0) custom.push(theme);
-      else custom[index] = theme;
-      return { selectedId: theme.id, custom };
-    }, message);
+    void updateLibrary((current) => upsertTheme(current, theme), message);
   }
 
   async function importTheme(file: File) {
@@ -163,7 +174,7 @@ export function ThemeSettings({
           : null;
       const suffix = '副本';
       const copy = copyTheme({ ...theme, name: theme.name.slice(0, 64 - suffix.length) + suffix });
-      setWorkflow({ kind: 'import', theme, copy, collision });
+      setWorkflow({ theme, copy, collision });
     } catch (error) {
       setFeedback({
         message: error instanceof Error ? error.message : '主题无法导入',
@@ -208,19 +219,23 @@ export function ThemeSettings({
       aria-label="主题"
       className="tw-grid tw-gap-2.5"
     >
-      {workflow?.kind === 'edit' ? (
+      {state.themeEdit ? (
         <ThemeEditor
-          key={workflow.theme.id}
-          initial={workflow.theme}
-          state={state}
+          key={state.themeEdit.initial.id}
+          initial={state.themeEdit.initial}
           dark={dark}
           increasedContrast={increasedContrast}
           platform={controller.platform}
-          saving={saving}
-          onCancel={cancel}
-          onSave={(theme) => applyTheme(theme, '主题已保存并应用。')}
+          saving={state.themeEdit.saving}
+          imageFailed={state.themeEdit.imageFailed}
+          onPreview={controller.previewTheme}
+          onCancel={() => {
+            setFeedback(null);
+            controller.cancelThemeEdit();
+          }}
+          onSave={(theme) => void saveEdit(theme)}
         />
-      ) : workflow?.kind === 'import' ? (
+      ) : workflow ? (
         <div className="tw-grid tw-gap-2.5">
           <h2
             ref={importHeading}
