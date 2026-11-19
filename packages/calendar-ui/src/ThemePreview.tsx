@@ -39,7 +39,7 @@ export function ThemePreview({
   return (
     <div className="tw-grid tw-gap-1.5">
       <div
-        className="theme-mini-calendar tw-relative tw-isolate tw-overflow-hidden tw-rounded-xl tw-bg-surface tw-text-ink"
+        className="theme-mini-calendar tw-relative tw-isolate tw-overflow-hidden tw-rounded-xl tw-bg-canvas tw-text-ink"
         data-theme-photo={background?.strength ? true : undefined}
         style={{ ...tokens, colorScheme: mode }}
         aria-label="月历配色预览"
@@ -49,7 +49,7 @@ export function ThemePreview({
           dark={mode === 'dark'}
           onImageStatus={(source, loaded) => setFailedImage(loaded ? '' : source)}
         />
-        <div className="tw-relative tw-overflow-hidden tw-rounded-lg tw-bg-surface">
+        <div className="tw-relative tw-overflow-hidden tw-rounded-lg tw-bg-panel">
           <div className="tw-flex tw-min-h-11 tw-items-center tw-justify-between tw-gap-2 tw-px-2.5">
             <strong className="tw-rounded-lg tw-bg-control tw-px-2 tw-py-1 tw-text-xs tw-font-semibold">
               {state.year} 年 {state.monthNumber} 月
@@ -58,7 +58,7 @@ export function ThemePreview({
               今天
             </span>
           </div>
-          <div className="tw-relative tw-grid tw-grid-cols-7 tw-gap-0.5 tw-bg-surface tw-p-1.5">
+          <div className="tw-relative tw-grid tw-grid-cols-7 tw-gap-0.5 tw-p-1.5">
             {week.map((day, index) => {
               if (!day) return <span key={index} />;
               const today = day.date === state.today;

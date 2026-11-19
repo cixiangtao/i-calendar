@@ -30,7 +30,7 @@ export const colorTokenGroups = [
     label: '背景与分隔',
     items: [
       { key: '--canvas', label: '页面背景' },
-      { key: '--surface', label: '卡片与弹层背景' },
+      { key: '--surface', label: '卡片参考底色与弹层背景' },
       { key: '--line', label: '分隔线与边框' },
       { key: '--control', label: '控件背景' },
       { key: '--control-hover', label: '控件悬停背景' },
@@ -276,7 +276,7 @@ const primaryPaletteKeys = {
   '--purple': 'purple',
 } as const satisfies Record<PrimaryColor, keyof ThemePalette>;
 
-/** 规则 v2 先合成背景 Alpha，再复用规则 v1 的文字层级和交互派生。 */
+/** 卡片保留原始 Alpha，规则 v2 的对比度和交互颜色按合成底色派生。 */
 export function deriveColorTokens(palette: ThemePalette, increasedContrast = false, dark = false) {
   const { canvas: canvasColor, surface: surfaceColor, ink, accent, ...semanticBases } = palette;
   const canvas = compositeThemeColor(
@@ -415,7 +415,7 @@ export function deriveColorTokens(palette: ThemePalette, increasedContrast = fal
     '--purple-soft': purple.tint,
     '--outside-purple': purple.outside,
   } satisfies Record<ColorToken, string>;
-  return tokens;
+  return { ...tokens, '--panel-background': surfaceColor };
 }
 
 /** 检查派生颜色的常用组合；无法同时满足的背景对比要求在预览中提示。 */

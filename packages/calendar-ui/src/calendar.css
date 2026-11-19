@@ -206,7 +206,7 @@ a:focus-visible {
   outline-offset: 2px;
   border-radius: 6px;
 }
-/* 图片在应用画布内独立成层，卡片仍使用可校正对比度的实色。 */
+/* 图片在应用画布内独立成层，位于卡片背景之下。 */
 body[data-platform] .calendar-app[data-theme-photo='true'] {
   position: relative;
   isolation: isolate;
@@ -236,7 +236,6 @@ body[data-platform] .calendar-app[data-theme-photo='true'] {
 }
 .theme-mini-calendar[data-theme-photo='true'] {
   padding: 24px 6px 6px;
-  background: var(--canvas);
 }
 @media (min-width: 860px) {
   body[data-platform='web'] .calendar-app[data-panel='calendar'][data-show-lunar-details='false'] {

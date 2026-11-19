@@ -76,8 +76,16 @@ test('多种颜色格式归一化并保留 Alpha，派生文字以实际实色�
   const light = resolveThemeTokens(theme, false);
   const dark = resolveThemeTokens(theme, true);
   assert.equal(light['--surface'], '#e6e6e6');
+  assert.equal(light['--panel-background'], 'rgba(255, 255, 255, 0.9)');
   assert.equal(dark['--canvas'], '#171b23');
   assert.equal(dark['--surface'], '#0c0e12');
+  assert.equal(dark['--panel-background'], 'rgba(0, 0, 0, 0.5)');
+  const transparent = deriveColorTokens({
+    ...theme.palettes.light,
+    surface: 'rgba(255, 255, 255, 0)',
+  });
+  assert.equal(transparent['--surface'], transparent['--canvas']);
+  assert.equal(transparent['--panel-background'], 'rgba(255, 255, 255, 0)');
   for (const tokens of [light, dark])
     assert.ok(contrastRatio(tokens['--lunar-ink'], tokens['--surface']) >= 4.5);
 });

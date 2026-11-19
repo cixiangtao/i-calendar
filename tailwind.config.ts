@@ -28,6 +28,7 @@ export default {
         accent: 'var(--accent)',
         canvas: 'var(--canvas)',
         surface: 'var(--surface)',
+        panel: 'var(--panel-background)',
         ink: 'var(--ink)',
         secondary: 'var(--secondary)',
         muted: 'var(--muted)',

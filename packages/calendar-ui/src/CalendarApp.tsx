@@ -364,7 +364,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   return (
     <article
       ref={container}
-      className="calendar-app tw-grid tw-w-[min(400px,_100%)] tw-min-w-0 tw-max-w-full tw-gap-3 tw-text-[length:13px] tw-text-ink mac:tw-max-h-[100vh] mac:tw-w-full mac:tw-content-start mac:tw-gap-2 mac:tw-overflow-y-auto mac:tw-p-2 web:tw-relative web:tw-isolate web:tw-mx-auto web:tw-w-full web:tw-gap-0 web:tw-rounded-[22px] web:tw-border-0 web:tw-bg-surface web:desktop:tw-grid-cols-[minmax(0,_1fr)_304px]"
+      className="calendar-app tw-grid tw-w-[min(400px,_100%)] tw-min-w-0 tw-max-w-full tw-gap-3 tw-text-[length:13px] tw-text-ink mac:tw-max-h-[100vh] mac:tw-w-full mac:tw-content-start mac:tw-gap-2 mac:tw-overflow-y-auto mac:tw-p-2 web:tw-relative web:tw-isolate web:tw-mx-auto web:tw-w-full web:tw-gap-0 web:tw-rounded-[22px] web:tw-border-0 web:data-[panel=calendar]:tw-bg-panel web:desktop:tw-grid-cols-[minmax(0,_1fr)_304px]"
       data-panel={state.panel}
       data-theme-photo={background?.strength ? true : undefined}
       data-show-lunar-details={state.preferences.showLunarDetails}
@@ -398,7 +398,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       ) : (
         <>
           <section
-            className="month-panel tw-relative tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-bg-transparent web:desktop:tw-p-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
+            className="month-panel tw-relative tw-min-w-0 tw-rounded-[22px] tw-bg-panel tw-p-[18px] mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-bg-transparent web:desktop:tw-p-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-4"
             aria-label="月历"
           >
             {controller.platform.kind === 'web' ? (
@@ -604,7 +604,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
           </section>
           {state.preferences.showLunarDetails ? (
             <aside
-              className="detail-panel tw-min-w-0 tw-rounded-[22px] tw-bg-surface tw-px-[18px] tw-py-3 mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-rounded-none web:tw-border-0 web:tw-border-t web:tw-border-solid web:tw-border-line web:tw-bg-transparent web:desktop:tw-flex web:desktop:tw-flex-col web:desktop:tw-border-l-0 web:desktop:tw-border-t-0 web:desktop:tw-px-6 web:desktop:tw-py-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-3 web:compact:tw-rounded-none web:desktop:[&>*]:tw-shrink-0"
+              className="detail-panel tw-min-w-0 tw-rounded-[22px] tw-bg-panel tw-px-[18px] tw-py-3 mac:tw-rounded-[18px] mac:tw-px-3 mac:tw-py-2.5 web:tw-rounded-none web:tw-border-0 web:tw-border-t web:tw-border-solid web:tw-border-line web:tw-bg-transparent web:desktop:tw-flex web:desktop:tw-flex-col web:desktop:tw-border-l-0 web:desktop:tw-border-t-0 web:desktop:tw-px-6 web:desktop:tw-py-7 compact:tw-rounded-[20px] compact:tw-px-3 compact:tw-py-3 web:compact:tw-rounded-none web:desktop:[&>*]:tw-shrink-0"
               aria-label="日期详情"
             >
               <CalendarContextMenu
@@ -802,7 +802,7 @@ function Settings({
   };
   return (
     <section
-      className="settings-panel tw-flex tw-h-[min(640px,_calc(100svh_-_64px))] tw-min-h-0 tw-min-w-0 tw-flex-col tw-overflow-hidden tw-rounded-[22px] tw-bg-surface tw-p-5 mac:tw-h-full mac:tw-min-h-0 mac:tw-overflow-hidden mac:tw-rounded-[18px] mac:tw-p-3 compact:tw-h-[calc(100svh_-_24px)] mac:compact:tw-h-full"
+      className="settings-panel tw-flex tw-h-[min(640px,_calc(100svh_-_64px))] tw-min-h-0 tw-min-w-0 tw-flex-col tw-overflow-hidden tw-rounded-[22px] tw-bg-panel tw-p-5 mac:tw-h-full mac:tw-min-h-0 mac:tw-overflow-hidden mac:tw-rounded-[18px] mac:tw-p-3 compact:tw-h-[calc(100svh_-_24px)] mac:compact:tw-h-full"
       aria-labelledby="settings-title"
     >
       <header className="settings-header tw-mb-3.5 tw-flex tw-min-h-[30px] tw-items-center tw-justify-between [&>.calendar-button]:tw-pl-0 [&>.calendar-button]:tw-text-action [&_h1]:tw-m-0 [&_h1]:tw-text-[length:15px] [&_h1]:tw-font-semibold">

@@ -2,6 +2,7 @@ import type { CalendarController } from '@i-calendar/ui';
 import { flushSync } from 'react-dom';
 
 import { encodeThemeArchive } from '../../../packages/calendar-ui/src/theme-archive.js';
+import { parseThemeColor } from '../../../packages/calendar-ui/src/theme-color.js';
 import { readThemeFile, themeBackground } from '../../../packages/calendar-ui/src/theme-image.js';
 import {
   builtInThemes,
@@ -11,14 +12,26 @@ import {
 const backdropImage = () =>
   document.querySelector<HTMLImageElement>('.calendar-app > .theme-backdrop img');
 
+function verifyPanelAlpha(selector: string, alpha: number) {
+  const panel = document.querySelector(selector);
+  const background = panel && parseThemeColor(getComputedStyle(panel).backgroundColor);
+  if (background?.alpha !== alpha) throw new Error(`主题卡片的透明度不正确：${selector}`);
+}
+
 /** 在隔离 WKWebView 内校验默认外观、带图主题文件、挂载和复原。 */
 export async function verifyThemes(controller: CalendarController) {
   const previous = controller.getSnapshot().preferences.themes;
   if (backdropImage()) throw new Error('默认清爽白含有背景图片');
+  verifyPanelAlpha('.month-panel', 1);
   const mountain = builtInThemes.find((theme) => theme.id === 'mountain')!;
+  const transparent = 'rgba(255, 255, 255, 0)';
   const content = {
     ...mountain,
     id: 'smoke-theme',
+    palettes: {
+      light: { ...mountain.palettes.light, surface: transparent },
+      dark: { ...mountain.palettes.dark, surface: transparent },
+    },
     background: themeBackground(mountain),
   };
   const legacy = await readThemeFile(new File([JSON.stringify(content)], 'legacy.icaltheme'));
@@ -45,9 +58,15 @@ export async function verifyThemes(controller: CalendarController) {
     if (!saved || !loaded) throw new Error('带图主题未应用');
     await loaded.decode();
     if (loaded.naturalWidth <= 0) throw new Error('带图主题未正常解码');
+    verifyPanelAlpha('.month-panel', 0);
+    verifyPanelAlpha('.detail-panel', 0);
     const surface = document.documentElement.style.getPropertyValue('--surface');
-    for (const open of [() => controller.showSettings(), () => controller.showCalculator()]) {
+    for (const [open, selector] of [
+      [() => controller.showSettings(), '.settings-panel'],
+      [() => controller.showCalculator(), '[aria-labelledby="calculator-title"]'],
+    ] as const) {
       flushSync(open);
+      verifyPanelAlpha(selector, 0);
       if (
         backdropImage() !== loaded ||
         document.documentElement.style.getPropertyValue('--surface') !== surface
@@ -61,5 +80,6 @@ export async function verifyThemes(controller: CalendarController) {
     });
   }
   if (backdropImage()) throw new Error('恢复清爽白后仍有背景图片');
+  verifyPanelAlpha('.month-panel', 1);
   return true;
 }

@@ -63,9 +63,13 @@ test('只编辑八个主色，派生色随主色更新，浅深色隔离且停�
   assert.equal(keys.length, 8);
   assert.equal(new Set(keys).size, 8);
   assert.deepEqual(
-    new Set(colorTokenGroups.flatMap((group) => group.items.map((item) => item.key))),
+    new Set([
+      ...colorTokenGroups.flatMap((group) => group.items.map((item) => item.key)),
+      '--panel-background',
+    ]),
     new Set(Object.keys(baseline)),
   );
+  assert.equal(baseline['--panel-background'], baseline['--surface']);
   const custom = parseCustomColors({
     enabled: true,
     light: {
