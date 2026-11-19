@@ -183,7 +183,7 @@ export function ThemeSettings({
         .replace(/[\p{Cc}\\/:*?"<>|]/gu, '-')
         .replace(/^[. ]+|[. ]+$/g, '');
       const exported = await controller.platform.exportTheme?.(
-        (filename || 'i日历主题') + '.icaltheme',
+        (filename || 'i日历主题') + '.zip',
         await encodeThemeArchive(theme),
       );
       if (exported) setFeedback({ message: '主题已导出。', error: false });
@@ -344,7 +344,7 @@ export function ThemeSettings({
               </CalendarButton>
               <ThemeFilePicker
                 platform={controller.platform}
-                accept=".icaltheme,.zip,.json,application/zip,application/json"
+                accept=".zip,.icaltheme,.json,application/zip,application/json"
                 label="导入主题…"
                 disabled={!state.ready || operation !== null}
                 loading={operation === 'import'}

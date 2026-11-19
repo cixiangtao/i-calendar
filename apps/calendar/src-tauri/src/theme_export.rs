@@ -4,16 +4,19 @@ use objc2_foundation::{NSData, NSString};
 
 const MAX_THEME_BYTES: usize = 304_000;
 
-/// 将文件写入用户通过系统保存面板确认的位置。
-pub async fn save(app: tauri::AppHandle, name: String, content: Vec<u8>) -> Result<bool, String> {
-    if !content.starts_with(b"PK\x03\x04")
-        || content.len() > MAX_THEME_BYTES
-        || name.chars().count() > 80
-        || !name.ends_with(".icaltheme")
-        || name
+fn valid_export(name: &str, content: &[u8]) -> bool {
+    content.starts_with(b"PK\x03\x04")
+        && content.len() <= MAX_THEME_BYTES
+        && name.chars().count() <= 80
+        && name.ends_with(".zip")
+        && !name
             .chars()
             .any(|c| c.is_control() || matches!(c, '/' | '\\' | ':'))
-    {
+}
+
+/// 将文件写入用户通过系统保存面板确认的位置。
+pub async fn save(app: tauri::AppHandle, name: String, content: Vec<u8>) -> Result<bool, String> {
+    if !valid_export(&name, &content) {
         return Err("主题文件名或大小无效".into());
     }
     let (sender, mut receiver) = tauri::async_runtime::channel(1);
@@ -45,4 +48,18 @@ pub async fn save(app: tauri::AppHandle, name: String, content: Vec<u8>) -> Resu
         .await
         .ok_or("主题保存已中断")?
         .map_err(str::to_owned)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::valid_export;
+
+    #[test]
+    fn accepts_zip_name_at_the_native_save_boundary() {
+        let zip_header = b"PK\x03\x04";
+        assert!(valid_export("山雾.zip", zip_header));
+        assert!(!valid_export("山雾.icaltheme", zip_header));
+        assert!(!valid_export("../山雾.zip", zip_header));
+        assert!(!valid_export("山雾.zip", b"{}"));
+    }
 }

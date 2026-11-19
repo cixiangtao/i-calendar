@@ -133,3 +133,12 @@ test('拒绝损坏、未知路径、缺图和超大小限制的 ZIP', async () =
   await assert.rejects(decodeThemeFile(missing), /背景图文件缺失/);
   await assert.rejects(decodeThemeFile(new Uint8Array(maxThemePackageBytes + 1)), /大小限制/);
 });
+
+test('ZIP 目录有效时仍检查主题清单、版本与内容', async () => {
+  const ordinaryArchive = await makeZip([['assets/', new Uint8Array()]]);
+  const unsupported = await makeZip([['theme.json', json({ archiveVersion: 2, theme: plain })]]);
+  const invalid = await makeZip([['theme.json', manifest({ ...plain, palettes: {} })]]);
+  await assert.rejects(decodeThemeFile(ordinaryArchive), /缺少 theme\.json/);
+  await assert.rejects(decodeThemeFile(unsupported), /格式版本不受支持/);
+  await assert.rejects(decodeThemeFile(invalid), /八个完整主色/);
+});
