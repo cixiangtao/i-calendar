@@ -16,7 +16,7 @@ Mac 首版采用本地 ad-hoc 签名，尚无 Developer ID 和 Apple 公证。�
 
 **Mac 首次打开**：从官方 Release 下载并解压，将 i日历拖到「应用程序」后双击。若系统提示无法验证开发者，确认下载来源后，在「系统设置 → 隐私与安全性」为 i日历选择「仍要打开」。
 
-项目由“拾日历”更名为“i日历”；本地目录、根包名和 Rust 程序名统一为 `i-calendar`，共享包为 `@i-calendar/core` 与 `@i-calendar/ui`，应用标识为 `local.icalendar.app`。旧名称仅保留于数据迁移和历史记录，已有偏好和缓存可继续读取。
+项目由“拾日历”更名为“i日历”；本地目录、根包名和 Rust 程序名统一为 `i-calendar`，共享包为 `@i-calendar/core` 与 `@i-calendar/ui`，正式应用标识为 `local.icalendar.app`。旧名称仅保留于数据迁移和历史记录，已有偏好和缓存可继续读取。
 
 ## 快速启动
 
@@ -30,6 +30,15 @@ corepack pnpm run dev:mac
 项目固定使用 pnpm 12.18.0，由 Corepack 按 `packageManager` 选择版本。以下 `pnpm` 命令均使用该版本，也可统一写成 `corepack pnpm …`。工作区使用 `pnpm-workspace.yaml`，JavaScript 依赖锁文件为 `pnpm-lock.yaml`。
 
 Mac 开发建议使用 Node 24 LTS（至少 24.15.0，满足 release-it 工具要求）、macOS 13+、Command Line Tools 和通过 rustup 安装的 Rust。项目在 `rust-toolchain.toml` 中锁定 Rust 1.99.1，不修改系统全局默认工具链。首次运行会下载和编译 Rust 依赖，耗时比后续启动长。`dev:mac` 会自动启动前端服务，再打开菜单栏日历。
+
+开发版可以和已安装的正式版同时运行。要双击打开开发版，可构建独立的 Mac 应用：
+
+```sh
+pnpm run build:mac:dev
+open outputs/mac-dev/i日历开发版.app
+```
+
+热更新开发和本地开发包共用开发版标识 `local.icalendar.app.dev`、偏好及缓存，两者同时打开时会复用已运行的开发实例。右键菜单栏图标可通过菜单项中的「i日历开发版」来区分。开机自启、应用内更新与旧版数据迁移由正式版处理。
 
 只看网页版不需要 Rust：
 
@@ -46,10 +55,10 @@ pnpm run build:mac
 open outputs/mac/i日历.app
 ```
 
-产物为 `outputs/mac/i日历.app` 和 `outputs/i日历-1.3.8-mac-arm64.zip`（文件名随本机构架变化）。当前验证环境为 Apple Silicon；应用采用本地临时签名，没有 Developer ID 签名或 Apple 公证，首版按此方式分发，安装说明见正式 Release。
+产物为 `outputs/mac/i日历.app` 和 `outputs/i日历-1.3.8-mac-arm64.zip`（文件名随本机构架变化）。此构建沿用正式应用标识，用于本地验收正式包。当前验证环境为 Apple Silicon；应用采用本地临时签名，没有 Developer ID 签名或 Apple 公证，首版按此方式分发，安装说明见正式 Release。
 
 - 左键菜单栏入口展开或收起；失去焦点自动收起；右键可进入设置或退出。
-- Mac 弹层停靠菜单栏所在屏幕的右上方，距工作区顶部与右侧各 8px；从屏幕右侧以 280ms 原生减速动画进入。收起时以 180ms 向右滑出，动画结束后隐藏；退场中再次点击可从当前位置转回打开。系统开启“减少动态效果”时使用 120ms 淡入与 100ms 淡出。
+- Mac 弹层停靠菜单栏所在屏幕的右上方，距工作区顶部与右侧各 8px。取不到菜单栏入口的位置时使用窗口所在的屏幕，窗口已滑出屏幕时使用主屏幕。从屏幕右侧以 280ms 原生减速动画进入。收起时以 180ms 向右滑出，动画结束后隐藏；退场中再次点击可从当前位置转回打开。系统开启“减少动态效果”时使用 120ms 淡入与 100ms 淡出。
 - Mac 悬浮窗使用 20px 原生圆角，四角透明并保留系统阴影，日历和设置页面统一生效。
 - Mac 菜单栏默认显示图标和 `HH:mm`，在“设置 → 菜单栏”选择是否显示图标和时间，并选择时分、时分秒、日期与星期、12 小时制或自定义格式。图标与有效时间文字至少保留一项，支持图文、仅时间、仅图标三种模式；格式与开关在本机保存，旧设置默认显示图标。
 - 菜单栏时钟由原生层刷新，弹窗收起后继续走时，跟随 Mac 系统时区；日历查询仍采用北京时间。格式示例与规则见[菜单栏时间格式](docs/菜单栏时间格式.md)。
