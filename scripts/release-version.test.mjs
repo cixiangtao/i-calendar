@@ -11,6 +11,7 @@ import { guardRelease, syncVersions, validateRelease, verifyVersions } from './r
 
 const source = fileURLToPath(new URL('../', import.meta.url));
 const env = { ...process.env, GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1' };
+delete env.I_CALENDAR_REPLACE_UNPUBLISHED_TAG;
 for (const key of Object.keys(env))
   if (/^GIT_(CONFIG_(COUNT|KEY_\d+|VALUE_\d+)|DIR|WORK_TREE|INDEX_FILE)$/.test(key))
     delete env[key];
@@ -82,6 +83,8 @@ async function release(root, args = [], extraEnv = {}) {
   const publicRelease = encodeURIComponent(`
     import assert from 'node:assert/strict';
     globalThis.fetch = async (url) => {
+      if (url === 'https://api.github.com/repos/cixiangtao/i-calendar/releases/tags/v1.0.1')
+        return new Response(null, { status: process.env.I_CALENDAR_TEST_CANDIDATE_PUBLISHED ? 200 : 404 });
       assert.equal(url, 'https://api.github.com/repos/cixiangtao/i-calendar/releases/latest');
       return Response.json({
         tag_name: process.env.I_CALENDAR_TEST_PUBLISHED_TAG ?? 'v1.0.0',
@@ -204,6 +207,45 @@ test('release-it 同步所有版本并创建中文发布提交和附注标签，
       (await readFile(path.join(root, 'README.md'), 'utf8')).includes('i日历-1.0.1-mac-arm64.zip'),
     );
     assert.equal(git(root, 'ls-files', '*lock*'), 'apps/calendar/src-tauri/Cargo.lock');
+  } finally {
+    await cleanup();
+  }
+});
+
+test('经明确确认可保留未公开候选标签，并按上次公开版以来的提交推导替代版本', async () => {
+  const { root, remote, cleanup } = await fixture();
+  try {
+    const candidate = await release(root, ['1.0.1']);
+    assert.equal(candidate.code, 0, candidate.output);
+    const previous = git(remote, 'rev-parse', 'refs/tags/v1.0.1');
+    const refs = git(remote, 'show-ref');
+    await writeFile(
+      path.join(root, 'docs/releases/1.0.2.md'),
+      `# i日历 1.0.2\n\n${'修复候选版本问题并保留原候选标签。'.repeat(4)}\n`,
+    );
+    git(root, 'add', 'docs/releases/1.0.2.md');
+    git(root, 'commit', '-m', 'fix(app): 🐛 修复候选版本回归');
+    const args = ['1.0.2', '--dry-run'];
+    const decision = { I_CALENDAR_REPLACE_UNPUBLISHED_TAG: 'v1.0.1' };
+    const blocked = await release(root, args);
+    assert.notEqual(blocked.code, 0);
+    assert.match(blocked.output, /与 GitHub 最新正式版不一致/);
+    const published = await release(root, args, {
+      ...decision,
+      I_CALENDAR_TEST_CANDIDATE_PUBLISHED: '1',
+    });
+    assert.notEqual(published.code, 0);
+    assert.match(published.output, /只有未公开的候选标签可替代/);
+    const preview = await release(root, args, decision);
+    assert.equal(preview.code, 0, preview.output);
+    assert.match(preview.output, /1\.0\.1 → 1\.0\.2（patch）/);
+    assert.equal(git(remote, 'show-ref'), refs);
+    await verifyVersions(root, '1.0.1');
+    const result = await release(root, ['1.0.2'], decision);
+    assert.equal(result.code, 0, result.output);
+    await verifyVersions(root, '1.0.2');
+    assert.equal(git(remote, 'rev-parse', 'refs/tags/v1.0.1'), previous);
+    assert.equal(git(remote, 'rev-parse', 'v1.0.2^{commit}'), git(root, 'rev-parse', 'HEAD'));
   } finally {
     await cleanup();
   }

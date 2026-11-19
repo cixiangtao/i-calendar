@@ -13,8 +13,11 @@ export default class CalendarVersion extends Plugin {
 
   async getIncrement({ latestVersion, increment, isPreRelease }) {
     assert.ok(!isPreRelease, '应用发布只支持正式版本');
-    const plan = await planRelease(process.cwd(), latestVersion);
+    const supersededTag = process.env.I_CALENDAR_REPLACE_UNPUBLISHED_TAG;
+    const plan = await planRelease(process.cwd(), latestVersion, supersededTag);
     if (!plan.level) throw new Error('自上次正式发布以来没有需要递增应用版本的提交');
+    if (supersededTag)
+      this.log.log(`从公开版 ${plan.published} 计算更新级别，保留未发版标签 ${supersededTag}`);
     this.log.log(`应用版本建议：${plan.current} → ${plan.version}（${plan.level}）`);
     for (const { hash, subject, level } of plan.commits)
       this.log.log(`  ${level} ${hash} ${subject}`);
