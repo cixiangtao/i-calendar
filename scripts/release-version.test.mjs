@@ -6,7 +6,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { assertVersionAdvance } from './release-semver.mjs';
+import { assertVersionAdvance, nextStableVersion } from './release-semver.mjs';
 import { guardRelease, syncVersions, validateRelease, verifyVersions } from './release-version.mjs';
 
 const source = fileURLToPath(new URL('../', import.meta.url));
@@ -16,7 +16,7 @@ for (const key of Object.keys(env))
     delete env[key];
 const git = (cwd, ...args) => execFileSync('git', args, { cwd, env, encoding: 'utf8' }).trim();
 
-async function fixture() {
+async function fixture(message = 'fix(app): 🐛 验证发布流程中的兼容修复') {
   const folder = await mkdtemp(path.join(os.tmpdir(), 'i-calendar-release-'));
   const root = path.join(folder, 'source');
   const remote = path.join(folder, 'remote.git');
@@ -48,7 +48,12 @@ async function fixture() {
     await writeFile(path.join(root, file), content);
   }
   await mkdir(path.join(root, 'scripts'));
-  for (const file of ['release-semver.mjs', 'release-version.mjs', 'release-version-plugin.mjs'])
+  for (const file of [
+    'release-plan.mjs',
+    'release-semver.mjs',
+    'release-version.mjs',
+    'release-version-plugin.mjs',
+  ])
     await copyFile(path.join(source, 'scripts', file), path.join(root, 'scripts', file));
   await symlink(path.join(source, 'node_modules'), path.join(root, 'node_modules'), 'dir');
   const config = JSON.parse(await readFile(path.join(source, 'release/release-it.json')));
@@ -64,22 +69,34 @@ async function fixture() {
   git(root, 'config', `url.${remote}.insteadOf`, 'https://github.com/cixiangtao/i-calendar.git');
   git(root, 'remote', 'add', 'origin', 'https://github.com/cixiangtao/i-calendar.git');
   git(root, 'add', '.');
-  git(root, 'commit', '-m', 'test(release): ✅ 初始化隔离发布仓库');
+  git(root, 'commit', '-m', 'feat(app)!: ✨ 初始化首个正式版本');
   git(root, 'tag', '-a', 'v1.0.0', '-m', '历史正式版');
   git(root, 'push', '--set-upstream', 'origin', 'main', '--tags');
   await writeFile(path.join(root, 'change.txt'), '待发布修改');
   git(root, 'add', 'change.txt');
-  git(root, 'commit', '-m', 'build(release): 📦️ 验证发布工具');
+  git(root, 'commit', '-m', message);
   return { root, remote, cleanup: () => rm(folder, { recursive: true, force: true }) };
 }
 
 async function release(root, args = [], extraEnv = {}) {
+  const publicRelease = encodeURIComponent(`
+    import assert from 'node:assert/strict';
+    globalThis.fetch = async (url) => {
+      assert.equal(url, 'https://api.github.com/repos/cixiangtao/i-calendar/releases/latest');
+      return Response.json({
+        tag_name: process.env.I_CALENDAR_TEST_PUBLISHED_TAG ?? 'v1.0.0',
+        draft: false,
+        prerelease: false,
+      });
+    };
+  `);
   return new Promise((resolve, reject) => {
     const child = spawn(
       process.execPath,
       [
+        '--import',
+        `data:text/javascript,${publicRelease}`,
         path.join(source, 'node_modules/release-it/bin/release-it.js'),
-        'patch',
         '--ci',
         '--config',
         'release/release-it.json',
@@ -111,7 +128,61 @@ test('release-it 预演不改清单、工作区、提交或本地与远端标签
     assert.equal(git(root, 'rev-parse', 'HEAD'), head);
     assert.equal(git(root, 'tag', '--list', 'v1.0.1'), '');
     assert.equal(git(remote, 'show-ref'), refs);
+    assert.match(result.output, /应用版本建议：1\.0\.0 → 1\.0\.1（patch）/);
+    assert.match(result.output, /patch [\da-f]+ fix\(app\)/);
     assert.ok(result.output.includes('git push --atomic'));
+  } finally {
+    await cleanup();
+  }
+});
+
+test('只叠加一次最高级别，跳过官网专属和文档提交', async () => {
+  const { root, cleanup } = await fixture();
+  try {
+    git(root, 'commit', '--allow-empty', '-m', 'feat(calendar): ✨ 增加跨端功能');
+    git(root, 'commit', '--allow-empty', '-m', 'feat(web)!: ✨ 更新官网交互');
+    git(root, 'commit', '--allow-empty', '-m', 'docs(release): 📝 补充说明');
+    const result = await release(root, ['--dry-run']);
+    assert.equal(result.code, 0, result.output);
+    assert.match(result.output, /应用版本建议：1\.0\.0 → 1\.1\.0（minor）/);
+    assert.doesNotMatch(result.output, /major [\da-f]+ feat\(web\)/);
+    for (const [subject, footer] of [
+      ['feat(calendar)!: ✨ 改变默认契约'],
+      ['refactor(calendar): ♻️ 更换旧数据结构', 'BREAKING CHANGE: 旧契约无法继续使用'],
+    ]) {
+      git(root, 'commit', '--allow-empty', '-m', subject, ...(footer ? ['-m', footer] : []));
+      const plan = await release(root, ['--dry-run']);
+      assert.equal(plan.code, 0, plan.output);
+      assert.match(plan.output, /应用版本建议：1\.0\.0 → 2\.0\.0（major）/);
+      const hash = git(root, 'rev-parse', '--short', 'HEAD');
+      assert.ok(plan.output.includes(`major ${hash} ${subject}`));
+    }
+  } finally {
+    await cleanup();
+  }
+});
+
+test('仅维护提交、公开基线不一致或指定版本与推导不符时停止发布', async () => {
+  const { root, remote, cleanup } = await fixture('docs(app): 📝 更新说明');
+  try {
+    git(root, 'commit', '--allow-empty', '-m', 'fix(web): 🐛 修复官网布局');
+    git(root, 'commit', '--allow-empty', '-m', 'fix(release): 🐛 修复发布预演输出');
+    const refs = git(remote, 'show-ref');
+    const noApplicationChanges = await release(root, ['--dry-run']);
+    assert.notEqual(noApplicationChanges.code, 0);
+    assert.match(noApplicationChanges.output, /没有需要递增应用版本的提交/);
+    git(root, 'commit', '--allow-empty', '-m', 'feat(theme): ✨ 新增主题');
+
+    const stale = await release(root, ['--dry-run'], { I_CALENDAR_TEST_PUBLISHED_TAG: 'v1.1.0' });
+    assert.notEqual(stale.code, 0);
+    assert.match(stale.output, /与 GitHub 最新正式版不一致/);
+
+    const mismatched = await release(root, ['patch']);
+    assert.notEqual(mismatched.code, 0);
+    assert.match(mismatched.output, /与提交推导结果 1\.1\.0 不一致/);
+    await verifyVersions(root, '1.0.0');
+    assert.equal(git(root, 'status', '--porcelain'), '');
+    assert.equal(git(remote, 'show-ref'), refs);
   } finally {
     await cleanup();
   }
@@ -120,7 +191,7 @@ test('release-it 预演不改清单、工作区、提交或本地与远端标签
 test('release-it 同步所有版本并创建中文发布提交和附注标签，原子推送到同一提交', async () => {
   const { root, remote, cleanup } = await fixture();
   try {
-    const result = await release(root);
+    const result = await release(root, ['1.0.1']);
     assert.equal(result.code, 0, result.output);
     await verifyVersions(root, '1.0.1');
     const head = git(root, 'rev-parse', 'HEAD');
@@ -160,6 +231,9 @@ test('缺少版本说明、预览版本与不干净工作区在写入前拒绝',
 });
 
 test('按数字比较三段版本，只在相同版本恢复时允许相等', () => {
+  assert.equal(nextStableVersion('1.3.8', 'major'), '2.0.0');
+  assert.equal(nextStableVersion('1.3.8', 'minor'), '1.4.0');
+  assert.equal(nextStableVersion('1.3.8', 'patch'), '1.3.9');
   for (const target of ['1.3.9', '1.4.0', '1.10.0', '2.0.0'])
     assert.doesNotThrow(() => assertVersionAdvance('1.3.8', target));
   for (const target of ['1.03.9', '1.3.09', '1.3.9\n', '1.3.9+build'])

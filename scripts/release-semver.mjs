@@ -11,6 +11,15 @@ export function parseStableVersion(version) {
   return version.split('.').map(BigInt);
 }
 
+export function nextStableVersion(current, level) {
+  const changed = ['major', 'minor', 'patch'].indexOf(level);
+  assert.ok(changed >= 0, '版本级别必须为 major、minor 或 patch');
+  const parts = parseStableVersion(current);
+  parts[changed] += 1n;
+  parts.fill(0n, changed + 1);
+  return parts.join('.');
+}
+
 /** 校验递增及低位归零。校验同一正式版的恢复时可允许版本相等。 */
 export function assertVersionAdvance(current, target, { allowSame = false } = {}) {
   const previous = parseStableVersion(current);
