@@ -269,6 +269,9 @@ importers:
       '@zip.js/zip.js':
         specifier: 2.25.0
         version: 2.25.0
+      acer-almanac:
+        specifier: 1.0.4
+        version: 1.0.4
       markdown-to-jsx:
         specifier: 9.10.6
         version: 9.10.6(react@19.3.1)
@@ -1595,6 +1598,10 @@ packages:
   '@zip.js/zip.js@2.25.0':
     resolution: {integrity: sha512-oNRqUuU1XFu6G5d7Z0jufJ9dS9WteO0xiU/PNxsUrb4itZCsSbn191jpJzU00Gmc6S680X3DPZeF5EV4zAEMAg==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
+
+  acer-almanac@1.0.4:
+    resolution: {integrity: sha512-FQFxzMUIscZ5H4BnfUKTSAEGCNF9NqCEl8lZEHwbdzP1hrBF6NBeHIeEWF+I6FOYmQKkpotGCo3+fNFbFqLF3Q==}
+    engines: {node: '>= 22.0.0'}
 
   agent-base@9.0.0:
     resolution: {integrity: sha512-TQf59BsZnytt8GdJKLPfUZ54g/iaUL2OWDSFCCvMOhsHduDQxO8xC4PNeyIkVcA5KwL2phPSv0douC0fgWzmnA==}
@@ -3566,6 +3573,8 @@ snapshots:
       vite: 8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@1.21.7)(tsx@4.23.15)
 
   '@zip.js/zip.js@2.25.0': {}
+
+  acer-almanac@1.0.4: {}
 
   agent-base@9.0.0: {}
 

@@ -22,6 +22,7 @@ import { CalendarSelect } from './CalendarSelect.js';
 import { CalendarSwitch } from './CalendarSwitch.js';
 import { CalendarTabs } from './CalendarTabs.js';
 import { deriveColorTokens } from './color-theme.js';
+import { DailySign } from './DailySign.js';
 import { DateCalculator } from './DateCalculator.js';
 import { formControlVariables } from './form-theme.js';
 import { LaunchAtLoginSettings } from './LaunchAtLoginSettings.js';
@@ -721,6 +722,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
               <div className="almanac-inline tw-mt-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-line web:desktop:tw-mt-0 web:desktop:tw-block web:desktop:tw-border-0 web:desktop:tw-border-t web:desktop:tw-border-solid web:desktop:tw-border-line web:desktop:tw-p-0">
                 <SunlightSummary state={state} />
                 <AlmanacContent almanac={state.almanac} />
+                <DailySign
+                  key={state.selected.date}
+                  day={state.selected}
+                />
               </div>
               <Feedback
                 controller={controller}

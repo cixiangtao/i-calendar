@@ -17,6 +17,10 @@
 - 许可：MIT，全文位于 packages/calendar-core/LICENSE-lunar-typescript。
 - 干支、宜忌和方位 API 说明分别见 https://6tail.cn/calendar/lunar.ganzhi.html 、https://6tail.cn/calendar/lunar.yiji.html 和 https://6tail.cn/calendar/lunar.jishen.html 。上游说明宜忌来自对 2345 日历多年资料的整理归纳，各黄历流派可能存在差异；应用固定口径见 [黄历数据与口径](docs/黄历数据与口径.md)。
 
+## acer-almanac 1.0.4
+
+- 「每日签」使用 [acer-almanac](https://github.com/cixiangtao/acer-almanac/tree/v1.0.4) 的 v2 算法，在本地按所选日期生成生活灵感。该包采用 MIT 许可证，全文随应用和网页的许可证汇总分发。
+
 ## holiday-cn
 
 - 作者：NateScarlet 及贡献者

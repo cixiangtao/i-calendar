@@ -16,6 +16,7 @@
     "@radix-ui/react-switch": "1.4.1",
     "@radix-ui/react-tabs": "1.2.1",
     "@zip.js/zip.js": "2.25.0",
+    "acer-almanac": "1.0.4",
     "markdown-to-jsx": "9.10.6"
   },
   "peerDependencies": {
