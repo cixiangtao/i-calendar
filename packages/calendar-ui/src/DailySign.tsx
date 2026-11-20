@@ -118,7 +118,7 @@ export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
         className="tw-pt-2"
       >
         {result?.status === 'ready' ? (
-          <div className="tw-grid tw-min-h-[154px] tw-items-center tw-rounded-xl tw-bg-[var(--yellow-soft)] tw-p-2">
+          <div className="tw-grid tw-min-h-[154px] tw-items-center tw-rounded-xl tw-bg-control tw-p-2">
             <CalendarButton
               ref={drawButton}
               appearance="text"
