@@ -158,10 +158,11 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const grid = useRef<HTMLDivElement>(null);
   const animatedMonth = useRef(state.year * 12 + state.monthNumber);
   const gear = useRef<HTMLButtonElement>(null);
-  const calculator = useRef<HTMLButtonElement>(null);
   const previousPanel = useRef(state.panel);
   const container = useRef<HTMLElement>(null);
   const editingTheme = state.themeEdit !== null;
+  const calculatorFromSettings =
+    state.panel === 'calculator' && state.calculatorOrigin === 'settings';
   const appearance = state.themeEdit?.appearance ?? state.preferences.appearance;
   const dark = appearance === 'dark' || (appearance === 'system' && systemDark);
   const theme = state.themeEdit?.theme ?? activeTheme(state.preferences.themes);
@@ -280,10 +281,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   }, [controller, state.ready, state.preferences.automaticAppUpdates]);
 
   useEffect(() => {
-    if (state.panel === 'calendar' && previousPanel.current !== 'calendar') {
-      const entry = previousPanel.current === 'calculator' ? calculator.current : gear.current;
-      (entry ?? gear.current)?.focus({ preventScroll: editingTheme });
-    }
+    if (state.panel === 'calendar' && previousPanel.current !== 'calendar')
+      gear.current?.focus({ preventScroll: editingTheme });
     previousPanel.current = state.panel;
   }, [editingTheme, state.panel]);
 
@@ -315,7 +314,9 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
         if (editingTheme) {
           if (state.panel === 'calendar') controller.resumeThemeEdit();
           else controller.cancelThemeEdit();
-        } else if (state.panel !== 'calendar') {
+        } else if (state.panel === 'calculator') {
+          controller.backFromCalculator();
+        } else if (state.panel === 'settings') {
           controller.showSettings(false);
         } else void controller.platform.close?.();
       } else if (state.panel === 'calendar') {
@@ -391,7 +392,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
         dark={dark}
         onImageStatus={controller.reportThemeImageStatus}
       />
-      {state.panel === 'settings' || editingTheme ? (
+      {state.panel === 'settings' || editingTheme || calculatorFromSettings ? (
         <Settings
           controller={controller}
           state={state}
@@ -404,7 +405,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
           holidays={controller.holidays}
           selectedDate={state.selected.date}
           today={state.today}
-          onBack={() => controller.showCalculator(false)}
+          backLabel={calculatorFromSettings ? '返回设置' : '返回日历'}
+          onBack={() => controller.backFromCalculator()}
           onViewDate={(date) => {
             focusAfterNavigation.current = true;
             controller.selectDate(date);
@@ -495,25 +497,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 >
                   今天
                 </CalendarButton>
-                {isMac || editingTheme ? (
-                  settingsButton
-                ) : (
-                  <CalendarButton
-                    ref={calculator}
-                    appearance="icon"
-                    className="app:tw-w-7 coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
-                    aria-label="日期计算"
-                    title="日期计算"
-                    disabled={!state.ready}
-                    onClick={() => controller.showCalculator()}
-                    icon={
-                      <Icon
-                        name="calculator"
-                        className="!tw-h-4 !tw-w-4"
-                      />
-                    }
-                  />
-                )}
+                {isMac || editingTheme ? settingsButton : null}
               </div>
             </div>
             <div
@@ -797,6 +781,8 @@ function Settings({
 }) {
   const file = useRef<HTMLInputElement>(null);
   const back = useRef<HTMLButtonElement>(null);
+  const calculatorEntry = useRef<HTMLButtonElement>(null);
+  const restoreCalculatorFocus = useRef(false);
   const appearanceScroll = useRef<HTMLDivElement>(null);
   const editScrollTop = useRef(0);
   const visible = state.panel === 'settings';
@@ -806,6 +792,11 @@ function Settings({
   );
   useLayoutEffect(() => {
     if (!visible) return;
+    if (restoreCalculatorFocus.current) {
+      restoreCalculatorFocus.current = false;
+      calculatorEntry.current?.focus({ preventScroll: true });
+      return;
+    }
     back.current?.focus({ preventScroll: true });
     if (appearanceScroll.current) appearanceScroll.current.scrollTop = editScrollTop.current;
   }, [visible]);
@@ -1141,19 +1132,37 @@ function Settings({
         controller={controller}
         state={state}
       />
-      {controller.platform.quit ? (
-        <footer className="settings-actions tw-mt-3 tw-flex tw-shrink-0 tw-justify-end tw-border-0 tw-border-t tw-border-solid tw-border-line tw-pt-3">
-          <CalendarButton
-            appearance="danger"
-            disabled={['downloading', 'installing'].includes(appUpdate.phase)}
-            onClick={() => {
-              void controller.platform.quit?.();
-            }}
-          >
-            退出i日历
-          </CalendarButton>
+      {(!state.themeEdit || controller.platform.quit) && (
+        <footer className="settings-actions tw-mt-3 tw-flex tw-shrink-0 tw-items-center tw-border-0 tw-border-t tw-border-solid tw-border-line tw-pt-3">
+          {!state.themeEdit ? (
+            <CalendarButton
+              ref={calculatorEntry}
+              appearance="toolbar"
+              className="tw-text-secondary coarse:tw-min-h-11 coarse:tw-min-w-11"
+              aria-label="日期计算"
+              title="日期计算"
+              disabled={!state.ready}
+              onClick={() => {
+                restoreCalculatorFocus.current = true;
+                controller.showCalculator(true, 'settings');
+              }}
+              icon={<Icon name="calculator" />}
+            />
+          ) : null}
+          {controller.platform.quit ? (
+            <CalendarButton
+              className="tw-ml-auto"
+              appearance="danger"
+              disabled={['downloading', 'installing'].includes(appUpdate.phase)}
+              onClick={() => {
+                void controller.platform.quit?.();
+              }}
+            >
+              退出i日历
+            </CalendarButton>
+          ) : null}
         </footer>
-      ) : null}
+      )}
     </section>
   );
 }

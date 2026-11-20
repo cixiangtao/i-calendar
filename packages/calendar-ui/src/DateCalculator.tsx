@@ -19,6 +19,7 @@ interface DateCalculatorProps {
   holidays: HolidayStore;
   selectedDate: DateKey;
   today: DateKey;
+  backLabel: string;
   onBack: () => void;
   onViewDate: (date: DateKey) => void;
 }
@@ -77,6 +78,7 @@ export function DateCalculator({
   holidays,
   selectedDate,
   today,
+  backLabel,
   onBack,
   onViewDate,
 }: DateCalculatorProps) {
@@ -172,7 +174,7 @@ export function DateCalculator({
           >
             <path d="m15 5-7 7 7 7" />
           </svg>
-          返回日历
+          {backLabel}
         </CalendarButton>
         <h1
           id="calculator-title"

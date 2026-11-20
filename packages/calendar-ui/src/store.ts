@@ -53,6 +53,7 @@ export interface CalendarSnapshot {
   preferences: CalendarPreferences;
   years: number[];
   panel: 'calendar' | 'settings' | 'calculator';
+  calculatorOrigin: 'calendar' | 'settings';
   settingsTab: SettingsTab;
   themeEdit: ThemeEdit | null;
   updating: boolean;
@@ -182,6 +183,7 @@ export class CalendarController {
       },
       years: this.holidays.years,
       panel: 'calendar',
+      calculatorOrigin: 'calendar',
       settingsTab: 'general',
       themeEdit: null,
       updating: false,
@@ -309,9 +311,18 @@ export class CalendarController {
     });
   }
 
-  /** 日期计算仅切换视图，不写入偏好或更改所选日期。 */
-  showCalculator(show = true) {
-    this.patch({ panel: show ? 'calculator' : 'calendar', themeEdit: null });
+  /** 打开日期计算时记录来源。关闭并查看结果时直接回到月历。 */
+  showCalculator(show = true, origin: CalendarSnapshot['calculatorOrigin'] = 'calendar') {
+    this.patch({
+      panel: show ? 'calculator' : 'calendar',
+      calculatorOrigin: show ? origin : 'calendar',
+      themeEdit: null,
+    });
+  }
+
+  /** 回到入口所在页面，保留当前设置标签和所选日期。 */
+  backFromCalculator() {
+    this.patch({ panel: this.snapshot.calculatorOrigin, calculatorOrigin: 'calendar' });
   }
 
   /** 主题草稿只影响当前窗口，独立于已应用主题和外观偏好。 */

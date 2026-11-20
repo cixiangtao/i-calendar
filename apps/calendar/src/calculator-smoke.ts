@@ -26,8 +26,21 @@ const click = (selector: string, text?: string) => {
 /** 仅供隔离原生冒烟使用，经真实 WebView 输入与点击验证日期工具。 */
 export function verifyDateCalculator(controller: CalendarController) {
   const originalDate = controller.getSnapshot().selected.date;
+  const settingsEntry = '.settings-actions button[aria-label="日期计算"]';
   try {
-    flushSync(() => controller.showCalculator());
+    flushSync(() => controller.showSettings(true, 'data'));
+    click(settingsEntry);
+    click('button', '返回设置');
+    if (
+      controller.getSnapshot().settingsTab !== 'data' ||
+      controller.getSnapshot().panel !== 'settings' ||
+      !document.activeElement?.matches(settingsEntry)
+    )
+      throw new Error('返回设置后未恢复原标签和日期计算入口焦点');
+    click(settingsEntry);
+    flushSync(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })));
+    if (controller.getSnapshot().panel !== 'settings') throw new Error('Esc 未返回设置');
+    click(settingsEntry);
     fill('calculator-start', '2024-02-28');
     fill('calculator-end', '2024-03-01');
     requireResult('相隔 2 天');
