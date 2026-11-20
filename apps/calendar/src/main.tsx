@@ -30,8 +30,26 @@ class AppBoundary extends Component<{ children: ReactNode }, { failed: boolean }
   }
 }
 
+function smokeProgress(stage: string) {
+  return invoke<void>('smoke_progress', { stage });
+}
+
+/** 在原生检查日志中记录前端阶段，断言失败时立即报告。 */
+async function verifySmokeStep(stage: string, verify: () => boolean | Promise<boolean>) {
+  await smokeProgress(stage);
+  try {
+    return await verify();
+  } catch (error) {
+    const detail =
+      error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error);
+    await invoke('smoke_progress', { stage, failure: detail });
+    throw error;
+  }
+}
+
 async function start() {
   const { platform, smokeTest } = await createPlatform();
+  if (smokeTest) await smokeProgress('初始化日历和渲染 WebView');
   document.body.dataset.platform = platform.kind;
   const controller = new CalendarController(platform);
   await controller.initialize();
@@ -92,23 +110,24 @@ async function start() {
       });
     }
     // 原生冒烟测试经真实 WebView 调用共享核心，再把结果传回 Rust。
-    const calculatorVerified = smokeTest
-      ? (await import('./calculator-smoke.js')).verifyDateCalculator(controller)
-      : undefined;
-    const releaseNotesVerified = smokeTest
-      ? (await import('./release-notes-smoke.js')).verifyReleaseNotes()
-      : undefined;
-    const sunlightVerified = smokeTest
-      ? await (await import('./sunlight-smoke.js')).verifySunlight(platform)
-      : undefined;
-    const themesVerified = smokeTest
-      ? await (await import('./themes-smoke.js')).verifyThemes(controller).catch(String)
-      : undefined;
+    const smokeReport = smokeTest
+      ? {
+          calculatorVerified: await verifySmokeStep('日期计算', async () =>
+            (await import('./calculator-smoke.js')).verifyDateCalculator(controller),
+          ),
+          releaseNotesVerified: await verifySmokeStep('更新日志', async () =>
+            (await import('./release-notes-smoke.js')).verifyReleaseNotes(),
+          ),
+          sunlightVerified: await verifySmokeStep('日出日落', async () =>
+            (await import('./sunlight-smoke.js')).verifySunlight(platform),
+          ),
+          themesVerified: await verifySmokeStep('主题', async () =>
+            (await import('./themes-smoke.js')).verifyThemes(controller),
+          ),
+        }
+      : {};
     const report = {
-      sunlightVerified,
-      calculatorVerified,
-      releaseNotesVerified,
-      themesVerified,
+      ...smokeReport,
       appUpdaterAvailable: !!platform.appUpdater,
       launchAtLoginAvailable: !!platform.launchAtLogin,
       controlGeometry: {

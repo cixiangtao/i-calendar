@@ -295,6 +295,64 @@ fn quit_calendar(app: tauri::AppHandle) {
 }
 
 #[tauri::command]
+fn smoke_progress(app: tauri::AppHandle, stage: String, failure: Option<String>) {
+    if !std::env::args().any(|argument| argument == "--smoke-test") {
+        return;
+    }
+    if let Some(failure) = failure {
+        eprintln!("FAIL：Mac 冒烟 · {stage} · {failure}");
+        app.exit(1);
+    } else {
+        eprintln!("RUN：Mac 冒烟 · {stage}");
+    }
+}
+
+#[cfg(target_os = "macos")]
+async fn verify_native_window(app: &tauri::AppHandle, background: bool) -> Result<(), String> {
+    eprintln!("RUN：Mac 冒烟 · 首次显示与窗口布局");
+    let window = app.get_webview_window("main").ok_or("主界面不存在")?;
+    if background {
+        if window.is_visible().unwrap_or(true) {
+            return Err("开机自启不应自动展开日历".into());
+        }
+        // 隔离启动验证完成后再打开，继续复用真实窗口生命周期冒烟。
+        println!("PASS：开机自启模式保持面板隐藏且菜单栏已初始化");
+        desktop::show_calendar(app);
+    }
+    if !window.is_visible().unwrap_or(false) {
+        return Err("菜单栏日历未显示".into());
+    }
+    desktop::wait_for_motion_settle(app)
+        .await
+        .map_err(|error| format!("首次打开等待失败：{error}"))?;
+    desktop::verify_rounded_popup(&window).await?;
+    desktop::verify_content_height(app)?;
+    window.hide().map_err(|_| "日历收起失败")?;
+    eprintln!("RUN：Mac 冒烟 · 菜单栏时钟");
+    menu_clock::verify_smoke(app).await?;
+    eprintln!("RUN：Mac 冒烟 · 窗口重开、动效与页面恢复");
+    desktop::show_calendar(app);
+    if !window.is_visible().unwrap_or(false) {
+        return Err("日历重新打开失败".into());
+    }
+    desktop::wait_for_motion_settle(app)
+        .await
+        .map_err(|error| format!("重开等待失败：{error}"))?;
+    desktop::verify_rounded_popup(&window).await?;
+    desktop::verify_content_height(app)?;
+    desktop::verify_popup_motion(app)
+        .await
+        .map_err(|error| format!("悬浮窗动效验证失败：{error}"))?;
+    desktop::verify_popup_reset(app)
+        .await
+        .map_err(|error| format!("悬浮窗页面恢复验证失败：{error}"))?;
+    println!("PASS：详情卡片完整展开，原生窗口按内容高度适配屏幕可用区域");
+    println!("PASS：原生悬浮窗 20px 圆角、透明边角和系统阴影在收起重开后保持生效");
+    println!("PASS：Tauri 原生窗口、WebView 前端、共享日历核心与 Rust 命令交互通过");
+    Ok(())
+}
+
+#[tauri::command]
 async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
@@ -338,56 +396,12 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 app.exit(1);
                 return Err("前端验证失败".into());
             }
-            let window = app.get_webview_window("main").ok_or("主界面不存在")?;
-            if background {
-                if window.is_visible().unwrap_or(true) {
-                    app.exit(1);
-                    return Err("开机自启不应自动展开日历".into());
-                }
-                // 隔离启动验证完成后再打开，继续复用真实窗口生命周期冒烟。
-                println!("PASS：开机自启模式保持面板隐藏且菜单栏已初始化");
-                desktop::show_calendar(&app);
-            }
-            if !window.is_visible().unwrap_or(false) {
-                app.exit(1);
-                return Err("菜单栏日历未显示".into());
-            }
-            desktop::wait_for_motion_settle(&app)
+            verify_native_window(&app, background)
                 .await
                 .inspect_err(|error| {
-                    eprintln!("首次打开等待失败：{error}");
+                    eprintln!("FAIL：Mac 窗口冒烟 · {error}");
                     app.exit(1);
                 })?;
-            desktop::verify_rounded_popup(&window).await?;
-            desktop::verify_content_height(&app)?;
-            window.hide().map_err(|_| "日历收起失败")?;
-            menu_clock::verify_smoke(&app).await?;
-            desktop::show_calendar(&app);
-            if !window.is_visible().unwrap_or(false) {
-                app.exit(1);
-                return Err("日历重新打开失败".into());
-            }
-            desktop::wait_for_motion_settle(&app)
-                .await
-                .inspect_err(|error| {
-                    eprintln!("重开等待失败：{error}");
-                    app.exit(1);
-                })?;
-            desktop::verify_rounded_popup(&window).await?;
-            desktop::verify_content_height(&app)?;
-            if let Err(error) = desktop::verify_popup_motion(&app).await {
-                eprintln!("悬浮窗动效验证失败：{error}");
-                app.exit(1);
-                return Err(error);
-            }
-            if let Err(error) = desktop::verify_popup_reset(&app).await {
-                eprintln!("悬浮窗页面恢复验证失败：{error}");
-                app.exit(1);
-                return Err(error);
-            }
-            println!("PASS：详情卡片完整展开，原生窗口按内容高度适配屏幕可用区域");
-            println!("PASS：原生悬浮窗 20px 圆角、透明边角和系统阴影在收起重开后保持生效");
-            println!("PASS：Tauri 原生窗口、WebView 前端、共享日历核心与 Rust 命令交互通过");
             app.exit(0);
         }
     }
@@ -454,16 +468,18 @@ pub fn run() {
             resize_popup,
             close_calendar,
             quit_calendar,
+            smoke_progress,
             frontend_ready
         ])
         .setup(|app| {
             #[cfg(target_os = "macos")]
             desktop::setup(app)?;
             if std::env::args().any(|argument| argument == "--smoke-test") {
+                eprintln!("RUN：Mac 冒烟 · 等待 WebView 就绪");
                 let handle = app.handle().clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(Duration::from_secs(30));
-                    eprintln!("Tauri 前端启动验证超时");
+                    eprintln!("FAIL：Mac 冒烟超过 30 秒，请核对最后一个 RUN 阶段");
                     handle.exit(1);
                 });
             }
