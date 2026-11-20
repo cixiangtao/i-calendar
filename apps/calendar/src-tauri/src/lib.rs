@@ -307,24 +307,44 @@ fn smoke_progress(app: tauri::AppHandle, stage: String, failure: Option<String>)
     }
 }
 
-#[cfg(target_os = "macos")]
-async fn verify_native_window(app: &tauri::AppHandle, background: bool) -> Result<(), String> {
-    eprintln!("RUN：Mac 冒烟 · 首次显示与窗口布局");
-    let window = app.get_webview_window("main").ok_or("主界面不存在")?;
-    if background {
-        if window.is_visible().unwrap_or(true) {
-            return Err("开机自启不应自动展开日历".into());
+#[tauri::command]
+async fn smoke_open_window(app: tauri::AppHandle) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        let arguments: Vec<_> = std::env::args().collect();
+        if !arguments.iter().any(|argument| argument == "--smoke-test") {
+            return Err("此命令只用于隔离冒烟".into());
         }
-        // 隔离启动验证完成后再打开，继续复用真实窗口生命周期冒烟。
-        println!("PASS：开机自启模式保持面板隐藏且菜单栏已初始化");
-        desktop::show_calendar(app);
+        let background = launch_at_login::background_start(arguments.iter().map(String::as_str));
+        desktop::frontend_ready(&app, background);
+        let window = app.get_webview_window("main").ok_or("主界面不存在")?;
+        if background {
+            if window.is_visible().map_err(|error| error.to_string())? {
+                return Err("开机自启不应自动展开日历".into());
+            }
+            println!("PASS：开机自启模式保持面板隐藏且菜单栏已初始化");
+            // 已验证后台启动语义，测试接下来需要打开窗口以运行 WebView 的异步检查。
+            desktop::show_calendar(&app);
+        }
+        if !window.is_visible().map_err(|error| error.to_string())? {
+            return Err("菜单栏日历未显示".into());
+        }
+        desktop::wait_for_motion_settle(&app)
+            .await
+            .map_err(|error| format!("首次打开等待失败：{error}"))?;
     }
+    #[cfg(not(target_os = "macos"))]
+    let _ = app;
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+async fn verify_native_window(app: &tauri::AppHandle) -> Result<(), String> {
+    eprintln!("RUN：Mac 冒烟 · 窗口布局");
+    let window = app.get_webview_window("main").ok_or("主界面不存在")?;
     if !window.is_visible().unwrap_or(false) {
         return Err("菜单栏日历未显示".into());
     }
-    desktop::wait_for_motion_settle(app)
-        .await
-        .map_err(|error| format!("首次打开等待失败：{error}"))?;
     desktop::verify_rounded_popup(&window).await?;
     desktop::verify_content_height(app)?;
     window.hide().map_err(|_| "日历收起失败")?;
@@ -357,9 +377,7 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
     #[cfg(target_os = "macos")]
     {
         let arguments: Vec<_> = std::env::args().collect();
-        let background = launch_at_login::background_start(arguments.iter().map(String::as_str));
-        desktop::frontend_ready(&app, background);
-        if std::env::args().any(|argument| argument == "--smoke-test") {
+        if arguments.iter().any(|argument| argument == "--smoke-test") {
             if report.get("calculatorVerified").and_then(Value::as_bool) != Some(true)
                 || report.get("releaseNotesVerified").and_then(Value::as_bool) != Some(true)
                 || report.get("sunlightVerified").and_then(Value::as_bool) != Some(true)
@@ -396,13 +414,15 @@ async fn frontend_ready(app: tauri::AppHandle, report: Value) -> Result<(), Stri
                 app.exit(1);
                 return Err("前端验证失败".into());
             }
-            verify_native_window(&app, background)
-                .await
-                .inspect_err(|error| {
-                    eprintln!("FAIL：Mac 窗口冒烟 · {error}");
-                    app.exit(1);
-                })?;
+            verify_native_window(&app).await.inspect_err(|error| {
+                eprintln!("FAIL：Mac 窗口冒烟 · {error}");
+                app.exit(1);
+            })?;
             app.exit(0);
+        } else {
+            let background =
+                launch_at_login::background_start(arguments.iter().map(String::as_str));
+            desktop::frontend_ready(&app, background);
         }
     }
     Ok(())
@@ -469,6 +489,7 @@ pub fn run() {
             close_calendar,
             quit_calendar,
             smoke_progress,
+            smoke_open_window,
             frontend_ready
         ])
         .setup(|app| {
