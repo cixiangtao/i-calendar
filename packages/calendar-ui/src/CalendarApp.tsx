@@ -641,7 +641,9 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                     <span key={state.selected.date}>{state.selected.day}</span>
                   </div>
                   <div className="date-detail tw-col-[2] tw-row-[1] tw-min-w-0 tw-flex-1 [&_h2>span:last-child]:tw-ml-1 [&_h2]:tw-m-0 [&_h2]:tw-whitespace-nowrap [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[18px] [&_h2]:tw-text-ink web:desktop:[&_h2]:tw-text-[length:14px] web:desktop:[&_h2]:tw-leading-[22px] compact:[&_h2]:tw-text-[length:12px] [&_p]:tw-m-0 [&_p]:tw-text-[length:11px] [&_p]:tw-leading-[17px] [&_p]:tw-text-secondary web:desktop:[&_p]:tw-text-[length:12px] web:desktop:[&_p]:tw-leading-[21px] compact:[&_p]:tw-text-[length:11px]">
-                    <div className="date-heading tw-mb-1 tw-flex tw-flex-wrap tw-items-center tw-gap-[4px_8px] web:desktop:tw-justify-center">
+                    <div
+                      className={`date-heading tw-flex tw-flex-wrap tw-items-center tw-gap-[4px_8px] web:desktop:tw-justify-center ${daysFromToday === 0 ? 'tw-mb-1' : 'tw-mb-0'}`}
+                    >
                       <h2>
                         <span className="detail-year tw-hidden web:desktop:tw-inline">
                           {state.selected.year}年
@@ -673,7 +675,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                       </strong>
                     </div>
                     {daysFromToday !== 0 ? (
-                      <p className="date-distance tw-tabular-nums">
+                      <p className="date-distance tw-tabular-nums !tw-leading-4">
                         {daysFromToday > 0
                           ? `还有 ${daysFromToday} 天`
                           : `${Math.abs(daysFromToday)} 天前`}
