@@ -723,7 +723,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
               <div className="almanac-inline tw-mt-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-line web:desktop:tw-mt-0 web:desktop:tw-block web:desktop:tw-border-0 web:desktop:tw-border-t web:desktop:tw-border-solid web:desktop:tw-border-line web:desktop:tw-p-0">
                 <SunlightSummary state={state} />
                 <AlmanacContent almanac={state.almanac} />
-                {controller.platform.development || state.selected.date === state.today ? (
+                {state.selected.date === state.today ? (
                   <DailySign
                     key={state.selected.date}
                     day={state.selected}
