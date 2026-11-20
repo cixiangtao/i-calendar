@@ -28,6 +28,18 @@ export function verifyDateCalculator(controller: CalendarController) {
   const originalDate = controller.getSnapshot().selected.date;
   const settingsEntry = '.settings-actions button[aria-label="日期计算"]';
   try {
+    flushSync(() => controller.goToday());
+    for (const [shift, expected] of [
+      [0, undefined],
+      [1, '还有 1 天'],
+      [-2, '1 天前'],
+    ] as const) {
+      if (shift) flushSync(() => controller.moveSelection(shift));
+      const distance = document.querySelector('.date-summary .date-distance');
+      if (distance?.textContent !== expected)
+        throw new Error(`日期详情天数不符，预期：${expected ?? '今天省略天数'}`);
+    }
+    flushSync(() => controller.selectDate(originalDate));
     flushSync(() => controller.showSettings(true, 'data'));
     click(settingsEntry);
     click('button', '返回设置');

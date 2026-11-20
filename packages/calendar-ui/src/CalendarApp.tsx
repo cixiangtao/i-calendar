@@ -1,4 +1,4 @@
-import type { CalendarDay } from '@i-calendar/core';
+import { daysBetween, type CalendarDay } from '@i-calendar/core';
 import {
   useEffect,
   useLayoutEffect,
@@ -146,6 +146,7 @@ function Feedback({
 /** 三端共用日历视图；平台壳不复制月历、节日或设置界面。 */
 export function CalendarApp({ controller }: { controller: CalendarController }) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const daysFromToday = daysBetween(state.today, state.selected.date);
   const isMac = controller.platform.kind === 'macos';
   useSunlightLocation(controller, state.ready, state.preferences.sunlight.mode);
   const [systemDark, setSystemDark] = useState(
@@ -671,6 +672,13 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         {scheduleLabel(state.selected)}
                       </strong>
                     </div>
+                    {daysFromToday !== 0 ? (
+                      <p className="date-distance tw-tabular-nums">
+                        {daysFromToday > 0
+                          ? `还有 ${daysFromToday} 天`
+                          : `${Math.abs(daysFromToday)} 天前`}
+                      </p>
+                    ) : null}
                     <div className="lunar-summary tw-flex tw-flex-wrap tw-items-baseline tw-gap-[0_8px] tw-text-[length:11px] tw-leading-[17px] tw-text-secondary web:desktop:tw-justify-center web:desktop:tw-text-[length:12px] web:desktop:tw-leading-[21px] [&>p]:tw-whitespace-nowrap [&>p]:tw-text-[var(--lunar-ink)]">
                       <p>
                         农历{state.selected.lunar.monthName}
