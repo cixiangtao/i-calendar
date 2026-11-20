@@ -13,6 +13,10 @@ on:
         description: 复用已成功构建的原工作流运行编号，留空则重新构建
         required: false
         type: string
+      local_smoke_sha256:
+        description: 经维护者本机完整窗口验收的原安装 ZIP 的 SHA-256，仅用于恢复失败的发布
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -28,7 +32,7 @@ env:
 jobs:
   build:
     name: 校验并构建 Mac 与官网
-    runs-on: macos-15
+    runs-on: ${{ inputs.local_smoke_sha256 && 'ubuntu-latest' || 'macos-15' }}
     timeout-minutes: 60
     outputs:
       version: ${{ steps.context.outputs.version }}
@@ -46,6 +50,44 @@ jobs:
       - name: 校验发布身份与配置
         id: context
         run: node scripts/release-context.mjs
+      - name: 校验本机验收对应的构建来源
+        if: ${{ inputs.local_smoke_sha256 }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ORIGINAL_RUN: ${{ inputs.artifact_run }}
+          ZIP_SHA256: ${{ inputs.local_smoke_sha256 }}
+          RELEASE_COMMIT: ${{ steps.context.outputs.commit }}
+          VERSION: ${{ steps.context.outputs.version }}
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { execFileSync } from 'node:child_process';
+          const { GITHUB_EVENT_NAME, GITHUB_REF, GITHUB_REPOSITORY, ORIGINAL_RUN,
+            RELEASE_TAG, RELEASE_COMMIT, ZIP_SHA256, VERSION } = process.env;
+          assert.equal(GITHUB_EVENT_NAME, 'workflow_dispatch');
+          assert.equal(GITHUB_REF, 'refs/heads/main');
+          assert.match(ORIGINAL_RUN ?? '', /^\d+$/);
+          assert.match(ZIP_SHA256 ?? '', /^[a-f0-9]{64}$/);
+          const gh = (...args) => execFileSync('gh', args, { encoding: 'utf8', maxBuffer: 12_000_000 });
+          const api = (path) => JSON.parse(gh('api', path));
+          const root = `repos/${GITHUB_REPOSITORY}/actions/runs/${ORIGINAL_RUN}`;
+          const run = api(root);
+          assert.equal(run.path, '.github/workflows/release.yml');
+          assert.equal(run.status, 'completed');
+          assert.equal(run.conclusion, 'failure');
+          assert.match(run.head_sha, /^[a-f0-9]{40}$/);
+          execFileSync('git', ['merge-base', '--is-ancestor', run.head_sha, 'origin/main']);
+          const { jobs } = api(`${root}/jobs?per_page=100`);
+          const build = jobs.find((job) => job.name === '校验并构建 Mac 与官网' && job.conclusion === 'success');
+          assert.ok(build, '原签名构建未成功');
+          assert.ok(jobs.some((job) => job.name === '验收已签名的 Mac 安装包' && job.conclusion === 'failure'));
+          const log = gh('run', 'view', ORIGINAL_RUN, '--repo', GITHUB_REPOSITORY, '--job', String(build.id), '--log');
+          const identity = `已校验正式发布：${GITHUB_REPOSITORY} ${RELEASE_TAG} ${RELEASE_COMMIT}`;
+          assert.ok(log.split('\n').some((line) => line.trimEnd().endsWith(identity)), '原构建未校验同一标签提交');
+          const { artifacts } = api(`${root}/artifacts`);
+          for (const name of [`release-${VERSION}`, 'github-pages'])
+            assert.ok(artifacts.some((artifact) => artifact.name === name && !artifact.expired), `原产物不可用：${name}`);
+          JS
       - name: 准备锁定工具链
         if: ${{ !github.event.inputs.artifact_run }}
         run: |
@@ -86,7 +128,7 @@ jobs:
           cd outputs
           shasum -a 256 "i日历-${VERSION}-mac-arm64.zip" "i日历-${VERSION}-mac-arm64.app.tar.gz" "i日历-${VERSION}-mac-arm64.app.tar.gz.sig" latest.json > SHA256SUMS.txt
       - name: 校验可复用构建来源
-        if: ${{ github.event.inputs.artifact_run }}
+        if: ${{ inputs.artifact_run && !inputs.local_smoke_sha256 }}
         env:
           GH_TOKEN: ${{ github.token }}
           ORIGINAL_RUN: ${{ github.event.inputs.artifact_run }}
@@ -110,7 +152,7 @@ jobs:
           console.log('原构建提交、工作流、检查结果与签名产物一致');
           JS
       - name: 载入当前发布工具与官网链接修正
-        if: ${{ github.event.inputs.artifact_run }}
+        if: ${{ inputs.artifact_run && !inputs.local_smoke_sha256 }}
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.workflow_sha }}
@@ -128,7 +170,7 @@ jobs:
         if: ${{ github.event.inputs.artifact_run }}
         run: cd outputs && shasum -a 256 -c SHA256SUMS.txt
       - name: 构建同版本的最新官网下载入口
-        if: ${{ github.event.inputs.artifact_run }}
+        if: ${{ inputs.artifact_run && !inputs.local_smoke_sha256 }}
         env:
           VERSION: ${{ steps.context.outputs.version }}
           RELEASE_COMMIT: ${{ steps.context.outputs.commit }}
@@ -148,6 +190,13 @@ jobs:
           corepack install
           pnpm install --frozen-lockfile
           pnpm run build:web
+      - name: 核对已在本机验收的安装包 SHA-256
+        if: ${{ inputs.local_smoke_sha256 }}
+        env:
+          VERSION: ${{ steps.context.outputs.version }}
+          ZIP_SHA256: ${{ inputs.local_smoke_sha256 }}
+        run: |
+          printf '%s  outputs/i日历-%s-mac-arm64.zip\n' "$ZIP_SHA256" "$VERSION" | shasum -a 256 -c
       - name: 保存待验收的签名分发文件
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -161,12 +210,30 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: 保存官网产物
+        if: ${{ !inputs.local_smoke_sha256 }}
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
           path: apps/calendar/dist
+      - name: 下载原构建的官网归档
+        if: ${{ inputs.local_smoke_sha256 }}
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: github-pages
+          path: restored-pages
+          run-id: ${{ inputs.artifact_run }}
+          github-token: ${{ github.token }}
+      - name: 保存原构建的官网归档
+        if: ${{ inputs.local_smoke_sha256 }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: github-pages
+          path: restored-pages/artifact.tar
+          if-no-files-found: error
+          compression-level: 0
 
   smoke:
     name: 验收已签名的 Mac 安装包
+    if: ${{ !inputs.local_smoke_sha256 }}
     needs: build
     runs-on: macos-15
     timeout-minutes: 15
@@ -208,6 +275,7 @@ jobs:
   publish:
     name: 发布 GitHub Release 与更新源
     needs: [build, smoke]
+    if: ${{ !cancelled() && needs.build.result == 'success' && (needs.smoke.result == 'success' || (inputs.local_smoke_sha256 && needs.smoke.result == 'skipped')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -233,6 +301,7 @@ jobs:
   website:
     name: 部署官网
     needs: [build, publish]
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.publish.result == 'success' }}
     runs-on: ubuntu-latest
     concurrency:
       group: i-calendar-pages

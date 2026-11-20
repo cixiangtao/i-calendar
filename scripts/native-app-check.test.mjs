@@ -160,5 +160,10 @@ test('只有本地发布使用延后模式，正式云端配置仍运行严格�
   assert.match(smokeJob ?? '', /shasum -a 256 -c SHA256SUMS\.txt/);
   assert.match(smokeJob ?? '', /await checkNativeApp\(/);
   assert.match(workflow, /\n  publish:\n[^\n]+\n    needs: \[build, smoke\]/);
+  assert.match(workflow, /needs\.smoke\.result == 'success'/);
+  assert.match(workflow, /inputs\.local_smoke_sha256 && needs\.smoke\.result == 'skipped'/);
+  assert.match(workflow, /assert\.equal\(GITHUB_REF, 'refs\/heads\/main'\)/);
+  assert.match(workflow, /原构建未校验同一标签提交/);
+  assert.match(workflow, /outputs\/i日历-%s-mac-arm64\.zip\\n.*shasum -a 256 -c/);
   assert.ok(!workflow.includes('--defer-unavailable'));
 });
