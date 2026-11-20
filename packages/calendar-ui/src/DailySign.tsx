@@ -1,10 +1,12 @@
 import type { CalendarDay } from '@i-calendar/core';
-import type { FortuneItem } from 'acer-almanac';
 import { useId, useState } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
+import type { createDailySign } from './daily-sign-content.js';
 
-type DailySignResult = { status: 'loading' | 'error' } | { status: 'ready'; items: FortuneItem[] };
+type DailySignResult =
+  | { status: 'loading' | 'error' }
+  | { status: 'ready'; sign: ReturnType<typeof createDailySign> };
 
 /** 为当前选中日按需展开生活灵感，选日时由调用方重置展开状态。 */
 export function DailySign({ day }: { day: CalendarDay }) {
@@ -17,9 +19,8 @@ export function DailySign({ day }: { day: CalendarDay }) {
   async function loadSign() {
     setResult({ status: 'loading' });
     try {
-      const { generateFortuneV2 } = await import('acer-almanac');
-      const { good } = generateFortuneV2(day);
-      setResult({ status: 'ready', items: good.slice(0, 3) });
+      const { createDailySign } = await import('./daily-sign-content.js');
+      setResult({ status: 'ready', sign: createDailySign(day) });
     } catch {
       setResult({ status: 'error' });
     }
@@ -70,33 +71,38 @@ export function DailySign({ day }: { day: CalendarDay }) {
       <div
         id={contentId}
         hidden={!open}
-        className="tw-px-1.5 tw-pb-2 tw-pt-3"
+        className="tw-pb-2 tw-pt-2"
       >
         {result?.status === 'ready' ? (
           <>
-            <time
-              dateTime={day.date}
-              className="tw-block tw-text-[11px] tw-tabular-nums tw-leading-[17px] tw-text-secondary"
-            >
-              {day.year}年{day.month}月{day.day}日
-            </time>
-            <ul className="tw-my-1.5 tw-list-none tw-p-0 tw-text-xs tw-leading-5">
-              {result.items.map(({ activity, description }) => (
-                <li
-                  key={activity}
-                  className="tw-border-0 tw-border-b tw-border-solid tw-border-line tw-py-2"
-                >
-                  <strong className="tw-font-semibold">{activity}</strong>
-                  <p className="tw-m-0 tw-text-secondary">{description}</p>
-                </li>
-              ))}
-            </ul>
-            <p className="tw-m-0 tw-text-[11px] tw-leading-[17px] tw-text-secondary">
-              按日期生成，仅供娱乐。
-            </p>
+            <div className="tw-rounded-xl tw-bg-action-soft tw-px-3 tw-py-3">
+              <h3 className="tw-m-0 tw-text-[15px] tw-font-semibold tw-leading-[22px]">
+                {result.sign.title}
+              </h3>
+              <p className="tw-m-0 tw-mt-1 tw-text-[13px] tw-leading-[22px]">{result.sign.body}</p>
+            </div>
+            <div className="tw-mt-3 tw-px-1.5">
+              <p className="tw-m-0 tw-text-[11px] tw-leading-[17px] tw-text-secondary">
+                也可以试试
+              </p>
+              <ul className="tw-m-0 tw-mt-0.5 tw-list-disc tw-pl-4 tw-text-xs tw-leading-5 marker:tw-text-action">
+                {result.sign.otherTitles.map((title) => (
+                  <li key={title}>{title}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="tw-mt-3 tw-flex tw-flex-wrap tw-items-baseline tw-justify-between tw-gap-x-2 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-px-1.5 tw-pt-2 tw-text-[11px] tw-leading-[17px] tw-text-secondary">
+              <time
+                dateTime={day.date}
+                className="tw-tabular-nums"
+              >
+                {day.year}年{day.month}月{day.day}日
+              </time>
+              <span>按日期生成，仅供娱乐。</span>
+            </div>
           </>
         ) : result?.status === 'error' ? (
-          <output className="tw-block tw-text-xs tw-leading-5 tw-text-secondary">
+          <output className="tw-block tw-px-1.5 tw-text-xs tw-leading-5 tw-text-secondary">
             每日签加载失败，可收起后重试。
           </output>
         ) : null}
