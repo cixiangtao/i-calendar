@@ -171,35 +171,43 @@ export function CalendarDatePicker({
             }}
             onEscapeKeyDown={(event) => event.stopPropagation()}
           >
-            <div className="tw-grid tw-grid-cols-[auto_minmax(0,1fr)_minmax(0,0.8fr)_auto] tw-items-center tw-gap-2 coarse:tw-px-2">
-              <CalendarButton
-                appearance="toolbar"
-                aria-label="上个月"
-                disabled={year === MIN_YEAR && month === 1}
-                onClick={() => changeMonth(year, month - 1)}
-                icon={<MonthChevron />}
-              />
+            <div className="tw-flex tw-items-center tw-justify-between tw-gap-2">
               <CalendarSelect
                 label="年份"
                 value={year}
                 options={years}
-                className="tw-w-full"
+                className="tw-w-[78px]"
                 onChange={(nextYear) => changeMonth(nextYear, month)}
               />
-              <CalendarSelect
-                label="月份"
-                value={month}
-                options={months}
-                className="tw-w-full"
-                onChange={(nextMonth) => changeMonth(year, nextMonth)}
-              />
-              <CalendarButton
-                appearance="toolbar"
-                aria-label="下个月"
-                disabled={year === MAX_YEAR && month === 12}
-                onClick={() => changeMonth(year, month + 1)}
-                icon={<MonthChevron next />}
-              />
+              <div
+                role="group"
+                aria-label="切换月份"
+                className="tw-flex tw-items-center tw-gap-1"
+              >
+                <CalendarButton
+                  appearance="toolbar"
+                  className="before:tw-box-border coarse:tw-mx-2"
+                  aria-label="上个月"
+                  disabled={year === MIN_YEAR && month === 1}
+                  onClick={() => changeMonth(year, month - 1)}
+                  icon={<MonthChevron />}
+                />
+                <CalendarSelect
+                  label="月份"
+                  value={month}
+                  options={months}
+                  className="tw-w-[62px]"
+                  onChange={(nextMonth) => changeMonth(year, nextMonth)}
+                />
+                <CalendarButton
+                  appearance="toolbar"
+                  className="before:tw-box-border coarse:tw-mx-2"
+                  aria-label="下个月"
+                  disabled={year === MAX_YEAR && month === 12}
+                  onClick={() => changeMonth(year, month + 1)}
+                  icon={<MonthChevron next />}
+                />
+              </div>
             </div>
             <div
               role="grid"
@@ -293,15 +301,15 @@ function MonthChevron({ next = false }: { next?: boolean }) {
   return (
     <svg
       viewBox="0 0 16 16"
-      width="16"
-      height="16"
+      width="13"
+      height="13"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.5"
+      strokeWidth="1.7"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className={next ? 'tw-rotate-180' : undefined}
+      className={cn('tw-shrink-0', next && 'tw-rotate-180')}
     >
       <path d="m9.5 4-4 4 4 4" />
     </svg>
