@@ -1,4 +1,8 @@
+import afterglow from './assets/theme-afterglow.jpg?inline';
+import bamboo from './assets/theme-bamboo-shadow.jpg?inline';
 import mountain from './assets/theme-mountain.jpg?inline';
+import sakuraTrain from './assets/theme-sakura-train.jpg?inline';
+import seaGlass from './assets/theme-sea-glass.jpg?inline';
 import { decodeThemeFile } from './theme-archive.js';
 import {
   maxThemeImageLength,
@@ -9,15 +13,28 @@ import {
 } from './theme-package.js';
 
 const jpegPrefix = 'data:image/jpeg;base64,';
-const mountainBackground: ThemeBackground = {
-  image: mountain.slice(jpegPrefix.length),
-  strength: 78,
-  x: 50,
-  y: 61,
-};
+const bundledBackground = (
+  jpeg: string,
+  strength: number,
+  x: number,
+  y: number,
+): ThemeBackground => ({
+  image: jpeg.slice(jpegPrefix.length),
+  strength,
+  x,
+  y,
+});
+const builtInBackgrounds = new Map([
+  ['mountain', bundledBackground(mountain, 78, 50, 61)],
+  ['sea-glass', bundledBackground(seaGlass, 78, 50, 55)],
+  ['bamboo-shadow', bundledBackground(bamboo, 73, 62, 47)],
+  ['afterglow', bundledBackground(afterglow, 76, 50, 59)],
+  ['sakura-train', bundledBackground(sakuraTrain, 78, 64, 55)],
+]);
 
+/** 从主题包或应用随附资源获取背景，导出时沿用同一份本地图片。 */
 export function themeBackground(theme: CalendarThemePackage) {
-  return theme.background ?? (theme.id === 'mountain' ? mountainBackground : undefined);
+  return theme.background ?? builtInBackgrounds.get(theme.id);
 }
 
 export const themeImageUrl = (background: ThemeBackground) =>

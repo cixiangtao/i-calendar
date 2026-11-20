@@ -3,7 +3,11 @@ import { flushSync } from 'react-dom';
 
 import { encodeThemeArchive } from '../../../packages/calendar-ui/src/theme-archive.js';
 import { parseThemeColor } from '../../../packages/calendar-ui/src/theme-color.js';
-import { readThemeFile, themeBackground } from '../../../packages/calendar-ui/src/theme-image.js';
+import {
+  readThemeFile,
+  themeBackground,
+  themeImageUrl,
+} from '../../../packages/calendar-ui/src/theme-image.js';
 import {
   builtInThemes,
   parseThemePackage,
@@ -21,9 +25,35 @@ function verifyPanelAlpha(selector: string, alpha: number) {
     );
 }
 
+async function verifyBundledBackgrounds(controller: CalendarController) {
+  const presets = ['sea-glass', 'bamboo-shadow', 'afterglow', 'sakura-train'];
+  for (const id of presets) {
+    const preset = builtInThemes.find((theme) => theme.id === id);
+    const background = preset && themeBackground(preset);
+    if (!preset || !background?.image) throw new Error(`缺少内置背景主题：${id}`);
+    parseThemePackage({ ...preset, background });
+    for (const appearance of ['light', 'dark'] as const) {
+      const saved = await flushSync(() =>
+        controller.setPreferences({ appearance, themes: { selectedId: id, custom: [] } }),
+      );
+      const image = backdropImage();
+      if (
+        !saved ||
+        image?.src !== themeImageUrl(background) ||
+        document.documentElement.dataset.theme !== appearance
+      )
+        throw new Error(`内置主题未应用：${id}（${appearance}）`);
+      await image.decode();
+      const alpha = parseThemeColor(preset.palettes[appearance].surface)!.alpha;
+      verifyPanelAlpha('.month-panel', alpha);
+      verifyPanelAlpha('.detail-panel', alpha);
+    }
+  }
+}
+
 /** 在隔离 WKWebView 内校验默认外观、带图主题文件、挂载和复原。 */
 export async function verifyThemes(controller: CalendarController) {
-  const previous = controller.getSnapshot().preferences.themes;
+  const { themes: previous, appearance: previousAppearance } = controller.getSnapshot().preferences;
   if (backdropImage()) throw new Error('默认清爽白含有背景图片');
   verifyPanelAlpha('.month-panel', 1);
   const mountain = builtInThemes.find((theme) => theme.id === 'mountain')!;
@@ -54,8 +84,12 @@ export async function verifyThemes(controller: CalendarController) {
   if (online.background?.url !== url || online.background.image !== undefined)
     throw new Error('在线背景主题导入未保留原链接');
   try {
+    await verifyBundledBackgrounds(controller);
     const saved = await flushSync(() =>
-      controller.setPreferences({ themes: { selectedId: imported.id, custom: [imported] } }),
+      controller.setPreferences({
+        appearance: previousAppearance,
+        themes: { selectedId: imported.id, custom: [imported] },
+      }),
     );
     const loaded = backdropImage();
     if (!saved || !loaded) throw new Error('带图主题未应用');
@@ -79,7 +113,7 @@ export async function verifyThemes(controller: CalendarController) {
   } finally {
     await flushSync(() => {
       controller.showSettings(false);
-      return controller.setPreferences({ themes: previous });
+      return controller.setPreferences({ appearance: previousAppearance, themes: previous });
     });
   }
   if (backdropImage()) throw new Error('恢复清爽白后仍有背景图片');

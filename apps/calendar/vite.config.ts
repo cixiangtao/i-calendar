@@ -68,6 +68,7 @@ export default defineConfig({
       output: {
         codeSplitting: {
           groups: [
+            { name: 'theme-backgrounds', test: /\/assets\/theme-[^/]+\.jpg\?inline$/ },
             { name: 'lunar', test: /node_modules\/lunar-typescript/ },
             { name: 'react', test: /node_modules\/(react|react-dom|scheduler)\// },
             { name: 'controls', test: /node_modules\/@radix-ui\// },
