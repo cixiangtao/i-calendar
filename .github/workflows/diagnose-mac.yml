@@ -1,0 +1,45 @@
+name: 定位 Mac 窗口冒烟超时
+
+on:
+  push:
+    branches: ['ci/diagnose-mac-v2.4.0']
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: 构建候选 Mac 应用
+        run: |
+          test "$(uname -m)" = arm64
+          npm install --global corepack@0.35.0 --force
+          corepack enable
+          corepack install
+          rustup toolchain install 1.99.1 --profile minimal
+          pnpm install --frozen-lockfile
+          export I_CALENDAR_UPDATE_ENDPOINT="$(node -p 'require("./release/config.json").updateEndpoint')"
+          export I_CALENDAR_UPDATE_PUBKEY="$(node -p 'require("./release/config.json").publicKey')"
+          pnpm run tauri build --ci --bundles app
+      - name: 记录两种启动模式的各阶段
+        env:
+          I_CALENDAR_SMOKE_SETTLED_ONLY: '1'
+        run: |
+          executable='apps/calendar/src-tauri/target/release/bundle/macos/i日历.app/Contents/MacOS/i-calendar'
+          failed=0
+          for attempt in 1 2; do
+            printf '\n普通启动 %s\n' "$attempt"
+            "$executable" --smoke-test || failed=1
+            printf '\n后台启动 %s\n' "$attempt"
+            "$executable" --smoke-test --autostart || failed=1
+          done
+          exit "$failed"
