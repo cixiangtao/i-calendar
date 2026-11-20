@@ -1,5 +1,5 @@
 import type { CalendarDay } from '@i-calendar/core';
-import { useId, useRef, useState, type KeyboardEvent } from 'react';
+import { Fragment, useId, useRef, useState, type KeyboardEvent } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
 import type { createDailySign } from './daily-sign-content.js';
@@ -14,6 +14,21 @@ interface DailySignProps {
   drawn: boolean;
   onDrawn: () => void;
   onReset?: () => void;
+}
+
+function SignActivities({ activities }: { activities: readonly string[] }) {
+  return activities.map((activity, index) => {
+    const hasSeparator = index + 1 < activities.length;
+    return (
+      <Fragment key={activity}>
+        <span className="tw-inline-block tw-max-w-full tw-break-words">
+          {activity}
+          {hasSeparator ? <span className="tw-text-secondary">{' /'}</span> : null}
+        </span>
+        {hasSeparator ? ' ' : null}
+      </Fragment>
+    );
+  });
 }
 
 /** 展开所选日期的签筒，摇签结束后揭晓同一天固定的签文。 */
@@ -125,26 +140,32 @@ export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
             </CalendarButton>
             {/* 两层重叠并同时参与定高，切到签面时日历不会再次撑高。 */}
             <div
-              className={`tw-col-start-1 tw-row-start-1 tw-min-w-0 tw-px-2 tw-py-1.5 ${drawn ? '' : 'tw-invisible'}`}
+              className={`tw-col-start-1 tw-row-start-1 tw-min-w-0 tw-px-2.5 tw-py-2 ${drawn ? '' : 'tw-invisible'}`}
               aria-hidden={!drawn || undefined}
             >
-              <h3 className="tw-m-0 tw-flex tw-flex-wrap tw-items-baseline tw-gap-x-2 tw-gap-y-1 tw-text-[16px] tw-font-semibold tw-leading-6">
-                <span className="tw-rounded-md tw-bg-surface tw-px-1.5 tw-text-[11px] tw-leading-[20px] tw-text-ink">
+              <header className="tw-flex tw-items-center tw-justify-between tw-gap-2">
+                <h3 className="tw-m-0 tw-min-w-0 tw-break-words tw-text-[18px] tw-font-semibold tw-leading-6">
+                  {result.sign.title}
+                </h3>
+                <span className="tw-shrink-0 tw-rounded-[5px] tw-border tw-border-solid tw-border-line tw-bg-surface tw-px-1.5 tw-text-[11px] tw-font-medium tw-leading-[18px] tw-text-ink">
                   {result.sign.rank}
                 </span>
-                <span>{result.sign.title}</span>
-              </h3>
-              <dl className="tw-mx-0 tw-mb-0 tw-mt-2.5 tw-grid tw-grid-cols-[23px_minmax(0,_1fr)] tw-items-start tw-gap-x-2 tw-gap-y-1.5 tw-text-xs tw-leading-5">
-                <dt className="tw-rounded-md tw-bg-green-soft tw-text-center tw-font-medium tw-text-green">
+              </header>
+              <dl className="tw-mx-0 tw-mb-0 tw-mt-2.5 tw-grid tw-grid-cols-[22px_minmax(0,_1fr)] tw-items-start tw-gap-x-2.5 tw-gap-y-2 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-pt-2.5 tw-text-[13px] tw-leading-[22px]">
+                <dt className="tw-rounded-md tw-bg-green-soft tw-text-center tw-text-xs tw-font-semibold tw-text-green">
                   宜
                 </dt>
-                <dd className="tw-m-0">{result.sign.good.join(' / ')}</dd>
-                <dt className="tw-rounded-md tw-bg-red-soft tw-text-center tw-font-medium tw-text-red">
+                <dd className="tw-m-0">
+                  <SignActivities activities={result.sign.good} />
+                </dd>
+                <dt className="tw-rounded-md tw-bg-red-soft tw-text-center tw-text-xs tw-font-semibold tw-text-red">
                   忌
                 </dt>
-                <dd className="tw-m-0">{result.sign.bad.join(' / ')}</dd>
+                <dd className="tw-m-0">
+                  <SignActivities activities={result.sign.bad} />
+                </dd>
               </dl>
-              <div className="tw-mt-1.5 tw-flex tw-items-center tw-gap-2">
+              <div className="tw-mt-2.5 tw-flex tw-items-center tw-gap-2">
                 {onReset ? (
                   <CalendarButton
                     appearance="text"
