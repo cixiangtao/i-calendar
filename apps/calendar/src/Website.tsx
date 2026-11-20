@@ -1,5 +1,6 @@
 import {
   activeTheme,
+  builtInThemes,
   CalendarApp,
   CalendarButton,
   themeBackground,
@@ -8,7 +9,7 @@ import {
 } from '@i-calendar/ui';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
-import mountainPreview from '../../../docs/images/theme-mountain.webp';
+import themePresets from '../../../docs/images/theme-presets.webp';
 import logo from '../../../packages/calendar-ui/src/assets/logo.svg';
 import releaseConfig from '../../../release/config.json';
 import { AmbientOrbit } from './AmbientOrbit.js';
@@ -168,7 +169,8 @@ export function Website({ controller }: { controller: CalendarController }) {
                 日历主题
               </h2>
               <p className="tw-mb-0 tw-mt-4 tw-max-w-[31em] tw-text-sm tw-leading-7 tw-text-secondary">
-                选清爽白、暖纸色等内置配色，也可以让山雾透过半透明卡片。每款主题都有浅色、深色两套配色，支持跟随系统。
+                内置 {builtInThemes.length}{' '}
+                款主题。清爽白等主题使用纯色配色，海盐蓝、竹影、晚霞和樱坂电车等主题带有图片背景。每款主题都支持浅色、深色和跟随系统。
               </p>
               <p className="tw-mb-5 tw-mt-3 tw-max-w-[31em] tw-text-sm tw-leading-7 tw-text-secondary">
                 在外观设置里自定义颜色、透明度和背景图，切回月历实时预览。满意后可导出 ZIP
@@ -183,15 +185,17 @@ export function Website({ controller }: { controller: CalendarController }) {
             </div>
             <figure className="tw-m-0">
               <img
-                src={mountainPreview}
-                width="1280"
-                height="800"
-                alt="山雾主题的网页版日历，远山背景透过浅色月历与日期详情"
+                src={themePresets}
+                width="1248"
+                height="848"
+                alt="网页版日历的四款图片背景主题，浅色海盐蓝、浅色竹影、深色晚霞和深色樱坂电车"
                 className="tw-block tw-h-auto tw-w-full tw-rounded-2xl"
                 loading="lazy"
                 decoding="async"
               />
-              <figcaption className="tw-mt-3 tw-text-xs tw-text-secondary">山雾 · 浅色</figcaption>
+              <figcaption className="tw-mt-3 tw-text-xs tw-text-secondary">
+                i日历 2.3 新增的四款主题
+              </figcaption>
             </figure>
           </div>
         </section>

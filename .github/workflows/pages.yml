@@ -9,7 +9,7 @@ on:
       - 'apps/calendar/src/Website.tsx'
       - 'apps/calendar/src/website.css'
       - 'apps/calendar/src/AmbientOrbit.tsx'
-      - 'docs/images/theme-mountain.webp'
+      - 'docs/images/theme-presets.webp'
   workflow_dispatch:
 
 permissions:
