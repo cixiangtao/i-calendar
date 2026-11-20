@@ -1,6 +1,6 @@
 {
   "name": "@i-calendar/core",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "与 UI 和平台无关的中国农历、节气和放假调休查询核心",
   "license": "MIT",
   "files": [
