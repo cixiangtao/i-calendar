@@ -135,11 +135,11 @@ export function DailySign({ day, drawn, onDrawn }: DailySignProps) {
                 <dt className="tw-rounded-md tw-bg-green-soft tw-text-center tw-font-medium tw-text-green">
                   宜
                 </dt>
-                <dd className="tw-m-0">{result.sign.good.join('、')}</dd>
+                <dd className="tw-m-0">{result.sign.good.join(' / ')}</dd>
                 <dt className="tw-rounded-md tw-bg-red-soft tw-text-center tw-font-medium tw-text-red">
                   忌
                 </dt>
-                <dd className="tw-m-0">{result.sign.bad.join('、')}</dd>
+                <dd className="tw-m-0">{result.sign.bad.join(' / ')}</dd>
               </dl>
               <p className="tw-mb-0 tw-mt-1.5 tw-text-right tw-text-[11px] tw-leading-[17px] tw-text-secondary">
                 仅供娱乐
