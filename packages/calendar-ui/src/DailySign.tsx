@@ -103,11 +103,11 @@ export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
         className="tw-pt-2"
       >
         {result?.status === 'ready' ? (
-          <div className="tw-grid tw-items-center tw-rounded-xl tw-bg-[var(--yellow-soft)] tw-p-2">
+          <div className="tw-grid tw-min-h-[154px] tw-items-center tw-rounded-xl tw-bg-[var(--yellow-soft)] tw-p-2">
             <CalendarButton
               ref={drawButton}
               appearance="text"
-              className={`tw-col-start-1 tw-row-start-1 tw-mx-auto tw-flex tw-max-w-full tw-flex-col tw-gap-0 [--form-height:138px] [--form-inset:16px] enabled:active:before:!tw-bg-transparent data-[hovered=true]:before:!tw-bg-transparent ${drawn ? 'tw-invisible' : ''}`}
+              className={`tw-col-start-1 tw-row-start-1 tw-mx-auto tw-flex tw-w-16 tw-flex-col tw-gap-0 [--form-height:112px] [--form-inset:0px] enabled:active:before:!tw-bg-transparent data-[hovered=true]:before:!tw-bg-transparent ${drawn ? 'tw-invisible' : ''}`}
               aria-hidden={drawn || undefined}
               aria-label="摇一签"
               aria-disabled={drawing || undefined}
@@ -115,10 +115,12 @@ export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
               onClick={draw}
               onKeyDown={handleEscape}
             >
-              <DailySignCup
-                drawing={drawing}
-                onDrawn={reveal}
-              />
+              <span className="daily-sign-hover tw-pointer-events-none tw-shrink-0">
+                <DailySignCup
+                  drawing={drawing}
+                  onDrawn={reveal}
+                />
+              </span>
               <span aria-hidden="true">{drawing ? '摇签中…' : '摇一签'}</span>
             </CalendarButton>
             {/* 两层重叠并同时参与定高，切到签面时日历不会再次撑高。 */}

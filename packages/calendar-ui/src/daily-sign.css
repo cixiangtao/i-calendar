@@ -1,3 +1,14 @@
+@media (prefers-reduced-motion: no-preference) {
+  .daily-sign-hover {
+    transform-origin: 50% 86%;
+    transition: transform var(--motion-state) var(--motion-ease);
+  }
+
+  [data-hovered='true']:not([aria-busy='true']) .daily-sign-hover {
+    transform: translateY(-3px) rotate(-5deg);
+  }
+}
+
 .daily-sign-cup[data-drawing='true'] {
   --daily-sign-draw-duration: 900ms;
   transform-origin: 50% 86%;

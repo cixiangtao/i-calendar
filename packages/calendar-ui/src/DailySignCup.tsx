@@ -4,8 +4,8 @@ import './daily-sign.css';
 export function DailySignCup({ drawing, onDrawn }: { drawing: boolean; onDrawn: () => void }) {
   return (
     <svg
-      viewBox="0 0 120 112"
-      className="daily-sign-cup tw-block tw-h-[106px] tw-w-[114px] tw-shrink-0 tw-overflow-visible"
+      viewBox="28 13 64 95"
+      className="daily-sign-cup tw-block tw-h-[90px] tw-w-[62px] tw-overflow-visible"
       data-drawing={drawing}
       onAnimationEnd={(event) => {
         if (event.target === event.currentTarget && drawing) onDrawn();
