@@ -13,10 +13,11 @@ interface DailySignProps {
   day: CalendarDay;
   drawn: boolean;
   onDrawn: () => void;
+  onReset?: () => void;
 }
 
 /** 展开所选日期的签筒，摇签结束后揭晓同一天固定的签文。 */
-export function DailySign({ day, drawn, onDrawn }: DailySignProps) {
+export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
   const contentId = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const drawButton = useRef<HTMLButtonElement>(null);
@@ -141,9 +142,24 @@ export function DailySign({ day, drawn, onDrawn }: DailySignProps) {
                 </dt>
                 <dd className="tw-m-0">{result.sign.bad.join(' / ')}</dd>
               </dl>
-              <p className="tw-mb-0 tw-mt-1.5 tw-text-right tw-text-[11px] tw-leading-[17px] tw-text-secondary">
-                仅供娱乐
-              </p>
+              <div className="tw-mt-1.5 tw-flex tw-items-center tw-gap-2">
+                {onReset ? (
+                  <CalendarButton
+                    appearance="text"
+                    className="[--form-font-size:11px] [--form-height:24px] [--form-inset:6px]"
+                    onClick={() => {
+                      trigger.current?.focus({ preventScroll: true });
+                      onReset();
+                    }}
+                    onKeyDown={handleEscape}
+                  >
+                    重置抽签
+                  </CalendarButton>
+                ) : null}
+                <p className="tw-m-0 tw-ml-auto tw-text-right tw-text-[11px] tw-leading-[17px] tw-text-secondary">
+                  仅供娱乐
+                </p>
+              </div>
             </div>
             <output className="sr-only">
               {drawn ? `${result.sign.rank}，${result.sign.title}。` : ''}

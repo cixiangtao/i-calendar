@@ -54,6 +54,7 @@ function nativeAppUpdater(): AppUpdater {
 function browserPlatform(): CalendarPlatform {
   return {
     kind: 'web',
+    development: import.meta.env.DEV,
     locate: browserLocate,
     async load() {
       const value = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -118,7 +119,9 @@ export async function createPlatform(): Promise<{
   smokeTest: boolean;
 }> {
   if (!isTauri()) return { platform: browserPlatform(), smokeTest: false };
-  const context = await invoke<{ kind: 'macos' | 'ios'; smokeTest: boolean }>('runtime_context');
+  const context = await invoke<{ kind: 'macos' | 'ios'; development: boolean; smokeTest: boolean }>(
+    'runtime_context',
+  );
   const updatesEnabled =
     context.kind === 'macos' &&
     !context.smokeTest &&
@@ -131,6 +134,7 @@ export async function createPlatform(): Promise<{
     smokeTest: context.smokeTest,
     platform: {
       kind: context.kind,
+      development: context.development || import.meta.env.DEV,
       ...(!context.smokeTest
         ? {
             async locate(signal: AbortSignal, requestPermission: boolean) {

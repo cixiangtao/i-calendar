@@ -730,6 +730,16 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   onDrawn={() =>
                     setDrawnSignDates((dates) => new Set(dates).add(state.selected.date))
                   }
+                  onReset={
+                    controller.platform.development
+                      ? () =>
+                          setDrawnSignDates((dates) => {
+                            const next = new Set(dates);
+                            next.delete(state.selected.date);
+                            return next;
+                          })
+                      : undefined
+                  }
                 />
               </div>
               <Feedback

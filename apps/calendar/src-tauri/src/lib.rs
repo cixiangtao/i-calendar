@@ -40,9 +40,10 @@ struct RuntimeState {
 }
 
 #[tauri::command]
-fn runtime_context() -> Value {
+fn runtime_context(app: tauri::AppHandle) -> Value {
     json!({
         "kind": if cfg!(target_os = "macos") { "macos" } else { "ios" },
+        "development": app.config().identifier == "local.icalendar.app.dev",
         "smokeTest": std::env::args().any(|argument| argument == "--smoke-test")
     })
 }

@@ -30,6 +30,8 @@ export interface SavedCalendarState {
 /** 界面只依赖此契约，不直接导入 Tauri、文件系统或浏览器存储。 */
 export interface CalendarPlatform {
   kind: 'web' | 'macos' | 'ios';
+  /** 宿主允许显示本地开发调试控件。 */
+  development?: boolean;
   load(): Promise<unknown>;
   save(state: SavedCalendarState): Promise<void>;
   fetchHolidayYear(year: number, signal: AbortSignal): Promise<unknown | null>;
