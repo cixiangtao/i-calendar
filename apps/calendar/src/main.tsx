@@ -35,7 +35,7 @@ function smokeProgress(stage: string) {
 }
 
 /** 在原生检查日志中记录前端阶段，断言失败时立即报告。 */
-async function verifySmokeStep(stage: string, verify: () => boolean | Promise<boolean>) {
+async function verifySmokeStep<T>(stage: string, verify: () => T | Promise<T>) {
   await smokeProgress(stage);
   try {
     return await verify();
@@ -108,6 +108,7 @@ async function start() {
           preferences: controller.getSnapshot().preferences,
         });
       });
+      await verifySmokeStep('启动可见性与首次显示', () => invoke<void>('smoke_open_window'));
     }
     // 原生冒烟测试经真实 WebView 调用共享核心，再把结果传回 Rust。
     const smokeReport = smokeTest
