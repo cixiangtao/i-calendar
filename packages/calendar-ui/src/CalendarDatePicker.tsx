@@ -3,22 +3,18 @@ import * as Popover from '@radix-ui/react-popover';
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
-import { CalendarInput } from './CalendarInput.js';
 import { CalendarSelect } from './CalendarSelect.js';
 import { cn, popupClasses } from './ui-utils.js';
 
-/** 允许保留手输草稿，点选时返回核心认可的公历日期。 */
+/** 受控的公历日期选择器，日期使用核心支持的 YYYY-MM-DD。 */
 export interface CalendarDatePickerProps {
   id: string;
   label: string;
-  /** 当前输入，编辑期间可以是不完整的 YYYY-MM-DD。 */
-  value: string;
-  /** 输入尚无有效日期时，面板从当天开始。 */
+  value: DateKey;
+  /** 用于标记当天并提供「今天」快捷选项。 */
   today: DateKey;
   weekStartsOn?: 1 | 7;
-  error?: string | null;
-  'aria-describedby'?: string;
-  onChange: (value: string) => void;
+  onChange: (value: DateKey) => void;
 }
 
 const years = Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, index) => {
@@ -42,28 +38,17 @@ function daysInMonth(year: number, month: number) {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-function validPickerDate(value: string, today: DateKey) {
-  try {
-    parseDate(value);
-    return value;
-  } catch {
-    return today;
-  }
-}
-
-/** 提供文本输入和跨端一致的选日面板。点选后关闭面板并恢复入口焦点。 */
+/** 从当前日期打开选日面板，选定后关闭并恢复日期按钮焦点。 */
 export function CalendarDatePicker({
   id,
   label,
   value,
   today,
   weekStartsOn = 1,
-  error,
-  'aria-describedby': describedBy,
   onChange,
 }: CalendarDatePickerProps) {
   const [open, setOpen] = useState(false);
-  const [cursor, setCursor] = useState(today);
+  const [cursor, setCursor] = useState(value);
   const activeDay = useRef<HTMLButtonElement>(null);
   const focusDayAfterMove = useRef(false);
   const { year, month, day } = parseDate(cursor);
@@ -71,7 +56,8 @@ export function CalendarDatePicker({
   const firstColumn = (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() - weekdayStart + 7) % 7;
   const monthLength = daysInMonth(year, month);
   const weekCount = Math.ceil((firstColumn + monthLength) / 7);
-  const errorId = `${id}-error`;
+  const labelId = `${id}-label`;
+  const valueId = `${id}-value`;
   const popupLabel = `选择${label}`;
 
   useLayoutEffect(() => {
@@ -116,60 +102,56 @@ export function CalendarDatePicker({
 
   return (
     <div className="tw-flex tw-min-w-0 tw-flex-col tw-gap-2">
-      <label htmlFor={id}>{label}</label>
+      <label
+        id={labelId}
+        htmlFor={id}
+      >
+        {label}
+      </label>
       <Popover.Root
         open={open}
         onOpenChange={(nextOpen) => {
-          if (nextOpen) setCursor(validPickerDate(value, today));
+          if (nextOpen) setCursor(value);
           setOpen(nextOpen);
         }}
       >
-        <Popover.Anchor asChild>
-          <div className="tw-flex tw-min-w-0 tw-items-center tw-gap-1 coarse:tw-gap-2">
-            <CalendarInput
+        <div className="tw-flex tw-min-w-0 tw-items-center coarse:tw-h-11">
+          <Popover.Trigger asChild>
+            <CalendarButton
               id={id}
-              value={value}
-              placeholder="YYYY-MM-DD"
-              maxLength={10}
-              autoComplete="off"
-              spellCheck={false}
-              status={error ? 'error' : undefined}
-              aria-invalid={!!error}
-              aria-describedby={error ? errorId : describedBy}
-              onChange={(event) => onChange(event.target.value)}
-            />
-            <Popover.Trigger asChild>
-              <CalendarButton
-                appearance="toolbar"
-                aria-label={popupLabel}
-                title={popupLabel}
-                className="coarse:tw-mx-[calc((44px-var(--form-height))/2)]"
-                icon={
-                  <svg
-                    viewBox="0 0 16 16"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <rect
-                      x="2.25"
-                      y="3.5"
-                      width="11.5"
-                      height="10.25"
-                      rx="2"
-                    />
-                    <path d="M5.25 2.25v2.5m5.5-2.5v2.5M2.5 6.75h11m-8 3.2h1m2 0h1" />
-                  </svg>
-                }
-              />
-            </Popover.Trigger>
-          </div>
-        </Popover.Anchor>
+              aria-labelledby={`${labelId} ${valueId}`}
+              className="tw-w-full tw-min-w-0 tw-justify-between tw-tabular-nums"
+            >
+              <time
+                id={valueId}
+                dateTime={value}
+              >
+                {value}
+              </time>
+              <svg
+                viewBox="0 0 16 16"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="tw-shrink-0 tw-text-secondary"
+              >
+                <rect
+                  x="2.25"
+                  y="3.5"
+                  width="11.5"
+                  height="10.25"
+                  rx="2"
+                />
+                <path d="M5.25 2.25v2.5m5.5-2.5v2.5M2.5 6.75h11m-8 3.2h1m2 0h1" />
+              </svg>
+            </CalendarButton>
+          </Popover.Trigger>
+        </div>
         <Popover.Portal>
           <Popover.Content
             aria-label={popupLabel}
@@ -303,14 +285,6 @@ export function CalendarDatePicker({
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
-      {error ? (
-        <p
-          id={errorId}
-          className="tw-m-0 tw-text-xs tw-leading-5 tw-text-red"
-        >
-          {error}
-        </p>
-      ) : null}
     </div>
   );
 }

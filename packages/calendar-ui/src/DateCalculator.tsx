@@ -2,7 +2,6 @@ import {
   addDays,
   countWorkdays,
   daysBetween,
-  parseDate,
   type DateKey,
   type HolidayStore,
 } from '@i-calendar/core';
@@ -26,15 +25,6 @@ interface DateCalculatorProps {
   onViewDate: (date: DateKey) => void;
 }
 
-function dateError(value: string) {
-  try {
-    parseDate(value);
-    return null;
-  } catch (error) {
-    return error instanceof Error ? error.message : '请输入有效日期';
-  }
-}
-
 /** 本地日期工具复用共享核心；草稿只在本次工具页面内保留，不写入用户偏好。 */
 export function DateCalculator({
   holidays,
@@ -53,15 +43,12 @@ export function DateCalculator({
   const back = useRef<HTMLButtonElement>(null);
   useEffect(() => back.current?.focus(), []);
 
-  const startError = dateError(start);
-  const endError = mode === 'offset' ? null : dateError(end);
   const amountError =
     mode === 'offset' && (!/^[+-]?\d+$/.test(amount) || !Number.isSafeInteger(Number(amount)))
       ? '请输入整数天数，向前推算时使用负数。'
       : null;
   const result = useMemo(() => {
-    if (startError || endError || amountError)
-      return { text: '等待有效输入', detail: '请先检查上方日期与天数。' };
+    if (amountError) return { text: '等待有效输入', detail: '请检查上方推算天数。' };
     if (mode === 'distance') {
       const distance = daysBetween(start, end);
       return {
@@ -110,7 +97,7 @@ export function DateCalculator({
       detail: `${includeStart ? '计入' : '不计'}起始日、计入结束日；按全国放假调休安排，扣除休假与普通周末，计入补班。`,
       date: end,
     };
-  }, [mode, start, end, amount, includeStart, holidays, startError, endError, amountError]);
+  }, [mode, start, end, amount, includeStart, holidays, amountError]);
 
   return (
     <section
@@ -157,21 +144,13 @@ export function DateCalculator({
           ]}
           onChange={setMode}
         />
-        <p
-          id="calculator-date-hint"
-          className="tw-mb-5 tw-mt-4 tw-text-xs tw-leading-5 tw-text-secondary"
-        >
-          日期格式为 YYYY-MM-DD，支持 1901—2100 年。
-        </p>
-        <div className="tw-grid tw-grid-cols-[repeat(auto-fit,minmax(min(100%,138px),1fr))] tw-items-start tw-gap-3">
+        <div className="tw-mt-5 tw-grid tw-grid-cols-[repeat(auto-fit,minmax(min(100%,116px),1fr))] tw-items-start tw-gap-3">
           <CalendarDatePicker
             id="calculator-start"
             label="起始日期"
             value={start}
             today={today}
             weekStartsOn={weekStartsOn}
-            aria-describedby="calculator-date-hint"
-            error={startError}
             onChange={setStart}
           />
           {mode === 'offset' ? (
@@ -206,8 +185,6 @@ export function DateCalculator({
               value={end}
               today={today}
               weekStartsOn={weekStartsOn}
-              aria-describedby="calculator-date-hint"
-              error={endError}
               onChange={setEnd}
             />
           )}
