@@ -155,6 +155,10 @@ test('只有本地发布使用延后模式，正式云端配置仍运行严格�
     new URL('../.github/workflows/release.yml', import.meta.url),
     'utf8',
   );
-  assert.match(workflow, /^\s*- run: pnpm run check:mac\s*$/m);
+  const smokeJob = workflow.split('\n  smoke:\n')[1]?.split('\n  publish:\n')[0];
+  assert.match(smokeJob ?? '', /actions\/download-artifact@/);
+  assert.match(smokeJob ?? '', /shasum -a 256 -c SHA256SUMS\.txt/);
+  assert.match(smokeJob ?? '', /await checkNativeApp\(/);
+  assert.match(workflow, /\n  publish:\n[^\n]+\n    needs: \[build, smoke\]/);
   assert.ok(!workflow.includes('--defer-unavailable'));
 });
