@@ -195,6 +195,9 @@ jobs:
     name: 部署官网
     needs: [build, publish]
     runs-on: ubuntu-latest
+    concurrency:
+      group: i-calendar-pages
+      cancel-in-progress: false
     permissions:
       contents: read
       pages: write

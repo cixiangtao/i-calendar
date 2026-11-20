@@ -6,9 +6,9 @@ import {
   ThemeBackdrop,
   type CalendarController,
 } from '@i-calendar/ui';
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
-import { version } from '../../../package.json';
+import mountainPreview from '../../../docs/images/theme-mountain.webp';
 import logo from '../../../packages/calendar-ui/src/assets/logo.svg';
 import releaseConfig from '../../../release/config.json';
 import { AmbientOrbit } from './AmbientOrbit.js';
@@ -16,9 +16,12 @@ import { AmbientOrbit } from './AmbientOrbit.js';
 import './website.css';
 
 const repository = `https://github.com/${releaseConfig.repository}`;
-const release = `${repository}/releases/tag/v${version}`;
-const download = `${repository}/releases/download/v${version}/i-calendar-${version}-mac-arm64.zip`;
-const textLink = 'tw-text-action tw-underline-offset-4 hover:tw-underline';
+const release = `${repository}/releases/latest`;
+const textLink =
+  'tw-font-medium tw-text-action tw-underline-offset-4 hover:tw-underline focus-visible:tw-rounded-sm';
+const contentWidth = 'tw-mx-auto tw-w-full tw-max-w-[1168px] tw-px-6 compact:tw-px-4';
+const sectionTitle =
+  'tw-m-0 tw-text-[length:clamp(1.625rem,1.3rem+1vw,2.25rem)] tw-font-semibold tw-leading-tight tw-tracking-tight';
 
 function Arrow({ down = false }: { down?: boolean }) {
   return (
@@ -38,17 +41,9 @@ function Arrow({ down = false }: { down?: boolean }) {
   );
 }
 
-function InfoRow({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="tw-grid tw-gap-2 tw-py-5 first:tw-pt-0 last:tw-border-0 desktop:tw-grid-cols-[112px_minmax(0,1fr)] desktop:tw-gap-6">
-      <dt className="tw-font-medium tw-text-ink">{title}</dt>
-      <dd className="tw-m-0 tw-leading-7 tw-text-secondary">{children}</dd>
-    </div>
-  );
-}
-
-/** 官网围绕可操作日历组织内容，使用同一控制器及主题，不复制平台数据能力。 */
+/** 官网使用共享日历及其主题控制器，并在工作区之后介绍主题与 Mac 版。 */
 export function Website({ controller }: { controller: CalendarController }) {
+  const calendar = useRef<HTMLElement>(null);
   const [motion, setMotion] = useState(true);
   const [reduced, setReduced] = useState(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -64,17 +59,25 @@ export function Website({ controller }: { controller: CalendarController }) {
     state.themeEdit?.theme ?? activeTheme(state.preferences.themes),
   );
   const hasPhoto = Boolean(background?.strength);
+
+  function showThemes() {
+    if (state.themeEdit) controller.resumeThemeEdit();
+    else controller.showSettings(true, 'appearance');
+    calendar.current?.focus({ preventScroll: true });
+    calendar.current?.scrollIntoView({ block: 'start' });
+  }
+
   return (
     <div className="website tw-text-ink">
       <a
         href="#calendar"
-        className="site-skip sr-only focus:tw-not-sr-only focus:tw-fixed focus:tw-left-4 focus:tw-top-4 focus:tw-z-50 focus:tw-rounded-lg focus:tw-bg-surface focus:tw-p-3 focus:tw-text-action"
+        className="sr-only focus:tw-not-sr-only focus:tw-fixed focus:tw-left-4 focus:tw-top-4 focus:tw-z-50 focus:tw-rounded-lg focus:tw-bg-surface focus:tw-p-3 focus:tw-text-action"
       >
         跳到日历
       </a>
       <main>
         <div
-          className="site-workspace tw-relative tw-isolate tw-overflow-hidden"
+          className="site-workspace tw-relative tw-isolate tw-overflow-hidden desktop:tw-min-h-[100svh]"
           data-theme-photo={hasPhoto || undefined}
         >
           {hasPhoto ? (
@@ -88,175 +91,185 @@ export function Website({ controller }: { controller: CalendarController }) {
               date={state.selected.date}
             />
           )}
-          <header className="tw-relative tw-mx-auto tw-flex tw-w-full tw-max-w-[1168px] tw-items-center tw-justify-between tw-gap-4 tw-px-6 tw-py-6 compact:tw-px-4 compact:tw-py-5">
-            <a
-              href="#calendar"
-              aria-label="i日历，回到日历"
-              className="site-theme-chrome tw-flex tw-items-center tw-gap-3 tw-text-ink tw-no-underline"
-            >
+          <header
+            className={`${contentWidth} tw-relative tw-flex tw-items-center tw-justify-between tw-gap-4 tw-py-5 compact:tw-py-3`}
+          >
+            <h1 className="site-theme-chrome tw-m-0 tw-flex tw-items-center tw-gap-2.5 tw-text-xl tw-font-semibold tw-tracking-tight">
               <img
                 src={logo}
                 width="32"
                 height="32"
                 alt=""
               />
-              <span className="tw-text-lg tw-font-semibold tw-tracking-tight">i日历</span>
-              <span className="tw-ml-2 tw-hidden tw-border-0 tw-border-l tw-border-solid tw-border-line tw-pl-5 tw-text-xs tw-text-ink sm:tw-inline">
-                时间，自有轨迹。
-              </span>
-            </a>
+              i日历
+            </h1>
             <nav
               aria-label="官网导航"
-              className="tw-flex tw-items-center tw-gap-6 tw-text-xs"
+              className="site-theme-chrome tw-flex tw-items-center tw-gap-6 tw-text-[13px] compact:tw-gap-4"
             >
-              {!hasPhoto ? (
-                <CalendarButton
-                  appearance="text"
-                  aria-pressed={motion && !reduced}
-                  disabled={reduced}
-                  onClick={() => setMotion((value) => !value)}
-                  title="系统减少动态效果时自动保持静态"
-                >
-                  {reduced ? '静态光轨' : motion ? '暂停光轨' : '播放光轨'}
-                </CalendarButton>
-              ) : null}
+              <a
+                href="#themes"
+                className="tw-inline-flex tw-min-h-11 tw-items-center tw-text-ink tw-no-underline hover:tw-text-action"
+              >
+                主题
+              </a>
               <a
                 href="#about"
-                className="site-theme-chrome tw-inline-flex tw-min-h-11 tw-items-center tw-gap-2 tw-text-ink tw-no-underline hover:tw-text-action"
+                className="tw-inline-flex tw-min-h-11 tw-items-center tw-gap-1.5 tw-text-ink tw-no-underline hover:tw-text-action"
               >
-                关于与下载 <Arrow down />
+                Mac 版 <Arrow down />
               </a>
             </nav>
           </header>
-          <div className="tw-relative">
-            <section
-              id="calendar"
-              aria-label="在线日历"
-              tabIndex={-1}
-              className="site-calendar tw-mx-auto tw-w-full tw-max-w-[1168px] tw-scroll-mt-4 tw-px-6 tw-pb-10 tw-pt-5 compact:tw-px-3 compact:tw-pb-6 compact:tw-pt-2"
-            >
-              <div className="tw-mb-8 tw-flex tw-items-end tw-justify-between tw-gap-4 tw-px-1 compact:tw-mb-5">
-                <div className="site-theme-chrome">
-                  <h1 className="tw-m-0 tw-text-[40px] tw-font-semibold tw-leading-tight tw-tracking-[-0.035em] compact:tw-text-[28px]">
-                    时间，触手可及。
-                  </h1>
-                  <p className="tw-mb-0 tw-mt-3 tw-text-[13px] tw-leading-6 tw-text-ink">
-                    公历与农历 · 节气与休班
-                  </p>
-                </div>
-                <span className="site-theme-chrome tw-hidden tw-pb-1 tw-text-xs tw-text-ink sm:tw-inline">
-                  北京时间 · 本地计算
-                </span>
-              </div>
-              <CalendarApp controller={controller} />
-              <p className="tw-mb-0 tw-mt-4 tw-text-center tw-text-[11px] tw-leading-5 tw-text-ink">
-                <span className="site-theme-chrome">
-                  点击日期查看详情
+          <section
+            id="calendar"
+            ref={calendar}
+            aria-label="在线日历"
+            tabIndex={-1}
+            className={`${contentWidth} site-calendar tw-relative tw-scroll-mt-3 tw-pb-10 compact:tw-pb-6`}
+          >
+            <CalendarApp controller={controller} />
+            {state.panel === 'calendar' && (
+              <div className="tw-mt-2 tw-flex tw-min-h-9 tw-flex-wrap tw-items-center tw-justify-between tw-gap-x-4 tw-px-1 tw-text-xs tw-text-ink">
+                <p className="site-theme-chrome tw-m-0 tw-leading-5">
+                  北京时间
                   <span className="tw-hidden desktop:tw-inline">
                     {' '}
                     · 方向键选日 · PageUp / PageDown 切月 · T 回到今天
                   </span>
-                </span>
-              </p>
-            </section>
-          </div>
+                </p>
+                {!hasPhoto && !reduced && (
+                  <CalendarButton
+                    appearance="text"
+                    className="aria-pressed:before:tw-bg-action-soft"
+                    aria-pressed={!motion}
+                    onClick={() => setMotion((value) => !value)}
+                  >
+                    暂停光轨
+                  </CalendarButton>
+                )}
+              </div>
+            )}
+          </section>
         </div>
+        <section
+          id="themes"
+          aria-labelledby="themes-title"
+          className="tw-scroll-mt-6 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-bg-surface"
+        >
+          <div
+            className={`${contentWidth} tw-grid tw-items-center tw-gap-8 tw-py-12 desktop:tw-grid-cols-[minmax(0,5fr)_minmax(0,8fr)] desktop:tw-gap-14 desktop:tw-py-20`}
+          >
+            <div>
+              <h2
+                id="themes-title"
+                className={sectionTitle}
+              >
+                日历主题
+              </h2>
+              <p className="tw-mb-0 tw-mt-4 tw-max-w-[31em] tw-text-sm tw-leading-7 tw-text-secondary">
+                选清爽白、暖纸色等内置配色，也可以让山雾透过半透明卡片。每款主题都有浅色、深色两套配色，支持跟随系统。
+              </p>
+              <p className="tw-mb-5 tw-mt-3 tw-max-w-[31em] tw-text-sm tw-leading-7 tw-text-secondary">
+                在外观设置里自定义颜色、透明度和背景图，切回月历实时预览。满意后可导出 ZIP
+                主题包分享。
+              </p>
+              <CalendarButton
+                appearance="neutral"
+                onClick={showThemes}
+              >
+                打开主题设置 <Arrow />
+              </CalendarButton>
+            </div>
+            <figure className="tw-m-0">
+              <img
+                src={mountainPreview}
+                width="1280"
+                height="800"
+                alt="山雾主题的网页版日历，远山背景透过浅色月历与日期详情"
+                className="tw-block tw-h-auto tw-w-full tw-rounded-2xl"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption className="tw-mt-3 tw-text-xs tw-text-secondary">山雾 · 浅色</figcaption>
+            </figure>
+          </div>
+        </section>
         <section
           id="about"
           aria-labelledby="about-title"
-          className="tw-scroll-mt-8 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-bg-surface"
+          className="tw-scroll-mt-6"
         >
-          <div className="tw-mx-auto tw-grid tw-max-w-[1168px] tw-gap-12 tw-px-6 tw-py-16 desktop:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)] desktop:tw-gap-20 compact:tw-px-5 compact:tw-py-10">
+          <div
+            className={`${contentWidth} tw-grid tw-items-start tw-gap-8 tw-py-12 desktop:tw-grid-cols-[minmax(0,5fr)_minmax(0,8fr)] desktop:tw-gap-14 desktop:tw-py-16`}
+          >
             <div>
               <h2
                 id="about-title"
-                className="tw-m-0 tw-max-w-[13em] tw-text-[32px] tw-font-semibold tw-leading-[1.45] tw-tracking-tight compact:tw-text-[26px]"
+                className={sectionTitle}
               >
-                网页随手查，
-                <br />
-                也可以常驻菜单栏。
+                i日历 Mac 版
               </h2>
-              <p className="tw-mb-7 tw-mt-5 tw-max-w-[34em] tw-text-sm tw-leading-7 tw-text-secondary">
-                免费、无广告的公农历。Mac
-                版让日历待在菜单栏，需要时轻轻一点。已收录的日期与调休数据支持离线查询。
+              <p className="tw-mb-5 tw-mt-4 tw-max-w-[31em] tw-text-sm tw-leading-7 tw-text-secondary">
+                点一下菜单栏，就能展开月历。已收录的日期与放假调休支持离线查询，菜单栏也可顺手显示时间。
               </p>
               <a
-                href={download}
-                className="site-download tw-inline-flex tw-min-h-12 tw-items-center tw-gap-7 tw-rounded-xl tw-bg-leaf tw-px-5 tw-py-3 tw-text-sm tw-font-medium tw-text-[var(--leaf-ink)] tw-no-underline tw-transition-colors hover:tw-bg-leaf-hover active:tw-bg-leaf-active"
+                href={release}
+                className="tw-box-border tw-inline-flex tw-min-h-11 tw-items-center tw-gap-3 tw-rounded-lg tw-bg-leaf tw-px-4 tw-text-sm tw-font-medium tw-text-[var(--leaf-ink)] tw-no-underline tw-transition-colors hover:tw-bg-leaf-hover active:tw-bg-leaf-active"
               >
-                下载 Mac 版 <Arrow down />
+                前往下载 Mac 版 <Arrow />
               </a>
-              <p className="tw-mb-0 tw-mt-4 tw-text-xs tw-leading-6 tw-text-secondary">
-                v{version} · Apple 芯片 · macOS 13 及以上
-                <br />
-                Intel 与 iOS 安装包尚未提供。
-              </p>
-              <p className="tw-mb-0 tw-mt-3 tw-max-w-[34em] tw-text-xs tw-leading-6 tw-text-secondary">
-                Mac 版采用 ad-hoc 本地签名，尚未通过 Apple 公证。
-                <a
-                  href={release}
-                  className={textLink}
-                >
-                  查看安装说明与版本更新
-                </a>
+              <p className="tw-mb-0 tw-mt-3 tw-max-w-[36em] tw-text-xs tw-leading-6 tw-text-secondary">
+                Apple 芯片，macOS 13 或更新版本。应用采用 ad-hoc 本地签名，尚未通过 Apple
+                公证。安装步骤见下载页。
               </p>
             </div>
-            <dl className="tw-m-0 tw-text-[13px]">
-              <InfoRow title="同一本日历">
-                Mac 与网页版复用日历核心和界面。公农历、节日、二十四节气与黄历，在同一处查看。
-              </InfoRow>
-              <InfoRow title="休假与补班">
-                根据中国大陆全国统一安排整理，常规周末与放假、补班分别标记。未收录年份会明确提示；个人排班以所在单位为准。
-              </InfoRow>
-              <InfoRow title="来源可追溯">
-                调休来源与黄历计算口径可在日历设置中查看。历法在本地计算；黄历仅作传统文化参考，不同流派可能有差异。
-              </InfoRow>
-              <InfoRow title="开源，保持简单">
-                项目以 MIT 许可证开源，无需注册账户。
-                <a
-                  href={repository}
-                  className={textLink}
-                >
-                  在 GitHub 查看源码
-                </a>
-              </InfoRow>
-            </dl>
+            <div className="tw-grid tw-gap-5 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-pt-5 desktop:tw-grid-cols-2 desktop:tw-border-t-0 desktop:tw-pt-2">
+              <div>
+                <h3 className="tw-m-0 tw-text-sm tw-font-semibold">放假与补班</h3>
+                <p className="tw-mb-0 tw-mt-2 tw-text-[13px] tw-leading-6 tw-text-secondary">
+                  按中国大陆全国统一安排标注。放假、补班和普通周末分别显示，未收录的年份会明确提示。
+                </p>
+              </div>
+              <div>
+                <h3 className="tw-m-0 tw-text-sm tw-font-semibold">农历与黄历</h3>
+                <p className="tw-mb-0 tw-mt-2 tw-text-[13px] tw-leading-6 tw-text-secondary">
+                  公农历和节气在本地计算。传统宜忌、干支和方位可在日期详情查看，数据来源见设置「关于」。
+                </p>
+              </div>
+            </div>
           </div>
         </section>
       </main>
-      <footer className="tw-mx-auto tw-flex tw-max-w-[1168px] tw-flex-wrap tw-items-center tw-justify-between tw-gap-4 tw-px-6 tw-py-7 tw-text-xs tw-text-secondary compact:tw-px-5">
-        <span className="tw-inline-flex tw-items-center tw-gap-2">
-          <img
-            src={logo}
-            width="20"
-            height="20"
-            alt=""
-          />
-          i日历 · 查日子，打开就好。
-        </span>
-        <nav
-          aria-label="项目链接"
-          className="tw-flex tw-gap-5"
+      <footer className="tw-border-0 tw-border-t tw-border-solid tw-border-line">
+        <div
+          className={`${contentWidth} tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-4 tw-py-6 tw-text-xs tw-text-secondary`}
         >
-          <a
-            href={repository}
-            className={textLink}
+          <span>i日历 · 免费、无广告、无需登录</span>
+          <nav
+            aria-label="项目链接"
+            className="tw-flex tw-flex-wrap tw-gap-x-5 tw-gap-y-2"
           >
-            GitHub
-          </a>
-          <a
-            href={release}
-            className={textLink}
-          >
-            版本说明
-          </a>
-          <a
-            href="./third-party-licenses.txt"
-            className={textLink}
-          >
-            许可声明
-          </a>
-        </nav>
+            <a
+              href={repository}
+              className={textLink}
+            >
+              GitHub
+            </a>
+            <a
+              href={release}
+              className={textLink}
+            >
+              版本说明
+            </a>
+            <a
+              href="./third-party-licenses.txt"
+              className={textLink}
+            >
+              许可声明
+            </a>
+          </nav>
+        </div>
       </footer>
     </div>
   );
