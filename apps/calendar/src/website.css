@@ -1,7 +1,3 @@
-/* 仪表台边界在首屏就绪时收拢一次；内容始终可见，不等待动画才能使用。 */
-.site-calendar > .calendar-app {
-  animation: calendar-resolve 480ms var(--motion-ease) both;
-}
 .site-workspace[data-theme-photo='true'] > .theme-backdrop::after {
   position: absolute;
   inset: 0;
@@ -14,37 +10,11 @@
   );
   content: '';
 }
+
 .site-workspace[data-theme-photo='true'] .site-theme-chrome {
   border-radius: 12px;
-  padding: 8px 12px;
+  padding-inline: 8px;
   background: var(--surface);
-}
-@keyframes calendar-resolve {
-  from {
-    clip-path: inset(0 0 0 0 round 8px);
-    transform: perspective(1200px) rotateX(2deg) translateY(10px);
-  }
-  to {
-    clip-path: inset(0 0 0 0 round 22px);
-    transform: translateY(0);
-  }
-}
-.site-download svg {
-  transition: transform var(--motion-state) var(--motion-ease);
-}
-@media (hover: hover) {
-  .site-download:hover svg {
-    transform: translateY(3px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .site-calendar > .calendar-app {
-    animation: none;
-  }
-  .site-download svg {
-    transition: none;
-    transform: none;
-  }
 }
 
 /* 官网用数字本身表达所选日期，菜单栏继续沿用纸页造型。 */
