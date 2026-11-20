@@ -407,6 +407,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
           holidays={controller.holidays}
           selectedDate={state.selected.date}
           today={state.today}
+          weekStartsOn={state.preferences.weekStartsOn}
           backLabel={calculatorFromSettings ? '返回设置' : '返回日历'}
           onBack={() => controller.backFromCalculator()}
           onViewDate={(date) => {

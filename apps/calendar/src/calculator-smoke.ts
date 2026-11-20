@@ -54,8 +54,26 @@ export function verifyDateCalculator(controller: CalendarController) {
     if (controller.getSnapshot().panel !== 'settings') throw new Error('Esc 未返回设置');
     click(settingsEntry);
     fill('calculator-start', '2024-02-28');
-    fill('calculator-end', '2024-03-01');
+    fill('calculator-end', '2024-02-28');
+    const endPicker = 'button[aria-label="选择结束日期"]';
+    const picker = '[data-calendar-popup="date-picker"][data-state="open"]';
+    click(endPicker);
+    click(`${picker} [data-date="2024-02-29"]`);
+    requireResult('相隔 1 天');
+    click(endPicker);
+    click(`${picker} button[aria-label="下个月"]`);
+    click(`${picker} [data-date="2024-03-01"]`);
     requireResult('相隔 2 天');
+    click(endPicker);
+    flushSync(() => {
+      document
+        .querySelector(picker)
+        ?.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+        );
+    });
+    if (document.querySelector(picker) || controller.getSnapshot().panel !== 'calculator')
+      throw new Error('Esc 未单独收起日期选择器');
     click('[role="radio"]', '前后推算');
     fill('calculator-start', '2026-11-17');
     fill('calculator-amount', '100');

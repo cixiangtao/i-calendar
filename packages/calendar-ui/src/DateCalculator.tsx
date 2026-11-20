@@ -9,6 +9,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
+import { CalendarDatePicker } from './CalendarDatePicker.js';
 import { CalendarInput } from './CalendarInput.js';
 import { CalendarSegmented } from './CalendarSegmented.js';
 import { CalendarSwitch } from './CalendarSwitch.js';
@@ -19,6 +20,7 @@ interface DateCalculatorProps {
   holidays: HolidayStore;
   selectedDate: DateKey;
   today: DateKey;
+  weekStartsOn: 1 | 7;
   backLabel: string;
   onBack: () => void;
   onViewDate: (date: DateKey) => void;
@@ -33,51 +35,12 @@ function dateError(value: string) {
   }
 }
 
-function DateField({
-  id,
-  label,
-  value,
-  error,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  error: string | null;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="tw-flex tw-min-w-0 tw-flex-col tw-gap-2">
-      <label htmlFor={id}>{label}</label>
-      <CalendarInput
-        id={id}
-        value={value}
-        placeholder="YYYY-MM-DD"
-        maxLength={10}
-        autoComplete="off"
-        spellCheck={false}
-        status={error ? 'error' : undefined}
-        aria-invalid={!!error}
-        aria-describedby={error ? `${id}-error` : 'calculator-date-hint'}
-        onChange={(event) => onChange(event.target.value)}
-      />
-      {error ? (
-        <p
-          id={`${id}-error`}
-          className="tw-m-0 tw-text-xs tw-leading-5 tw-text-red"
-        >
-          {error}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
 /** 本地日期工具复用共享核心；草稿只在本次工具页面内保留，不写入用户偏好。 */
 export function DateCalculator({
   holidays,
   selectedDate,
   today,
+  weekStartsOn,
   backLabel,
   onBack,
   onViewDate,
@@ -200,11 +163,14 @@ export function DateCalculator({
         >
           日期格式为 YYYY-MM-DD，支持 1901—2100 年。
         </p>
-        <div className="tw-grid tw-grid-cols-2 tw-items-start tw-gap-4">
-          <DateField
+        <div className="tw-grid tw-grid-cols-[repeat(auto-fit,minmax(min(100%,138px),1fr))] tw-items-start tw-gap-3">
+          <CalendarDatePicker
             id="calculator-start"
             label="起始日期"
             value={start}
+            today={today}
+            weekStartsOn={weekStartsOn}
+            aria-describedby="calculator-date-hint"
             error={startError}
             onChange={setStart}
           />
@@ -234,10 +200,13 @@ export function DateCalculator({
               ) : null}
             </div>
           ) : (
-            <DateField
+            <CalendarDatePicker
               id="calculator-end"
               label="结束日期"
               value={end}
+              today={today}
+              weekStartsOn={weekStartsOn}
+              aria-describedby="calculator-date-hint"
               error={endError}
               onChange={setEnd}
             />

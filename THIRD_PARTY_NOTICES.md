@@ -32,7 +32,7 @@
 
 ## 界面与应用运行组件
 
-界面使用 React 19.3.1、React DOM 19.3.1 与 Radix Primitives（MIT）：Select 2.4.1、Switch 1.4.1、Tabs 1.2.1、Context Menu 2.4.1、Radio Group 1.5.1。原生壳使用 Tauri 2 及 opener、clipboard-manager、single-instance、updater、autostart 插件（MIT / Apache-2.0，具体以锁定依赖为准）。开发工具包括 pnpm、oxlint、oxfmt、Tailwind CSS、PostCSS、Autoprefixer、Vite、TypeScript、esbuild 与 Rust 工具链。
+界面使用 React 19.3.1、React DOM 19.3.1 与 Radix Primitives（MIT）：Select 2.4.1、Switch 1.4.1、Tabs 1.2.1、Context Menu 2.4.1、Radio Group 1.5.1、Popover 1.3.1。原生壳使用 Tauri 2 及 opener、clipboard-manager、single-instance、updater、autostart 插件（MIT / Apache-2.0，具体以锁定依赖为准）。开发工具包括 pnpm、oxlint、oxfmt、Tailwind CSS、PostCSS、Autoprefixer、Vite、TypeScript、esbuild 与 Rust 工具链。
 
 主题包导入与导出使用 [zip.js 2.25.0](https://github.com/gildas-lormeau/zip.js)，采用 BSD-3-Clause 许可证。
 

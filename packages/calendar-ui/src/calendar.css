@@ -271,7 +271,10 @@ body[data-platform='macos'] .calendar-app[data-panel='calculator'] {
 [data-calendar-popup] {
   transform-origin: var(
     --radix-select-content-transform-origin,
-    var(--radix-context-menu-content-transform-origin, top left)
+    var(
+      --radix-context-menu-content-transform-origin,
+      var(--radix-popover-content-transform-origin, top left)
+    )
   );
 }
 [data-calendar-popup][data-state='open'] {

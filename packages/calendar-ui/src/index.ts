@@ -27,6 +27,8 @@ export { CalendarContextMenu } from './CalendarContextMenu.js';
 export type { CalendarContextMenuProps } from './CalendarContextMenu.js';
 export { CalendarInput } from './CalendarInput.js';
 export type { CalendarInputProps } from './CalendarInput.js';
+export { CalendarDatePicker } from './CalendarDatePicker.js';
+export type { CalendarDatePickerProps } from './CalendarDatePicker.js';
 export type {
   ColorThemeId,
   ColorToken,
