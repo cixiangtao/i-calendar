@@ -59,7 +59,7 @@ if (!release) {
           await gh('api', '--method', 'POST', `repos/${repository}/releases`, '--input', request),
         );
       },
-      { tag, commit, version, notes: await readFile(`docs/releases/${version}.md`, 'utf8') },
+      { tag, version, notes: await readFile(`docs/releases/${version}.md`, 'utf8') },
     );
   } finally {
     await rm(temporary, { recursive: true, force: true });
@@ -117,6 +117,7 @@ for (const { name, file } of payloads) {
   assert.ok(asset, `附件名称不一致：${name}`);
   if (asset.digest) assert.equal(asset.digest, `sha256:${await digest(file)}`);
 }
+assert.equal((await api(`repos/${repository}/commits/${tag}`)).sha, commit, '远程标签已变化');
 await gh(
   'api',
   '--method',

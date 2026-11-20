@@ -10,14 +10,13 @@ import { createDraftRelease, preparePublication, selectRelease } from './github-
 test('新草稿直接采用创建响应，中文多行说明原样传递，响应身份异常时拒绝继续', async () => {
   const metadata = {
     tag: 'v1.0.4',
-    commit: 'a'.repeat(40),
     version: '1.0.4',
     notes: '# 版本说明\n\n八主色与主题包\n',
   };
   const response = { id: 42, tag_name: 'v1.0.4', draft: true, prerelease: false, assets: [] };
   const created = await createDraftRelease(async (body) => {
     assert.equal(body.tag_name, metadata.tag);
-    assert.equal(body.target_commitish, metadata.commit);
+    assert.equal('target_commitish' in body, false);
     assert.equal(body.body, metadata.notes);
     assert.equal(body.draft, true);
     assert.equal(body.prerelease, false);

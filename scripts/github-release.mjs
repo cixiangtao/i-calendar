@@ -12,13 +12,11 @@ export function selectRelease(releases, tag) {
   return matches[0] ?? null;
 }
 
-/** 使用创建接口返回的草稿身份，避免依赖刚创建后可能尚未更新的列表查询。 */
-export async function createDraftRelease(create, { tag, commit, version, notes }) {
+/** 为调用方已验证的现有标签创建草稿，直接采用创建响应返回的身份。 */
+export async function createDraftRelease(create, { tag, version, notes }) {
   assert.equal(tag, `v${version}`);
-  assert.match(commit, /^[a-f0-9]{40}$/);
   const release = await create({
     tag_name: tag,
-    target_commitish: commit,
     name: `i日历 ${version}`,
     body: notes,
     draft: true,
