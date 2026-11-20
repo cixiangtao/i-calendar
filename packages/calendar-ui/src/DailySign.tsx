@@ -151,15 +151,19 @@ export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
                   {result.sign.rank}
                 </span>
               </header>
-              <dl className="tw-mx-0 tw-mb-0 tw-mt-2.5 tw-grid tw-grid-cols-[22px_minmax(0,_1fr)] tw-items-start tw-gap-x-2.5 tw-gap-y-2 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-pt-2.5 tw-text-[13px] tw-leading-[22px]">
-                <dt className="tw-rounded-md tw-bg-green-soft tw-text-center tw-text-xs tw-font-semibold tw-text-green">
-                  宜
+              <dl className="tw-mx-0 tw-mb-0 tw-mt-2.5 tw-grid tw-grid-cols-[22px_minmax(0,_1fr)] tw-items-start tw-gap-x-2.5 tw-gap-y-2 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-pt-2.5 tw-text-[13px] tw-leading-[var(--sign-line-height)] [--sign-line-height:22px] [&>dt]:tw-grid [&>dt]:tw-h-[var(--sign-line-height)] [&>dt]:tw-items-center">
+                <dt>
+                  <span className="tw-rounded-md tw-bg-green-soft tw-text-center tw-text-xs tw-font-semibold tw-text-green">
+                    宜
+                  </span>
                 </dt>
                 <dd className="tw-m-0">
                   <SignActivities activities={result.sign.good} />
                 </dd>
-                <dt className="tw-rounded-md tw-bg-red-soft tw-text-center tw-text-xs tw-font-semibold tw-text-red">
-                  忌
+                <dt>
+                  <span className="tw-rounded-md tw-bg-red-soft tw-text-center tw-text-xs tw-font-semibold tw-text-red">
+                    忌
+                  </span>
                 </dt>
                 <dd className="tw-m-0">
                   <SignActivities activities={result.sign.bad} />
