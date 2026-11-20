@@ -1,6 +1,6 @@
 import type { CalendarDay } from '@i-calendar/core';
 import type { FortuneItem } from 'acer-almanac';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 
 import { CalendarButton } from './CalendarButton.js';
 
@@ -9,9 +9,10 @@ type DailySignResult = { status: 'loading' | 'error' } | { status: 'ready'; item
 /** 为当前选中日按需展开生活灵感，选日时由调用方重置展开状态。 */
 export function DailySign({ day }: { day: CalendarDay }) {
   const contentId = useId();
-  const content = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
+  const [requestedOpen, setRequestedOpen] = useState(false);
   const [result, setResult] = useState<DailySignResult>();
+  // 内容就绪后再展开，让页面和 Mac 悬浮窗只发生一次高度变化。
+  const open = requestedOpen && !!result && result.status !== 'loading';
 
   async function loadSign() {
     setResult({ status: 'loading' });
@@ -24,12 +25,6 @@ export function DailySign({ day }: { day: CalendarDay }) {
     }
   }
 
-  useEffect(() => {
-    if (open && result && result.status !== 'loading') {
-      content.current?.scrollIntoView({ block: 'nearest' });
-    }
-  }, [open, result]);
-
   return (
     <div className="tw-mt-3 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-pt-2">
       <CalendarButton
@@ -37,14 +32,15 @@ export function DailySign({ day }: { day: CalendarDay }) {
         className="tw-w-full tw-justify-between [--form-inset:6px]"
         aria-expanded={open}
         aria-controls={contentId}
+        aria-busy={(requestedOpen && result?.status === 'loading') || undefined}
         onClick={() => {
-          setOpen(!open);
-          if (!open && (!result || result.status === 'error')) void loadSign();
+          setRequestedOpen(!requestedOpen);
+          if (!requestedOpen && (!result || result.status === 'error')) void loadSign();
         }}
         onKeyDown={(event) => {
-          if (open && event.key === 'Escape') {
+          if (requestedOpen && event.key === 'Escape') {
             event.preventDefault();
-            setOpen(false);
+            setRequestedOpen(false);
           }
         }}
       >
@@ -72,7 +68,6 @@ export function DailySign({ day }: { day: CalendarDay }) {
         </svg>
       </CalendarButton>
       <div
-        ref={content}
         id={contentId}
         hidden={!open}
         className="tw-px-1.5 tw-pb-2 tw-pt-3"
@@ -100,11 +95,11 @@ export function DailySign({ day }: { day: CalendarDay }) {
               按日期生成，仅供娱乐。
             </p>
           </>
-        ) : (
+        ) : result?.status === 'error' ? (
           <output className="tw-block tw-text-xs tw-leading-5 tw-text-secondary">
-            {result?.status === 'error' ? '每日签加载失败，可收起后重试。' : '正在加载每日签…'}
+            每日签加载失败，可收起后重试。
           </output>
-        )}
+        ) : null}
       </div>
     </div>
   );
