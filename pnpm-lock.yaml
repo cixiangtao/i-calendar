@@ -162,6 +162,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  acer-almanac@1.0.4: ea52e3cd9c46f002877a3ea0830cbb4dc0c03904e7b14a8531d132702e803304
+
 importers:
 
   .:
@@ -271,7 +274,7 @@ importers:
         version: 2.25.0
       acer-almanac:
         specifier: 1.0.4
-        version: 1.0.4
+        version: 1.0.4(patch_hash=ea52e3cd9c46f002877a3ea0830cbb4dc0c03904e7b14a8531d132702e803304)
       markdown-to-jsx:
         specifier: 9.10.6
         version: 9.10.6(react@19.3.1)
@@ -3574,7 +3577,7 @@ snapshots:
 
   '@zip.js/zip.js@2.25.0': {}
 
-  acer-almanac@1.0.4: {}
+  acer-almanac@1.0.4(patch_hash=ea52e3cd9c46f002877a3ea0830cbb4dc0c03904e7b14a8531d132702e803304): {}
 
   agent-base@9.0.0: {}
 

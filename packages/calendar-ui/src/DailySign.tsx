@@ -4,16 +4,22 @@ import { Fragment, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { CalendarButton } from './CalendarButton.js';
 import type { createDailySign } from './daily-sign-content.js';
 import { DailySignCup } from './DailySignCup.js';
+import type { DailySignStorage } from './platform.js';
 
 type DailySignResult =
-  | { status: 'loading' | 'error' }
-  | { status: 'ready'; sign: ReturnType<typeof createDailySign> };
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'ready'; sign: ReturnType<typeof createDailySign>; seed: string; drawn: boolean };
 
 interface DailySignProps {
   day: CalendarDay;
-  drawn: boolean;
-  onDrawn: () => void;
-  onReset?: () => void;
+  storage: DailySignStorage;
+  canReset?: boolean;
+}
+
+function randomSeed() {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 function SignActivities({ activities }: { activities: readonly string[] }) {
@@ -31,24 +37,30 @@ function SignActivities({ activities }: { activities: readonly string[] }) {
   });
 }
 
-/** 展开所选日期的签筒，摇签结束后揭晓同一天固定的签文。 */
-export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
+/** 展开当天的签筒，摇签结束后保存并揭晓本机抽到的签。 */
+export function DailySign({ day, storage, canReset }: DailySignProps) {
   const contentId = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const drawButton = useRef<HTMLButtonElement>(null);
+  const saving = useRef(false);
   const [requestedOpen, setRequestedOpen] = useState(false);
   const [drawing, setDrawing] = useState(false);
   const [result, setResult] = useState<DailySignResult>();
   // 筒与签面共同决定展开高度，加载完成后一次呈现。
   const open = requestedOpen && !!result && result.status !== 'loading';
+  const drawn = result?.status === 'ready' && result.drawn;
 
-  async function loadSign() {
-    setResult({ status: 'loading' });
+  async function loadSign(reset = false) {
+    if (!reset) setResult({ status: 'loading' });
     try {
-      const { createDailySign } = await import('./daily-sign-content.js');
-      setResult({ status: 'ready', sign: createDailySign(day) });
+      const [{ createDailySign }, saved] = await Promise.all([
+        import('./daily-sign-content.js'),
+        reset ? storage.reset(day.date) : storage.load(day.date),
+      ]);
+      const seed = saved ?? randomSeed();
+      setResult({ status: 'ready', sign: createDailySign(day, seed), seed, drawn: !!saved });
     } catch {
-      setResult({ status: 'error' });
+      setResult({ status: 'error', message: '每日签加载失败，可收起后重试。' });
     }
   }
 
@@ -60,16 +72,29 @@ export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
     trigger.current?.focus({ preventScroll: true });
   }
 
-  function reveal() {
-    if (document.activeElement === drawButton.current)
-      trigger.current?.focus({ preventScroll: true });
-    setDrawing(false);
-    onDrawn();
+  async function reveal() {
+    if (result?.status !== 'ready' || result.drawn || saving.current) return;
+    saving.current = true;
+    try {
+      const seed = await storage.draw(day.date, result.seed);
+      const sign =
+        seed === result.seed
+          ? result.sign
+          : (await import('./daily-sign-content.js')).createDailySign(day, seed);
+      if (document.activeElement === drawButton.current)
+        trigger.current?.focus({ preventScroll: true });
+      setResult({ status: 'ready', sign, seed, drawn: true });
+    } catch {
+      setResult({ status: 'error', message: '每日签保存失败，可收起后重试。' });
+    } finally {
+      saving.current = false;
+      setDrawing(false);
+    }
   }
 
   function draw() {
-    if (drawing) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) reveal();
+    if (drawing || saving.current) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) void reveal();
     else setDrawing(true);
   }
 
@@ -133,7 +158,7 @@ export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
               <span className="daily-sign-hover tw-pointer-events-none tw-shrink-0">
                 <DailySignCup
                   drawing={drawing}
-                  onDrawn={reveal}
+                  onDrawn={() => void reveal()}
                 />
               </span>
               <span aria-hidden="true">{drawing ? '摇签中…' : '摇一签'}</span>
@@ -170,13 +195,13 @@ export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
                 </dd>
               </dl>
               <div className="tw-mt-2.5 tw-flex tw-items-center tw-gap-2">
-                {onReset ? (
+                {canReset ? (
                   <CalendarButton
                     appearance="text"
                     className="[--form-font-size:11px] [--form-height:24px] [--form-inset:6px]"
                     onClick={() => {
                       trigger.current?.focus({ preventScroll: true });
-                      onReset();
+                      void loadSign(true);
                     }}
                     onKeyDown={handleEscape}
                   >
@@ -194,7 +219,7 @@ export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
           </div>
         ) : result?.status === 'error' ? (
           <output className="tw-block tw-px-1.5 tw-text-xs tw-leading-5 tw-text-secondary">
-            每日签加载失败，可收起后重试。
+            {result.message}
           </output>
         ) : null}
       </div>

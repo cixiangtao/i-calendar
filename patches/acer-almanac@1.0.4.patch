@@ -1,0 +1,33 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 046632bd19d0480ec9cae212f3c96d9aaea53306..965d2ebedc020de3b35563f0fa30c93a232f39bd 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -91,9 +91,10 @@ declare const generateFortuneV1: (date: CalendarDate) => FortuneResult;
+ /**
+  * Generates the current deterministic fortune result for a date.
+  *
++ * An optional salt produces an independent draw for the same date.
+  * The selection contains no duplicate activities or images.
+  */
+-declare const generateFortuneV2: (date: CalendarDate) => FortuneResult;
++declare const generateFortuneV2: (date: CalendarDate, salt?: string) => FortuneResult;
+ /** Alias for the current fortune algorithm. */
+ declare const generateFortune: typeof generateFortuneV2;
+ //#endregion
+diff --git a/dist/index.js b/dist/index.js
+index 64e4f58d2083acfc320431f3e2ccd98132beb46f..c53061ce119192b00be4b84f24b312c3211dfc3e 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -890,9 +890,10 @@ const selectV2Items = (candidates, images, imageOffset, weights, categoryUsage,
+ *
+ * The selection contains no duplicate activities or images.
+ */
+-const generateFortuneV2 = (date) => {
++const generateFortuneV2 = (date, salt = "") => {
+ 	assertCalendarDate(date);
+-	const random = createRandom(hashString(`${FORTUNE_NAMESPACE}|${formatIsoDate(date)}`));
++	const dateSeed = `${FORTUNE_NAMESPACE}|${formatIsoDate(date)}`;
++	const random = createRandom(hashString(salt ? `${dateSeed}|${salt}` : dateSeed));
+ 	const goodCount = 2 + randomInteger(random, 3);
+ 	const badCount = 2 + randomInteger(random, 3);
+ 	const candidates = [...FORTUNE_CONTENT];

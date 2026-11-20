@@ -7,7 +7,12 @@ export type { CalendarSelectOption, CalendarSelectProps } from './CalendarSelect
 export { CalendarController, parseSavedState } from './store.js';
 export { bindPageLifecycle } from './page-lifecycle.js';
 export type { CalendarSnapshot } from './store.js';
-export type { CalendarPlatform, CalendarPreferences, SavedCalendarState } from './platform.js';
+export type {
+  CalendarPlatform,
+  CalendarPreferences,
+  DailySignStorage,
+  SavedCalendarState,
+} from './platform.js';
 export { AppUpdateController } from './app-update.js';
 export type { AppRelease, AppUpdater, AppUpdateProgress } from './app-update.js';
 export { LaunchAtLoginController } from './launch-at-login.js';

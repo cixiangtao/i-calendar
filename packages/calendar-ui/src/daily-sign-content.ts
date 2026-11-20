@@ -69,9 +69,9 @@ const signTitles: Partial<Record<string, string>> = {
   'play-with-pet': '它来选',
 };
 
-/** 同一公历日得到同一张签。签等由 acer 的完整宜忌条目数决定。 */
-export function createDailySign(day: Pick<CalendarDay, 'year' | 'month' | 'day'>) {
-  const { good, bad } = generateFortuneV2(day);
+/** 用当天日期和本地抽签种子计算签面，签等由 acer 的完整宜忌条目数决定。 */
+export function createDailySign(day: Pick<CalendarDay, 'year' | 'month' | 'day'>, seed: string) {
+  const { good, bad } = generateFortuneV2(day, seed);
   const [lead] = good;
   if (!lead) throw new Error('每日签缺少主签');
 

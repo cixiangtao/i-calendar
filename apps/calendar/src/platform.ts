@@ -7,6 +7,7 @@ import type {
 } from '@i-calendar/ui';
 import { Channel, isTauri, invoke } from '@tauri-apps/api/core';
 
+import { createDailySignStorage } from './daily-sign-storage.js';
 import { browserLocate, nativeLocate } from './location.js';
 
 const STORAGE_KEY = 'i-calendar:state:v1';
@@ -55,6 +56,7 @@ function browserPlatform(): CalendarPlatform {
   return {
     kind: 'web',
     development: import.meta.env.DEV,
+    dailySign: createDailySignStorage(),
     locate: browserLocate,
     async load() {
       const value = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -135,6 +137,7 @@ export async function createPlatform(): Promise<{
     platform: {
       kind: context.kind,
       development: context.development || import.meta.env.DEV,
+      dailySign: context.smokeTest ? undefined : createDailySignStorage(),
       ...(!context.smokeTest
         ? {
             async locate(signal: AbortSignal, requestPermission: boolean) {
