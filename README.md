@@ -31,7 +31,7 @@
 
 ## 安装 Mac 版
 
-当前版本 **2.3.0**。Mac 安装包适用于 Apple 芯片（arm64）和 macOS 13 或更新版本。解压后把「i日历」拖进「应用程序」，打开后从系统菜单栏使用。右键菜单栏图标可直达设置和日期计算。[打开正式版下载页](https://github.com/cixiangtao/i-calendar/releases/latest)
+当前版本 **2.4.0**。Mac 安装包适用于 Apple 芯片（arm64）和 macOS 13 或更新版本。解压后把「i日历」拖进「应用程序」，打开后从系统菜单栏使用。右键菜单栏图标可直达设置和日期计算。[打开正式版下载页](https://github.com/cixiangtao/i-calendar/releases/latest)
 
 应用采用 ad-hoc 本地签名，尚未通过 Apple 公证。若 macOS 提示无法验证开发者，请核对 Release 提供的 SHA-256，再到「系统设置 → 隐私与安全性」选择「仍要打开」。[应用内更新说明](docs/自动更新.md)
 
