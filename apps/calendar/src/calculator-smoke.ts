@@ -66,10 +66,22 @@ export function verifyDateCalculator(controller: CalendarController) {
       [-2, '1 天前'],
     ] as const) {
       if (shift) flushSync(() => controller.moveSelection(shift));
+      const { selected } = controller.getSnapshot();
+      const summary = document.querySelector('.date-summary');
+      const title = summary?.querySelector('h2 time');
+      if (
+        title?.getAttribute('datetime') !== selected.date ||
+        title.textContent !== `${selected.month}月${selected.day}日`
+      )
+        throw new Error(`日期详情标题未显示所选月日：${selected.date}`);
       const distance = document.querySelector('.date-summary .date-distance');
       if (distance?.textContent !== expected)
         throw new Error(`日期详情天数不符，预期：${expected ?? '今天省略天数'}`);
     }
+    click('.today-button', '回到今天');
+    const { selected, today } = controller.getSnapshot();
+    if (selected.date !== today || document.querySelector('.date-summary .date-distance'))
+      throw new Error('回到今天后未恢复当天详情');
     flushSync(() => controller.selectDate(originalDate));
     flushSync(() => controller.showSettings(true, 'data'));
     click(settingsEntry);

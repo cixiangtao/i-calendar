@@ -127,22 +127,6 @@ a:focus-visible {
   background: var(--yellow-soft);
   color: var(--yellow);
 }
-.date-leaf::before,
-.date-leaf::after {
-  position: absolute;
-  content: '';
-  top: 7px;
-  width: 4px;
-  height: 4px;
-  background: var(--leaf-ink);
-  border-radius: 50%;
-}
-.date-leaf::before {
-  left: 10px;
-}
-.date-leaf::after {
-  right: 10px;
-}
 .schedule-badge.schedule-holiday,
 .schedule-badge.schedule-weekend {
   color: var(--red);
@@ -242,19 +226,6 @@ body[data-platform] .calendar-app[data-theme-photo='true'] {
     width: min(640px, 100%);
     grid-template-columns: minmax(0, 1fr);
   }
-  body[data-platform='web'] .date-leaf::before,
-  body[data-platform='web'] .date-leaf::after {
-    top: 11px;
-    width: 5px;
-    height: 5px;
-  }
-  body[data-platform='web'] .date-leaf::before {
-    left: 16px;
-  }
-  body[data-platform='web'] .date-leaf::after {
-    right: 16px;
-  }
-
   body[data-platform='web'] .calendar-app[data-panel='settings'],
   body[data-platform='web'] .calendar-app[data-panel='calculator'] {
     width: 560px;
@@ -324,19 +295,6 @@ body[data-platform='macos'] .calendar-app[data-panel='calculator'] {
     /* 只设置时长会启动默认的 all 过渡，让隐藏窗口暂时读到旧主题色。 */
     transition: none !important;
     scroll-behavior: auto !important;
-  }
-}
-.date-leaf > span {
-  animation: selected-date-change 160ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes selected-date-change {
-  from {
-    opacity: 0.6;
-    transform: translateY(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 .almanac-pillars > div + div::before {

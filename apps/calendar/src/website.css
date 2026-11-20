@@ -16,9 +16,3 @@
   padding-inline: 8px;
   background: var(--surface);
 }
-
-/* 官网用数字本身表达所选日期，菜单栏继续沿用纸页造型。 */
-body[data-platform='web'] .date-leaf::before,
-body[data-platform='web'] .date-leaf::after {
-  content: none;
-}

@@ -82,12 +82,12 @@ export const colorTokenGroups = [
     ],
   },
   {
-    label: '日期叶片与开关',
+    label: '今日日期、主要操作与开关',
     items: [
-      { key: '--leaf', label: '日期叶片与开启轨道' },
-      { key: '--leaf-ink', label: '日期叶片文字与圆孔' },
-      { key: '--leaf-hover', label: '开启轨道悬停' },
-      { key: '--leaf-active', label: '开启轨道按下' },
+      { key: '--leaf', label: '今日日期、主要按钮与开启轨道底色' },
+      { key: '--leaf-ink', label: '今日日期与主要按钮文字' },
+      { key: '--leaf-hover', label: '主要按钮与开启轨道悬停' },
+      { key: '--leaf-active', label: '主要按钮与开启轨道按下' },
       { key: '--switch-thumb', label: '开关滑块' },
       { key: '--switch-off', label: '关闭轨道' },
       { key: '--switch-off-hover', label: '关闭轨道悬停' },

@@ -148,6 +148,7 @@ function Feedback({
 export function CalendarApp({ controller }: { controller: CalendarController }) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const daysFromToday = daysBetween(state.today, state.selected.date);
+  const isSelectedToday = daysFromToday === 0;
   const isMac = controller.platform.kind === 'macos';
   useSunlightLocation(controller, state.ready, state.preferences.sunlight.mode);
   const [systemDark, setSystemDark] = useState(
@@ -491,14 +492,14 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   />
                 </nav>
               </div>
-              <div className="tw-ml-auto tw-flex tw-shrink-0 tw-items-center tw-gap-1 web:compact:coarse:tw-absolute web:compact:coarse:tw-right-3 web:compact:coarse:tw-top-2 tiny:coarse:tw-gap-0">
+              <div className="tw-ml-auto tw-flex tw-shrink-0 tw-items-center tw-gap-1 web:compact:tw-absolute web:compact:tw-right-3 web:compact:tw-top-3 web:compact:coarse:tw-top-2 tiny:coarse:tw-gap-0">
                 <CalendarButton
-                  appearance="accent"
-                  className="today-button app:tw-relative app:tw-h-7 app:tw-w-11 app:tw-min-w-11 app:tw-shrink-0 app:tw-whitespace-nowrap app:tw-rounded-[8px] app:tw-border-0 app:tw-bg-transparent app:tw-p-0 app:tw-text-[length:13px] app:tw-font-medium app:tw-leading-[20px] app:tw-text-action app:tw-shadow-none coarse:app:tw-min-h-11 coarse:app:tw-min-w-11"
+                  appearance={isSelectedToday ? 'text' : 'primary'}
+                  className="today-button tw-w-[72px] [--button-width:72px] coarse:tw-min-h-11"
                   onClick={() => controller.goToday()}
                   title="回到今天（T）"
                 >
-                  今天
+                  回到今天
                 </CalendarButton>
                 {isMac || editingTheme ? settingsButton : null}
               </div>
@@ -633,26 +634,34 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 ]}
               >
                 <section
-                  className="date-summary tw-relative tw-grid tw-min-h-[58px] tw-grid-cols-[50px_minmax(0,_1fr)] tw-items-center tw-gap-[4px_12px] web:desktop:tw-flex web:desktop:tw-flex-col web:desktop:tw-items-center web:desktop:tw-gap-2 web:desktop:tw-px-0 web:desktop:tw-pb-3 web:desktop:tw-pt-2 web:desktop:tw-text-center compact:tw-gap-2 coarse:tw-flex-wrap compact:coarse:tw-grid-cols-[44px_minmax(0,_1fr)] compact:coarse:tw-gap-[4px_8px]"
+                  className="date-summary tw-flex tw-flex-col tw-gap-1.5 web:desktop:tw-items-center web:desktop:tw-gap-2 web:desktop:tw-pb-3 web:desktop:tw-pt-2 web:desktop:tw-text-center"
                   aria-label="所选日期"
                 >
-                  <div
-                    className="date-leaf tw-relative tw-col-[1] tw-row-[1] tw-grid tw-h-[58px] tw-w-[50px] tw-shrink-0 tw-place-items-center tw-rounded-[13px] tw-bg-[var(--leaf)] tw-text-[var(--leaf-ink)] web:tw-bg-transparent web:tw-text-action web:desktop:tw-h-[94px] web:desktop:tw-w-[84px] web:desktop:tw-rounded-[19px] compact:tw-h-[54px] compact:tw-w-11 [&>span]:tw-pt-[5px] [&>span]:tw-text-[length:28px] [&>span]:tw-font-medium [&>span]:tw-tabular-nums [&>span]:tw-leading-[32px] web:desktop:[&>span]:tw-text-[length:72px] web:desktop:[&>span]:tw-font-light web:desktop:[&>span]:tw-leading-none"
-                    aria-hidden="true"
-                  >
-                    <span key={state.selected.date}>{state.selected.day}</span>
-                  </div>
-                  <div className="date-detail tw-col-[2] tw-row-[1] tw-min-w-0 tw-flex-1 [&_h2>span:last-child]:tw-ml-1 [&_h2]:tw-m-0 [&_h2]:tw-whitespace-nowrap [&_h2]:tw-text-[length:13px] [&_h2]:tw-font-semibold [&_h2]:tw-leading-[18px] [&_h2]:tw-text-ink web:desktop:[&_h2]:tw-text-[length:14px] web:desktop:[&_h2]:tw-leading-[22px] compact:[&_h2]:tw-text-[length:12px] [&_p]:tw-m-0 [&_p]:tw-text-[length:11px] [&_p]:tw-leading-[17px] [&_p]:tw-text-secondary web:desktop:[&_p]:tw-text-[length:12px] web:desktop:[&_p]:tw-leading-[21px] compact:[&_p]:tw-text-[length:11px]">
-                    <div
-                      className={`date-heading tw-flex tw-flex-wrap tw-items-center tw-gap-[4px_8px] web:desktop:tw-justify-center ${daysFromToday === 0 ? 'tw-mb-1' : 'tw-mb-0'}`}
-                    >
-                      <h2>
-                        <span className="detail-year tw-hidden web:desktop:tw-inline">
-                          {state.selected.year}年
+                  <div>
+                    <h2 className="tw-m-0 tw-text-[24px] tw-font-semibold tw-tabular-nums tw-leading-[30px] tw-tracking-tight tw-text-ink web:desktop:tw-text-[34px] web:desktop:tw-leading-[42px]">
+                      <time dateTime={state.selected.date}>
+                        {state.selected.month}月{state.selected.day}日
+                      </time>
+                    </h2>
+                    <div className="tw-mt-0.5 tw-flex tw-min-h-5 tw-flex-wrap tw-items-center tw-gap-x-2 tw-text-xs tw-leading-5 tw-text-secondary web:desktop:tw-justify-center">
+                      <span className="tw-whitespace-nowrap">
+                        {state.selected.year}年 · 周{weekdays[state.selected.weekday - 1]}
+                      </span>
+                      {isSelectedToday ? (
+                        <span className="tw-rounded-md tw-bg-action-soft tw-px-1.5 tw-text-[11px] tw-font-medium tw-leading-[18px] tw-text-action">
+                          今天
                         </span>
-                        {state.selected.month}月{state.selected.day}日{' '}
-                        <span>周{weekdays[state.selected.weekday - 1]}</span>
-                      </h2>
+                      ) : (
+                        <span className="date-distance tw-whitespace-nowrap tw-tabular-nums">
+                          {daysFromToday > 0
+                            ? `还有 ${daysFromToday} 天`
+                            : `${Math.abs(daysFromToday)} 天前`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="tw-flex tw-flex-col tw-gap-0.5">
+                    <div className="tw-flex tw-flex-wrap tw-items-center tw-gap-[4px_8px] web:desktop:tw-justify-center">
                       {state.selected.solarTerm ? (
                         <span
                           className="date-event date-event-term tw-text-[length:11px] tw-font-medium tw-leading-[18px] tw-text-green tw-overflow-anywhere"
@@ -676,15 +685,8 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         {scheduleLabel(state.selected)}
                       </strong>
                     </div>
-                    {daysFromToday !== 0 ? (
-                      <p className="date-distance tw-tabular-nums !tw-leading-4">
-                        {daysFromToday > 0
-                          ? `还有 ${daysFromToday} 天`
-                          : `${Math.abs(daysFromToday)} 天前`}
-                      </p>
-                    ) : null}
-                    <div className="lunar-summary tw-flex tw-flex-wrap tw-items-baseline tw-gap-[0_8px] tw-text-[length:11px] tw-leading-[17px] tw-text-secondary web:desktop:tw-justify-center web:desktop:tw-text-[length:12px] web:desktop:tw-leading-[21px] [&>p]:tw-whitespace-nowrap [&>p]:tw-text-[var(--lunar-ink)]">
-                      <p>
+                    <div className="lunar-summary tw-flex tw-flex-wrap tw-items-baseline tw-gap-[0_8px] tw-text-[length:11px] tw-leading-[17px] tw-text-secondary web:desktop:tw-justify-center web:desktop:tw-text-[length:12px] web:desktop:tw-leading-[21px]">
+                      <p className="tw-m-0 tw-whitespace-nowrap tw-text-[var(--lunar-ink)]">
                         农历{state.selected.lunar.monthName}
                         {state.selected.lunar.dayName}
                       </p>
