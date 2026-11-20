@@ -1,0 +1,46 @@
+.daily-sign-cup[data-drawing='true'] {
+  transform-origin: 50% 86%;
+  animation: daily-sign-shake 620ms both;
+}
+
+.daily-sign-cup[data-drawing='true'] .daily-sign-stick {
+  animation: daily-sign-stick-out 620ms both;
+}
+
+@keyframes daily-sign-shake {
+  0%,
+  68%,
+  100% {
+    transform: rotate(0);
+  }
+  12% {
+    transform: rotate(-11deg);
+  }
+  26% {
+    transform: rotate(10deg);
+  }
+  40% {
+    transform: rotate(-8deg);
+  }
+  54% {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes daily-sign-stick-out {
+  0%,
+  45% {
+    transform: translateY(0);
+  }
+  86%,
+  100% {
+    transform: translateY(-22px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-sign-cup[data-drawing='true'],
+  .daily-sign-cup[data-drawing='true'] .daily-sign-stick {
+    animation-duration: 0.01ms;
+  }
+}

@@ -1,4 +1,4 @@
-import { daysBetween, type CalendarDay } from '@i-calendar/core';
+import { daysBetween, type CalendarDay, type DateKey } from '@i-calendar/core';
 import {
   useEffect,
   useLayoutEffect,
@@ -156,6 +156,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
   const [increasedContrast, setIncreasedContrast] = useState(
     () => window.matchMedia('(prefers-contrast: more)').matches,
   );
+  const [drawnSignDates, setDrawnSignDates] = useState(() => new Set<DateKey>());
   const focusAfterNavigation = useRef(false);
   const grid = useRef<HTMLDivElement>(null);
   const animatedMonth = useRef(state.year * 12 + state.monthNumber);
@@ -725,6 +726,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                 <DailySign
                   key={state.selected.date}
                   day={state.selected}
+                  drawn={drawnSignDates.has(state.selected.date)}
+                  onDrawn={() =>
+                    setDrawnSignDates((dates) => new Set(dates).add(state.selected.date))
+                  }
                 />
               </div>
               <Feedback
