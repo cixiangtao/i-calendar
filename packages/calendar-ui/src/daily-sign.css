@@ -1,10 +1,11 @@
 .daily-sign-cup[data-drawing='true'] {
+  --daily-sign-draw-duration: 900ms;
   transform-origin: 50% 86%;
-  animation: daily-sign-shake 620ms both;
+  animation: daily-sign-shake var(--daily-sign-draw-duration) both;
 }
 
 .daily-sign-cup[data-drawing='true'] .daily-sign-stick {
-  animation: daily-sign-stick-out 620ms both;
+  animation: daily-sign-stick-out var(--daily-sign-draw-duration) both;
 }
 
 @keyframes daily-sign-shake {

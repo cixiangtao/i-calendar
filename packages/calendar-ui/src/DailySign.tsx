@@ -107,7 +107,7 @@ export function DailySign({ day, drawn, onDrawn, onReset }: DailySignProps) {
             <CalendarButton
               ref={drawButton}
               appearance="text"
-              className={`tw-col-start-1 tw-row-start-1 tw-mx-auto tw-flex tw-max-w-full tw-flex-col tw-gap-0 [--form-height:138px] [--form-inset:16px] ${drawn ? 'tw-invisible' : ''}`}
+              className={`tw-col-start-1 tw-row-start-1 tw-mx-auto tw-flex tw-max-w-full tw-flex-col tw-gap-0 [--form-height:138px] [--form-inset:16px] enabled:active:before:!tw-bg-transparent data-[hovered=true]:before:!tw-bg-transparent ${drawn ? 'tw-invisible' : ''}`}
               aria-hidden={drawn || undefined}
               aria-label="摇一签"
               aria-disabled={drawing || undefined}
