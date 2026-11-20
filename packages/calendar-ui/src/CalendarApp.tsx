@@ -1137,8 +1137,8 @@ function Settings({
           {!state.themeEdit ? (
             <CalendarButton
               ref={calculatorEntry}
-              appearance="toolbar"
-              className="tw-text-secondary coarse:tw-min-h-11 coarse:tw-min-w-11"
+              appearance="icon"
+              className="coarse:tw-min-h-11 coarse:tw-min-w-11"
               aria-label="日期计算"
               title="日期计算"
               disabled={!state.ready}
