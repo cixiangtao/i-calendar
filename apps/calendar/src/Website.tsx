@@ -9,7 +9,8 @@ import {
 } from '@i-calendar/ui';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
-import themePresets from '../../../docs/images/theme-presets.webp';
+import compactMacShowcase from '../../../docs/images/macos-showcase-compact.webp';
+import macShowcase from '../../../docs/images/macos-showcase.webp';
 import logo from '../../../packages/calendar-ui/src/assets/logo.svg';
 import releaseConfig from '../../../release/config.json';
 import { AmbientOrbit } from './AmbientOrbit.js';
@@ -18,6 +19,7 @@ import './website.css';
 
 const repository = `https://github.com/${releaseConfig.repository}`;
 const release = `${repository}/releases/latest`;
+const homebrew = `${repository}#homebrew`;
 const textLink =
   'tw-font-medium tw-text-action tw-underline-offset-4 hover:tw-underline focus-visible:tw-rounded-sm';
 const contentWidth = 'tw-mx-auto tw-w-full tw-max-w-[1168px] tw-px-6 compact:tw-px-4';
@@ -42,7 +44,7 @@ function Arrow({ down = false }: { down?: boolean }) {
   );
 }
 
-/** 官网使用共享日历及其主题控制器，并在工作区之后介绍主题与 Mac 版。 */
+/** 官网使用共享日历及其主题控制器，并在工作区之后介绍 Mac 版与主题。 */
 export function Website({ controller }: { controller: CalendarController }) {
   const calendar = useRef<HTMLElement>(null);
   const [motion, setMotion] = useState(true);
@@ -109,16 +111,16 @@ export function Website({ controller }: { controller: CalendarController }) {
               className="site-theme-chrome tw-flex tw-items-center tw-gap-6 tw-text-[13px] compact:tw-gap-4"
             >
               <a
-                href="#themes"
-                className="tw-inline-flex tw-min-h-11 tw-items-center tw-text-ink tw-no-underline hover:tw-text-action"
-              >
-                主题
-              </a>
-              <a
                 href="#about"
                 className="tw-inline-flex tw-min-h-11 tw-items-center tw-gap-1.5 tw-text-ink tw-no-underline hover:tw-text-action"
               >
                 Mac 版 <Arrow down />
+              </a>
+              <a
+                href="#themes"
+                className="tw-inline-flex tw-min-h-11 tw-items-center tw-text-ink tw-no-underline hover:tw-text-action"
+              >
+                主题
               </a>
             </nav>
           </header>
@@ -154,12 +156,67 @@ export function Website({ controller }: { controller: CalendarController }) {
           </section>
         </div>
         <section
-          id="themes"
-          aria-labelledby="themes-title"
+          id="about"
+          aria-labelledby="about-title"
           className="tw-scroll-mt-6 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-bg-surface"
         >
           <div
-            className={`${contentWidth} tw-grid tw-items-center tw-gap-8 tw-py-12 desktop:tw-grid-cols-[minmax(0,5fr)_minmax(0,8fr)] desktop:tw-gap-14 desktop:tw-py-20`}
+            className={`${contentWidth} tw-grid tw-items-center tw-gap-8 tw-py-12 desktop:tw-grid-cols-[minmax(0,4fr)_minmax(0,7fr)] desktop:tw-gap-12 desktop:tw-py-20`}
+          >
+            <div>
+              <h2
+                id="about-title"
+                className="tw-m-0 tw-text-[length:clamp(2rem,1.25rem+2.4vw,3rem)] tw-font-semibold tw-leading-tight tw-tracking-tight"
+              >
+                菜单栏里的 i日历
+              </h2>
+              <p className="tw-mb-0 tw-mt-4 tw-max-w-[26em] tw-text-base tw-leading-7 tw-text-secondary">
+                点一下菜单栏，展开月历和日期详情。公农历、节气和已收录的放假调休，离线也能查。
+              </p>
+              <div className="tw-mt-6 tw-flex tw-flex-wrap tw-items-center tw-gap-x-5 tw-gap-y-2">
+                <a
+                  href={release}
+                  className="tw-box-border tw-inline-flex tw-min-h-11 tw-items-center tw-gap-3 tw-rounded-lg tw-bg-leaf tw-px-4 tw-text-sm tw-font-medium tw-text-[var(--leaf-ink)] tw-no-underline tw-transition-colors hover:tw-bg-leaf-hover active:tw-bg-leaf-active"
+                >
+                  下载 Mac 版 <Arrow />
+                </a>
+                <a
+                  href={homebrew}
+                  className={`${textLink} tw-inline-flex tw-min-h-11 tw-items-center tw-text-sm`}
+                >
+                  Homebrew 安装
+                </a>
+              </div>
+              <p className="tw-mb-0 tw-mt-3 tw-text-xs tw-leading-6 tw-text-secondary">
+                Apple 芯片，macOS 13 或更新版本。安装包采用 ad-hoc 签名，尚未通过 Apple 公证。
+              </p>
+            </div>
+            <picture>
+              <source
+                media="(max-width: 430px)"
+                srcSet={compactMacShowcase}
+                width="720"
+                height="1080"
+              />
+              <img
+                src={macShowcase}
+                width="1440"
+                height="1080"
+                alt="i日历 Mac 客户端实拍，月历下方是日期详情"
+                className="tw-block tw-h-auto tw-w-full tw-rounded-2xl"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
+          </div>
+        </section>
+        <section
+          id="themes"
+          aria-labelledby="themes-title"
+          className="tw-scroll-mt-6 tw-border-0 tw-border-t tw-border-solid tw-border-line"
+        >
+          <div
+            className={`${contentWidth} tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-x-8 tw-gap-y-5 tw-py-10 desktop:tw-py-12`}
           >
             <div>
               <h2
@@ -168,80 +225,17 @@ export function Website({ controller }: { controller: CalendarController }) {
               >
                 日历主题
               </h2>
-              <p className="tw-mb-0 tw-mt-4 tw-max-w-[31em] tw-text-sm tw-leading-7 tw-text-secondary">
+              <p className="tw-mb-0 tw-mt-3 tw-max-w-[34em] tw-text-sm tw-leading-7 tw-text-secondary">
                 内置 {builtInThemes.length}{' '}
-                款主题。清爽白等主题使用纯色配色，海盐蓝、竹影、晚霞和樱坂电车等主题带有图片背景。每款主题都支持浅色、深色和跟随系统。
-              </p>
-              <p className="tw-mb-5 tw-mt-3 tw-max-w-[31em] tw-text-sm tw-leading-7 tw-text-secondary">
-                在外观设置里自定义颜色、透明度和背景图，切回月历实时预览。满意后可导出 ZIP
-                主题包分享。
-              </p>
-              <CalendarButton
-                appearance="neutral"
-                onClick={showThemes}
-              >
-                打开主题设置 <Arrow />
-              </CalendarButton>
-            </div>
-            <figure className="tw-m-0">
-              <img
-                src={themePresets}
-                width="1248"
-                height="848"
-                alt="网页版日历的四款图片背景主题，浅色海盐蓝、浅色竹影、深色晚霞和深色樱坂电车"
-                className="tw-block tw-h-auto tw-w-full tw-rounded-2xl"
-                loading="lazy"
-                decoding="async"
-              />
-              <figcaption className="tw-mt-3 tw-text-xs tw-text-secondary">
-                i日历 2.3 新增的四款主题
-              </figcaption>
-            </figure>
-          </div>
-        </section>
-        <section
-          id="about"
-          aria-labelledby="about-title"
-          className="tw-scroll-mt-6"
-        >
-          <div
-            className={`${contentWidth} tw-grid tw-items-start tw-gap-8 tw-py-12 desktop:tw-grid-cols-[minmax(0,5fr)_minmax(0,8fr)] desktop:tw-gap-14 desktop:tw-py-16`}
-          >
-            <div>
-              <h2
-                id="about-title"
-                className={sectionTitle}
-              >
-                i日历 Mac 版
-              </h2>
-              <p className="tw-mb-5 tw-mt-4 tw-max-w-[31em] tw-text-sm tw-leading-7 tw-text-secondary">
-                点一下菜单栏，就能展开月历。已收录的日期与放假调休支持离线查询，菜单栏也可顺手显示时间。
-              </p>
-              <a
-                href={release}
-                className="tw-box-border tw-inline-flex tw-min-h-11 tw-items-center tw-gap-3 tw-rounded-lg tw-bg-leaf tw-px-4 tw-text-sm tw-font-medium tw-text-[var(--leaf-ink)] tw-no-underline tw-transition-colors hover:tw-bg-leaf-hover active:tw-bg-leaf-active"
-              >
-                前往下载 Mac 版 <Arrow />
-              </a>
-              <p className="tw-mb-0 tw-mt-3 tw-max-w-[36em] tw-text-xs tw-leading-6 tw-text-secondary">
-                Apple 芯片，macOS 13 或更新版本。应用采用 ad-hoc 本地签名，尚未通过 Apple
-                公证。安装步骤见下载页。
+                款主题，支持浅色、深色和跟随系统，也能自定义配色和背景图，导出主题包分享。
               </p>
             </div>
-            <div className="tw-grid tw-gap-5 tw-border-0 tw-border-t tw-border-solid tw-border-line tw-pt-5 desktop:tw-grid-cols-2 desktop:tw-border-t-0 desktop:tw-pt-2">
-              <div>
-                <h3 className="tw-m-0 tw-text-sm tw-font-semibold">放假与补班</h3>
-                <p className="tw-mb-0 tw-mt-2 tw-text-[13px] tw-leading-6 tw-text-secondary">
-                  按中国大陆全国统一安排标注。放假、补班和普通周末分别显示，未收录的年份会明确提示。
-                </p>
-              </div>
-              <div>
-                <h3 className="tw-m-0 tw-text-sm tw-font-semibold">农历与黄历</h3>
-                <p className="tw-mb-0 tw-mt-2 tw-text-[13px] tw-leading-6 tw-text-secondary">
-                  公农历和节气在本地计算。传统宜忌、干支和方位可在日期详情查看，数据来源见设置「关于」。
-                </p>
-              </div>
-            </div>
+            <CalendarButton
+              appearance="neutral"
+              onClick={showThemes}
+            >
+              打开主题设置 <Arrow />
+            </CalendarButton>
           </div>
         </section>
       </main>
