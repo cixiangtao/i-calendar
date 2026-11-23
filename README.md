@@ -31,9 +31,16 @@
 
 ## 安装 Mac 版
 
-当前版本 **2.4.0**。Mac 安装包适用于 Apple 芯片（arm64）和 macOS 13 或更新版本。解压后把「i日历」拖进「应用程序」，打开后从系统菜单栏使用。右键菜单栏图标可直达设置和日期计算。[打开正式版下载页](https://github.com/cixiangtao/i-calendar/releases/latest)
+当前版本 **2.4.0**。Mac 安装包适用于 Apple 芯片（arm64）和 macOS 13 或更新版本。可从[正式版下载页](https://github.com/cixiangtao/i-calendar/releases/latest)下载 ZIP，解压后把「i日历」拖进「应用程序」。已安装 Homebrew 的用户也可通过项目自己的 Tap 安装，Homebrew 会下载同一份 ZIP 并校验 SHA-256。
 
-应用采用 ad-hoc 本地签名，尚未通过 Apple 公证。若 macOS 提示无法验证开发者，请核对 Release 提供的 SHA-256，再到「系统设置 → 隐私与安全性」选择「仍要打开」。[应用内更新说明](docs/自动更新.md)
+```sh
+brew tap cixiangtao/i-calendar https://github.com/cixiangtao/i-calendar.git
+brew install --cask cixiangtao/i-calendar/i-calendar
+```
+
+打开「i日历」后从系统菜单栏使用。右键菜单栏图标可直达设置和日期计算。
+
+两种方式安装的应用均采用 ad-hoc 本地签名，尚未通过 Apple 公证。若 macOS 提示无法验证开发者，请确认安装包的 SHA-256 与 Release 提供的值一致，再到「系统设置 → 隐私与安全性」选择「仍要打开」。[应用内更新说明](docs/自动更新.md)
 
 ## 数据从哪里来
 
