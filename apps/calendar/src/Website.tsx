@@ -97,7 +97,7 @@ export function Website({ controller }: { controller: CalendarController }) {
           <header
             className={`${contentWidth} tw-relative tw-flex tw-items-center tw-justify-between tw-gap-4 tw-py-5 compact:tw-py-3`}
           >
-            <h1 className="site-theme-chrome tw-m-0 tw-flex tw-items-center tw-gap-2.5 tw-text-xl tw-font-semibold tw-tracking-tight">
+            <h1 className="tw-m-0 tw-flex tw-items-center tw-gap-2.5 tw-text-xl tw-font-semibold tw-tracking-tight">
               <img
                 src={logo}
                 width="32"
@@ -108,7 +108,7 @@ export function Website({ controller }: { controller: CalendarController }) {
             </h1>
             <nav
               aria-label="官网导航"
-              className="site-theme-chrome tw-flex tw-items-center tw-gap-6 tw-text-[13px] compact:tw-gap-4"
+              className="tw-flex tw-items-center tw-gap-6 tw-text-[13px] compact:tw-gap-4"
             >
               <a
                 href="#about"
