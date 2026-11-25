@@ -668,7 +668,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                       )}
                       <span className="tw-whitespace-nowrap tw-text-xs tw-tabular-nums tw-leading-5 tw-text-secondary">
                         {isoWeek.year !== state.selected.year ? `${isoWeek.year} 年` : ''}
-                        {`❬${isoWeek.week}❭周`}
+                        {`❨${isoWeek.week}❩周`}
                       </span>
                       <strong
                         className={`schedule-badge tw-whitespace-nowrap tw-rounded-[6px] tw-bg-green-soft tw-px-1.5 tw-py-px tw-text-[length:11px] tw-font-medium tw-leading-[18px] tw-text-green schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
