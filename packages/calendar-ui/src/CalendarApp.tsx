@@ -638,19 +638,21 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   aria-label="所选日期"
                 >
                   <div className="tw-flex tw-flex-col tw-gap-0.5">
-                    <h2 className="tw-m-0 tw-whitespace-nowrap tw-text-[13px] tw-font-normal tw-tabular-nums tw-leading-5 tw-text-secondary web:desktop:tw-text-center">
+                    <h2 className="tw-m-0 tw-whitespace-nowrap tw-text-[13px] tw-font-normal tw-tabular-nums tw-leading-7 tw-text-secondary web:desktop:tw-text-center web:desktop:tw-leading-9">
                       <time
                         dateTime={state.selected.date}
-                        className="tw-inline-flex tw-items-baseline tw-gap-x-2"
+                        className="tw-inline-flex tw-items-baseline tw-gap-x-1 [&_b]:tw-mr-px [&_b]:tw-text-[22px] [&_b]:tw-font-medium [&_b]:tw-text-ink web:desktop:[&_b]:tw-text-[28px]"
                       >
-                        <span>{state.selected.year}年</span>
-                        <span className="tw-text-[22px] tw-font-medium tw-leading-7 tw-text-ink web:desktop:tw-text-[28px] web:desktop:tw-leading-9 [&>span]:tw-ml-px [&>span]:tw-text-[16px] [&>span]:tw-font-normal web:desktop:[&>span]:tw-text-[20px]">
-                          {state.selected.month}
-                          <span className="tw-mr-1">月</span>
-                          {state.selected.day}
-                          <span>日</span>
+                        <span>
+                          <b>{state.selected.year}</b>年
                         </span>
-                        <span>周{weekdays[state.selected.weekday - 1]}</span>
+                        <span>
+                          <b>{state.selected.month}</b>月
+                        </span>
+                        <span>
+                          <b>{state.selected.day}</b>日
+                        </span>
+                        <span className="tw-ml-1">周{weekdays[state.selected.weekday - 1]}</span>
                       </time>
                     </h2>
                     <div className="tw-flex tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-0.5 web:desktop:tw-justify-center">
