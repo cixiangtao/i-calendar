@@ -71,9 +71,10 @@ export function verifyDateCalculator(controller: CalendarController) {
       const title = summary?.querySelector('h2 time');
       if (
         title?.getAttribute('datetime') !== selected.date ||
-        title.textContent !== `${selected.month}月${selected.day}日`
+        title.textContent !==
+          `${selected.year}年${selected.month}月${selected.day}日周${'一二三四五六日'[selected.weekday - 1]}`
       )
-        throw new Error(`日期详情标题未显示所选月日：${selected.date}`);
+        throw new Error(`日期详情标题未完整显示所选日期与星期：${selected.date}`);
       const distance = document.querySelector('.date-summary .date-distance');
       if (distance?.textContent !== expected)
         throw new Error(`日期详情天数不符，预期：${expected ?? '今天省略天数'}`);

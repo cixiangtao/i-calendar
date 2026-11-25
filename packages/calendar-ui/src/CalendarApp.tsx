@@ -638,12 +638,22 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   aria-label="所选日期"
                 >
                   <div className="tw-flex tw-flex-col tw-gap-0.5">
-                    <div className="tw-flex tw-flex-wrap tw-items-center tw-gap-x-3 web:desktop:tw-justify-center">
-                      <h2 className="tw-m-0 tw-whitespace-nowrap tw-text-[24px] tw-font-semibold tw-tabular-nums tw-leading-[30px] tw-tracking-tight tw-text-ink web:desktop:tw-text-[34px] web:desktop:tw-leading-[42px]">
-                        <time dateTime={state.selected.date}>
-                          {state.selected.month}月{state.selected.day}日
-                        </time>
-                      </h2>
+                    <h2 className="tw-m-0 tw-whitespace-nowrap tw-text-sm tw-font-normal tw-tabular-nums tw-leading-5 tw-text-secondary web:desktop:tw-text-center">
+                      <time
+                        dateTime={state.selected.date}
+                        className="tw-inline-flex tw-items-baseline tw-gap-x-1.5"
+                      >
+                        <span>{state.selected.year}年</span>
+                        <span className="tw-text-[24px] tw-font-semibold tw-leading-[30px] tw-tracking-tight tw-text-ink web:desktop:tw-text-[34px] web:desktop:tw-leading-[42px] [&>span]:tw-text-[0.75em] [&>span]:tw-font-medium">
+                          {state.selected.month}
+                          <span>月</span>
+                          {state.selected.day}
+                          <span>日</span>
+                        </span>
+                        <span>周{weekdays[state.selected.weekday - 1]}</span>
+                      </time>
+                    </h2>
+                    <div className="tw-flex tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-0.5 web:desktop:tw-justify-center">
                       {isSelectedToday ? (
                         <span className="tw-rounded-md tw-bg-action-soft tw-px-1.5 tw-text-[11px] tw-font-medium tw-leading-[18px] tw-text-action">
                           今天
@@ -655,11 +665,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                             : `${Math.abs(daysFromToday)} 天前`}
                         </span>
                       )}
-                    </div>
-                    <div className="tw-flex tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-0.5 web:desktop:tw-justify-center">
-                      <span className="tw-whitespace-nowrap tw-text-xs tw-leading-5 tw-text-secondary">
-                        {state.selected.year}年 · 周{weekdays[state.selected.weekday - 1]}
-                      </span>
                       <strong
                         className={`schedule-badge tw-whitespace-nowrap tw-rounded-[6px] tw-bg-green-soft tw-px-1.5 tw-py-px tw-text-[length:11px] tw-font-medium tw-leading-[18px] tw-text-green schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
                       >
