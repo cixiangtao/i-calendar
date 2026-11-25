@@ -8,6 +8,7 @@ import {
   addDays,
   dateForInstant,
   daysBetween,
+  getIsoWeek,
   parseDate,
   parseHolidayDataset,
 } from '../src/index.js';
@@ -90,6 +91,15 @@ test('严格日期校验、闰年、日期运算和显式时区', () => {
     dateForInstant(new Date('2026-11-10T16:30:00Z'), 'America/Los_Angeles'),
     '2026-11-10',
   );
+});
+
+test('ISO 周按周一切换，跨年时使用周所属年份', () => {
+  assert.deepEqual(getIsoWeek('2026-11-20'), { year: 2026, week: 47 });
+  assert.deepEqual(getIsoWeek('2026-11-22'), { year: 2026, week: 47 });
+  assert.deepEqual(getIsoWeek('2026-11-23'), { year: 2026, week: 48 });
+  assert.deepEqual(getIsoWeek('2027-01-03'), { year: 2026, week: 53 });
+  assert.deepEqual(getIsoWeek('2027-01-04'), { year: 2027, week: 1 });
+  assert.deepEqual(getIsoWeek('2024-12-30'), { year: 2025, week: 1 });
 });
 
 test('月历周一/周日起始、跨月六行、支持范围两端不溢出', () => {

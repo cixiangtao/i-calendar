@@ -41,6 +41,17 @@ export function daysBetween(from: DateKey, to: DateKey) {
   return (parseDate(to).value.getTime() - parseDate(from).value.getTime()) / MS_PER_DAY;
 }
 
+/** 返回 ISO 周所属的年份与周数。周一为一周之始，含 1 月 4 日的一周为第 1 周。 */
+export function getIsoWeek(date: DateKey) {
+  const { value: thursday } = parseDate(date);
+  // 每周的周四决定周所属的年份，再从该年的第一个周四开始计数。
+  const weekday = thursday.getUTCDay() || 7;
+  thursday.setUTCDate(thursday.getUTCDate() + 4 - weekday);
+  const year = thursday.getUTCFullYear();
+  const daysSinceJanuaryFirst = (thursday.getTime() - Date.UTC(year, 0, 1)) / MS_PER_DAY;
+  return { year, week: Math.floor(daysSinceJanuaryFirst / 7) + 1 };
+}
+
 /** Converts an instant to a civil date in an explicit IANA timezone. Defaults to mainland China. */
 export function dateForInstant(instant: Date = new Date(), timeZone = 'Asia/Shanghai'): DateKey {
   if (!Number.isFinite(instant.getTime())) throw new RangeError('时间无效');

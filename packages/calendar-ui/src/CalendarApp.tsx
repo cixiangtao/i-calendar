@@ -1,4 +1,4 @@
-import { daysBetween, type CalendarDay } from '@i-calendar/core';
+import { daysBetween, getIsoWeek, type CalendarDay } from '@i-calendar/core';
 import {
   useEffect,
   useLayoutEffect,
@@ -148,6 +148,7 @@ function Feedback({
 export function CalendarApp({ controller }: { controller: CalendarController }) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const daysFromToday = daysBetween(state.today, state.selected.date);
+  const isoWeek = getIsoWeek(state.selected.date);
   const isSelectedToday = daysFromToday === 0;
   const isMac = controller.platform.kind === 'macos';
   useSunlightLocation(controller, state.ready, state.preferences.sunlight.mode);
@@ -665,6 +666,10 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                             : `${Math.abs(daysFromToday)} 天前`}
                         </span>
                       )}
+                      <span className="tw-whitespace-nowrap tw-text-xs tw-tabular-nums tw-leading-5 tw-text-secondary">
+                        {isoWeek.year !== state.selected.year ? `${isoWeek.year} 年` : ''}第{' '}
+                        {isoWeek.week} 周
+                      </span>
                       <strong
                         className={`schedule-badge tw-whitespace-nowrap tw-rounded-[6px] tw-bg-green-soft tw-px-1.5 tw-py-px tw-text-[length:11px] tw-font-medium tw-leading-[18px] tw-text-green schedule-${state.selected.schedule.coverage === 'unavailable' ? 'unknown' : state.selected.schedule.kind}`}
                       >
