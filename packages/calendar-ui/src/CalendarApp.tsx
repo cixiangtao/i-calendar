@@ -643,9 +643,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         dateTime={state.selected.date}
                         className="tw-inline-flex tw-items-baseline tw-gap-x-1 [&_b]:tw-mr-px [&_b]:tw-text-[22px] [&_b]:tw-font-medium [&_b]:tw-text-ink web:desktop:[&_b]:tw-text-[28px]"
                       >
-                        <span>
-                          <b>{state.selected.year}</b>年
-                        </span>
+                        <span className="tw-mr-1">{state.selected.year}年</span>
                         <span>
                           <b>{state.selected.month}</b>月
                         </span>
