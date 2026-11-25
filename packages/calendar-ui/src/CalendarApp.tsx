@@ -638,15 +638,15 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                   aria-label="所选日期"
                 >
                   <div className="tw-flex tw-flex-col tw-gap-0.5">
-                    <h2 className="tw-m-0 tw-whitespace-nowrap tw-text-sm tw-font-normal tw-tabular-nums tw-leading-5 tw-text-secondary web:desktop:tw-text-center">
+                    <h2 className="tw-m-0 tw-whitespace-nowrap tw-text-[13px] tw-font-normal tw-tabular-nums tw-leading-5 tw-text-secondary web:desktop:tw-text-center">
                       <time
                         dateTime={state.selected.date}
-                        className="tw-inline-flex tw-items-baseline tw-gap-x-1.5"
+                        className="tw-inline-flex tw-items-baseline tw-gap-x-2"
                       >
                         <span>{state.selected.year}年</span>
-                        <span className="tw-text-[24px] tw-font-semibold tw-leading-[30px] tw-tracking-tight tw-text-ink web:desktop:tw-text-[34px] web:desktop:tw-leading-[42px] [&>span]:tw-text-[0.75em] [&>span]:tw-font-medium">
+                        <span className="tw-text-[22px] tw-font-medium tw-leading-7 tw-text-ink web:desktop:tw-text-[28px] web:desktop:tw-leading-9 [&>span]:tw-ml-px [&>span]:tw-text-[16px] [&>span]:tw-font-normal web:desktop:[&>span]:tw-text-[20px]">
                           {state.selected.month}
-                          <span>月</span>
+                          <span className="tw-mr-1">月</span>
                           {state.selected.day}
                           <span>日</span>
                         </span>
