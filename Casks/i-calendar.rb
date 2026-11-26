@@ -1,6 +1,6 @@
 cask "i-calendar" do
-  version "2.5.1"
-  sha256 "b410aa5e10766ec9b8a08f29e55dc1d582a05ff85bce6a4f773b895781acc516"
+  version "2.5.2"
+  sha256 "7e095bf0a7a233e065a14c4a7119bbdf0a4b8c30022e19cb58c0ba5b8050bbb1"
 
   url "https://github.com/cixiangtao/i-calendar/releases/download/v#{version}/i-calendar-#{version}-mac-arm64.zip"
   name "i日历"
