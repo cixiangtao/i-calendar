@@ -83,9 +83,6 @@ a:focus-visible {
   color: var(--red);
   font-weight: 500;
 }
-.day-cell.holiday-day {
-  background: var(--red-soft);
-}
 .day-cell.outside-month .solar-day,
 .day-cell.outside-month .lunar-day {
   color: var(--outside-ink);

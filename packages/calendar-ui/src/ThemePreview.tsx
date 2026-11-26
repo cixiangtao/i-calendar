@@ -63,25 +63,19 @@ export function ThemePreview({
               if (!day) return <span key={index} />;
               const today = day.date === state.today;
               const selected = day.date === state.selected.date;
-              const holiday = day.schedule.kind === 'holiday';
-              const rest = holiday || day.schedule.kind === 'weekend';
+              const rest = day.schedule.kind === 'holiday' || day.schedule.kind === 'weekend';
               return (
                 <div
                   key={day.date}
                   className={
                     'tw-grid tw-min-h-9 tw-min-w-0 tw-content-center tw-justify-items-center tw-rounded-lg tw-px-0.5 ' +
-                    (today ? 'is-today ' : '') +
-                    (selected && !today
-                      ? 'tw-bg-[var(--selected-bg)]'
-                      : holiday
-                        ? 'tw-bg-red-soft'
-                        : '')
+                    (today ? 'is-today' : selected ? 'tw-bg-[var(--selected-bg)]' : '')
                   }
                 >
                   <b
                     className={
                       'tw-text-sm tw-tabular-nums ' +
-                      (rest ? 'tw-text-red' : selected ? 'tw-text-action' : '')
+                      (selected ? 'tw-text-action' : rest ? 'tw-text-red' : '')
                     }
                   >
                     {day.day}

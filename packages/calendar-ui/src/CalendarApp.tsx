@@ -551,7 +551,6 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                             (day.weekday >= 6 && day.schedule.kind !== 'makeup-workday')
                               ? 'rest-day'
                               : '',
-                            day.schedule.kind === 'holiday' ? 'holiday-day' : '',
                             day.schedule.kind === 'makeup-workday' ? 'makeup-day' : '',
                           ]
                             .filter(Boolean)
