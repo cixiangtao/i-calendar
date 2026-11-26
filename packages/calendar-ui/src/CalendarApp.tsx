@@ -14,6 +14,7 @@ import {
 import { version as appVersion } from '../../../package.json';
 import { website as appWebsite } from '../../../release/config.json';
 import { AlmanacContent } from './Almanac.js';
+import { APP_UPDATE_INTERVAL_MS } from './app-update.js';
 import { AppUpdateNotice, AppUpdateSection } from './AppUpdateSection.js';
 import { CalendarButton } from './CalendarButton.js';
 import { CalendarContextMenu } from './CalendarContextMenu.js';
@@ -276,7 +277,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
       void controller.appUpdates.check(true);
     };
     check();
-    const interval = window.setInterval(check, 60 * 60 * 1000);
+    const interval = window.setInterval(check, APP_UPDATE_INTERVAL_MS);
     window.addEventListener('focus', check);
     return () => {
       window.clearInterval(interval);

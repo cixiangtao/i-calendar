@@ -29,9 +29,7 @@ export interface AppUpdateSnapshot {
   dismissed: boolean;
 }
 
-const AUTOMATIC_INTERVAL = 24 * 60 * 60 * 1000;
-
-const FAILED_CHECK_INTERVAL = 60 * 60 * 1000;
+export const APP_UPDATE_INTERVAL_MS = 60 * 60 * 1000;
 
 function updateMessage(error: unknown, fallback: string) {
   switch (error) {
@@ -91,11 +89,11 @@ export class AppUpdateController {
     if (!this.updater || this.disposed || this.busy()) return;
     const time = this.now().getTime();
     if (automatic && time < this.nextAutomaticCheck) return;
+    this.nextAutomaticCheck = time + APP_UPDATE_INTERVAL_MS;
     this.patch({ phase: 'checking', error: null, progress: null });
     try {
       const release = await this.updater.check();
       if (this.disposed) return;
-      this.nextAutomaticCheck = time + AUTOMATIC_INTERVAL;
       this.patch({
         phase: release ? 'available' : 'idle',
         release,
@@ -103,7 +101,6 @@ export class AppUpdateController {
         dismissed: release?.version === this.dismissedVersion,
       });
     } catch (error) {
-      this.nextAutomaticCheck = time + FAILED_CHECK_INTERVAL;
       this.patch({ phase: 'error', error: updateMessage(error, '检查新版本失败，请稍后重试。') });
     }
   }

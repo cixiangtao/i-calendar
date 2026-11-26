@@ -6,15 +6,16 @@ import { CalendarController, parseSavedState } from '../src/store.js';
 
 const release: AppRelease = { version: '1.0.1', notes: '修复跨日刷新' };
 
-test('自动检查只提示、不安装，每日限频，手动检查可重试', async () => {
+test('自动检查只提示、不安装，每小时限频，手动检查可重试', async () => {
   let now = new Date('2026-11-13T04:00:00Z');
   let checks = 0;
   let installs = 0;
+  let published: AppRelease | null = null;
   const controller = new AppUpdateController(
     {
       check: async () => {
         checks++;
-        return release;
+        return published;
       },
       install: async () => {
         installs++;
@@ -25,12 +26,17 @@ test('自动检查只提示、不安装，每日限频，手动检查可重试',
   await controller.check(true);
   await controller.check(true);
   assert.equal(checks, 1);
-  assert.equal(installs, 0);
-  assert.equal(controller.getSnapshot().phase, 'available');
-  await controller.check();
-  assert.equal(checks, 2);
-  now = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  assert.equal(controller.getSnapshot().phase, 'idle');
+  published = release;
+  now = new Date(now.getTime() + 60 * 60 * 1000 - 1);
   await controller.check(true);
+  assert.equal(checks, 1);
+  now = new Date(now.getTime() + 1);
+  await controller.check(true);
+  assert.equal(checks, 2);
+  assert.equal(controller.getSnapshot().phase, 'available');
+  assert.equal(installs, 0);
+  await controller.check();
   assert.equal(checks, 3);
 });
 
