@@ -68,8 +68,8 @@ export function ThemePreview({
                 <div
                   key={day.date}
                   className={
-                    'tw-grid tw-min-h-9 tw-min-w-0 tw-content-center tw-justify-items-center tw-rounded-lg tw-px-0.5 ' +
-                    (today ? 'is-today' : selected ? 'tw-bg-[var(--selected-bg)]' : '')
+                    'date-brush tw-grid tw-min-h-9 tw-min-w-0 tw-content-center tw-justify-items-center tw-rounded-lg tw-px-0.5 ' +
+                    (today ? 'is-today' : selected ? 'selected' : '')
                   }
                 >
                   <b

@@ -69,15 +69,9 @@ a:focus-visible {
   border: 0;
   padding: 0;
 }
-.day-cell {
-  transition: background-color var(--motion-feedback) var(--motion-ease);
-}
 .solar-day,
 .lunar-day {
   transition: color var(--motion-feedback) var(--motion-ease);
-}
-.day-cell:hover {
-  background: var(--control);
 }
 .day-cell.rest-day .solar-day {
   color: var(--red);
@@ -97,9 +91,6 @@ a:focus-visible {
 .day-cell.outside-month .festival-label {
   color: var(--outside-purple);
 }
-.day-cell.selected:not(.is-today) {
-  background: var(--selected-bg);
-}
 .day-cell.selected .solar-day {
   color: var(--blue);
   font-weight: 650;
@@ -117,11 +108,11 @@ a:focus-visible {
 .theme-mini-calendar .is-today > * {
   color: var(--leaf-ink);
 }
-.is-today {
+.date-brush {
   position: relative;
   isolation: isolate;
 }
-.is-today::before {
+.date-brush::before {
   content: '';
   position: absolute;
   z-index: -1;
@@ -130,9 +121,21 @@ a:focus-visible {
   max-height: 3.4rem;
   margin: auto;
   pointer-events: none;
-  background: var(--leaf);
+  background-color: transparent;
+  transition: background-color var(--motion-feedback) var(--motion-ease);
   -webkit-mask: url('./assets/today-brush.png') center / 100% 100% no-repeat;
   mask: url('./assets/today-brush.png') center / 100% 100% no-repeat;
+}
+@media (hover: hover) and (pointer: fine) {
+  .day-cell:hover::before {
+    background-color: var(--control);
+  }
+}
+.date-brush.selected::before {
+  background-color: var(--selected-bg);
+}
+.date-brush.is-today::before {
+  background-color: var(--leaf);
 }
 .is-today .lunar-day {
   max-width: min(88%, 5.25rem);

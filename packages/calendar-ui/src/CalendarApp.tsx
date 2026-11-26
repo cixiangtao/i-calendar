@@ -544,7 +544,7 @@ export function CalendarApp({ controller }: { controller: CalendarController }) 
                         <button
                           type="button"
                           className={[
-                            'day-cell tw-w-full tw-h-[46px] tw-relative tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-0.5 tw-py-[3px] tw-px-0 tw-border-0 tw-rounded-[12px] tw-bg-transparent tw-text-ink [&_.term-label]:tw-text-green [&_.festival-label]:tw-text-[var(--purple)] web:desktop:tw-h-[clamp(52px,_7vh,_72px)] mac:tw-h-10 mac:tw-py-0.5 mac:tw-px-0 mac:tw-rounded-[10px] mac:tw-gap-px coarse:tw-h-12 web:desktop:short:tw-gap-px web:desktop:short:tw-py-0.5 web:desktop:short:tw-px-0',
+                            'day-cell date-brush tw-w-full tw-h-[46px] tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-0.5 tw-py-[3px] tw-px-0 tw-border-0 tw-rounded-[12px] tw-bg-transparent tw-text-ink [&_.term-label]:tw-text-green [&_.festival-label]:tw-text-[var(--purple)] web:desktop:tw-h-[clamp(52px,_7vh,_72px)] mac:tw-h-10 mac:tw-py-0.5 mac:tw-px-0 mac:tw-rounded-[10px] mac:tw-gap-px coarse:tw-h-12 web:desktop:short:tw-gap-px web:desktop:short:tw-py-0.5 web:desktop:short:tw-px-0',
                             day.month !== state.monthNumber ? 'outside-month' : '',
                             state.selected.date === day.date ? 'selected' : '',
                             state.today === day.date ? 'is-today' : '',
