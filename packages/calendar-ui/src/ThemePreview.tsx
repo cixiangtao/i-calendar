@@ -81,20 +81,14 @@ export function ThemePreview({
                   <b
                     className={
                       'tw-text-sm tw-tabular-nums ' +
-                      (today
-                        ? 'solar-day tw-text-[var(--leaf-ink)]'
-                        : rest
-                          ? 'tw-text-red'
-                          : selected
-                            ? 'tw-text-action'
-                            : '')
+                      (rest ? 'tw-text-red' : selected ? 'tw-text-action' : '')
                     }
                   >
                     {day.day}
                   </b>
                   <span
                     className={
-                      'tw-w-full tw-truncate tw-text-center tw-text-[11px] ' +
+                      'lunar-day tw-w-full tw-truncate tw-text-center tw-text-[11px] ' +
                       (day.festivals.length
                         ? 'tw-text-[var(--purple)]'
                         : day.solarTerm

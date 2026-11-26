@@ -116,21 +116,25 @@ a:focus-visible {
 .day-cell.selected .festival-label {
   color: var(--purple);
 }
-.day-cell.is-today .solar-day {
+.day-cell.is-today :is(.solar-day, .lunar-day),
+.theme-mini-calendar .is-today > * {
   color: var(--leaf-ink);
 }
-.is-today .solar-day {
+.is-today {
   position: relative;
   isolation: isolate;
 }
-.is-today .solar-day::before {
+.is-today::before {
   content: '';
   position: absolute;
   z-index: -1;
-  inset: 0.04em -0.38em;
+  inset: 0;
+  max-width: 6rem;
+  max-height: 3.4rem;
+  margin: auto;
   pointer-events: none;
   background: var(--leaf);
-  transform: rotate(-3deg);
+  transform: rotate(-2deg);
   clip-path: polygon(
     8% 8%,
     45% 3%,
@@ -151,6 +155,9 @@ a:focus-visible {
     11% 47%,
     3% 48%
   );
+}
+.is-today .lunar-day {
+  max-width: min(88%, 5.25rem);
 }
 .day-mark.makeup {
   background: var(--yellow-soft);
