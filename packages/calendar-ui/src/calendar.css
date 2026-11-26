@@ -134,27 +134,8 @@ a:focus-visible {
   margin: auto;
   pointer-events: none;
   background: var(--leaf);
-  transform: rotate(-2deg);
-  clip-path: polygon(
-    8% 8%,
-    45% 3%,
-    98% 5%,
-    94% 17%,
-    100% 16%,
-    96% 38%,
-    90% 42%,
-    98% 41%,
-    93% 68%,
-    97% 66%,
-    92% 91%,
-    57% 95%,
-    2% 98%,
-    6% 78%,
-    0 80%,
-    4% 51%,
-    11% 47%,
-    3% 48%
-  );
+  -webkit-mask: url('./assets/today-brush.png') center / 100% 100% no-repeat;
+  mask: url('./assets/today-brush.png') center / 100% 100% no-repeat;
 }
 .is-today .lunar-day {
   max-width: min(88%, 5.25rem);
