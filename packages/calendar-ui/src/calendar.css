@@ -116,16 +116,53 @@ a:focus-visible {
 .day-cell.selected .festival-label {
   color: var(--purple);
 }
-.day-cell.is-today {
-  background: var(--leaf);
-}
-.day-cell.is-today .solar-day,
-.day-cell.is-today .lunar-day {
+.day-cell.is-today .solar-day {
   color: var(--leaf-ink);
+}
+.is-today .solar-day {
+  position: relative;
+  isolation: isolate;
+}
+.is-today .solar-day::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0.04em -0.38em;
+  pointer-events: none;
+  background: var(--leaf);
+  transform: rotate(-3deg);
+  clip-path: polygon(
+    8% 8%,
+    45% 3%,
+    98% 5%,
+    94% 17%,
+    100% 16%,
+    96% 38%,
+    90% 42%,
+    98% 41%,
+    93% 68%,
+    97% 66%,
+    92% 91%,
+    57% 95%,
+    2% 98%,
+    6% 78%,
+    0 80%,
+    4% 51%,
+    11% 47%,
+    3% 48%
+  );
 }
 .day-mark.makeup {
   background: var(--yellow-soft);
   color: var(--yellow);
+}
+@media (max-width: 450px) {
+  .day-cell.is-today .day-mark {
+    top: -6px;
+    right: -1px;
+    padding: 0 1px;
+    line-height: 10px;
+  }
 }
 .schedule-badge.schedule-holiday,
 .schedule-badge.schedule-weekend {

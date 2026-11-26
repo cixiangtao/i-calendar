@@ -70,19 +70,24 @@ export function ThemePreview({
                   key={day.date}
                   className={
                     'tw-grid tw-min-h-9 tw-min-w-0 tw-content-center tw-justify-items-center tw-rounded-lg tw-px-0.5 ' +
-                    (today
-                      ? 'tw-bg-leaf tw-text-[var(--leaf-ink)]'
-                      : selected
-                        ? 'tw-bg-[var(--selected-bg)]'
-                        : holiday
-                          ? 'tw-bg-red-soft'
-                          : '')
+                    (today ? 'is-today ' : '') +
+                    (selected && !today
+                      ? 'tw-bg-[var(--selected-bg)]'
+                      : holiday
+                        ? 'tw-bg-red-soft'
+                        : '')
                   }
                 >
                   <b
                     className={
                       'tw-text-sm tw-tabular-nums ' +
-                      (today ? '' : rest ? 'tw-text-red' : selected ? 'tw-text-action' : '')
+                      (today
+                        ? 'solar-day tw-text-[var(--leaf-ink)]'
+                        : rest
+                          ? 'tw-text-red'
+                          : selected
+                            ? 'tw-text-action'
+                            : '')
                     }
                   >
                     {day.day}
@@ -90,15 +95,13 @@ export function ThemePreview({
                   <span
                     className={
                       'tw-w-full tw-truncate tw-text-center tw-text-[11px] ' +
-                      (today
-                        ? ''
-                        : day.festivals.length
-                          ? 'tw-text-[var(--purple)]'
-                          : day.solarTerm
-                            ? 'tw-text-green'
-                            : selected
-                              ? 'tw-text-[var(--selected-ink)]'
-                              : 'tw-text-[var(--lunar-ink)]')
+                      (day.festivals.length
+                        ? 'tw-text-[var(--purple)]'
+                        : day.solarTerm
+                          ? 'tw-text-green'
+                          : selected
+                            ? 'tw-text-[var(--selected-ink)]'
+                            : 'tw-text-[var(--lunar-ink)]')
                     }
                   >
                     {caption(day)}
