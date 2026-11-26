@@ -93,7 +93,6 @@ a:focus-visible {
 }
 .day-cell.selected .solar-day {
   color: var(--blue);
-  font-weight: 650;
 }
 .day-cell.selected .lunar-day {
   color: var(--selected-ink);
