@@ -19,7 +19,7 @@ Mac 和网页版均免费、无广告、无需登录。
 
 ## 安装 Mac 版
 
-当前版本 **2.5.3**，适用于 **Apple 芯片（arm64）和 macOS 13 或更新版本**。
+当前版本 **2.5.4**，适用于 **Apple 芯片（arm64）和 macOS 13 或更新版本**。
 
 1. 从[正式版下载页](https://github.com/cixiangtao/i-calendar/releases/latest)下载 ZIP。
 2. 解压后将「i日历」拖入「应用程序」，打开后点击菜单栏图标。
