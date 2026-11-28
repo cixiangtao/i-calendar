@@ -132,20 +132,27 @@ export async function resumeNativeChecks({ root, ...options }) {
     names = [];
   }
   let pending = 0;
+  const failures = [];
   for (const name of names.filter((entry) => entry.endsWith('.json')).sort()) {
-    const report = JSON.parse(await readFile(path.join(reportsAt(root), name), 'utf8'));
-    if (report.status !== 'pending') continue;
-    assert.ok(
-      path.isAbsolute(report.executable) && /^[a-f0-9]{64}$/.test(report.sha256 ?? ''),
-      '待验记录缺少原应用路径或摘要',
-    );
-    pending += 1;
-    await checkNativeApp({
-      ...options,
-      root,
-      executable: report.executable,
-      expectedDigest: report.sha256,
-    });
+    try {
+      const report = JSON.parse(await readFile(path.join(reportsAt(root), name), 'utf8'));
+      if (report.status !== 'pending') continue;
+      assert.ok(
+        path.isAbsolute(report.executable) && /^[a-f0-9]{64}$/.test(report.sha256 ?? ''),
+        '待验记录缺少原应用路径或摘要',
+      );
+      pending += 1;
+      await checkNativeApp({
+        ...options,
+        root,
+        executable: report.executable,
+        expectedDigest: report.sha256,
+      });
+    } catch (error) {
+      failures.push([name, error.message, error.stdout, error.stderr].filter(Boolean).join('\n'));
+    }
   }
+  if (failures.length)
+    throw new Error(`有 ${failures.length} 份补验记录失败：\n${failures.join('\n\n')}`);
   if (!pending) console.log('没有待补验的原生应用。');
 }

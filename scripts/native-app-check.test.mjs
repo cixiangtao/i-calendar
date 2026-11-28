@@ -106,6 +106,22 @@ test('补验前原产物被覆盖则拒绝执行，待验记录保持未通过',
   assert.equal((await f.report()).status, 'pending');
 });
 
+test('一份原产物被覆盖时仍补验其他原包，整批保留失败结果', async (t) => {
+  const f = await fixture(t);
+  const other = path.join(f.root, 'other-app');
+  await writeFile(other, '另一个原包');
+  for (const executable of [f.executable, other])
+    await checkNativeApp({ ...f, executable, session: locked });
+  const folder = path.join(f.root, 'work/native-checks');
+  const [first, second] = (await readdir(folder)).sort().map((name) => path.join(folder, name));
+  const original = await readFile(first, 'utf8');
+  await writeFile(JSON.parse(original).executable, '已覆盖');
+  await assert.rejects(resumeNativeChecks({ ...f, session: ready }), /待验应用已变化/);
+  assert.equal(await readFile(first, 'utf8'), original);
+  assert.deepEqual(f.calls, [['--smoke-test'], ['--smoke-test', '--autostart']]);
+  assert.equal(JSON.parse(await readFile(second, 'utf8')).status, 'passed');
+});
+
 test('严格模式始终执行应用检查，CI 不接受延后开关', async (t) => {
   const f = await fixture(t);
   await assert.rejects(
